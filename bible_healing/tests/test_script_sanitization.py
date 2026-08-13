@@ -67,6 +67,7 @@ def test_clause_endings_become_split_points():
     punct = punctuate_korean_scripture(raw)
     assert punct.count("지어다.") >= 2
     units = split_into_speech_units(punct, max_len=90)
-    assert units
-    # Periods stay inside a unit so SuperTonic breathes without a hard cut.
-    assert any("지어다." in u for u in units)
+    assert len(units) >= 3
+    assert all("지어다" in u or "의뢰할지어다" in u for u in units)
+    # One clause per unit — SuperTonic must not see several sentences at once.
+    assert all(u.count(".") <= 1 for u in units)

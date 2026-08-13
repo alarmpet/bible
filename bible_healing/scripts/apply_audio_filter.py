@@ -13,7 +13,7 @@ from pathlib import Path
 _BH_ROOT = Path(__file__).resolve().parents[1]
 _LOCK_PATH = _BH_ROOT / "config" / "media_rules_lock.json"
 _LOCK_FILTER_DEFAULT = (
-    "asetrate=24000*0.86,aresample=24000,atempo=1.163,"
+    "asetrate=24000*0.86,aresample=24000,"
     "highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5"
 )
 
@@ -30,10 +30,9 @@ def scripture_ffmpeg_filter(lock: dict | None = None, pitch_percent: float = -14
     if abs(float(pitch_percent) - locked_pitch) < 1e-6:
         return str(base)
     rate = 1.0 + float(pitch_percent) / 100.0
-    atempo = 1.0 / rate
     return (
-        f"asetrate=24000*{rate:.4g},aresample=24000,atempo={atempo:.4g},"
-        "highpass=f=65,lowpass=f=8500,equalizer=f=250:t=q:w=1:g=1.5"
+        f"asetrate=24000*{rate:.4g},aresample=24000,"
+        "highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5"
     )
 
 

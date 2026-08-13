@@ -15,9 +15,9 @@ speakers:
     voice: M4
     speed: 0.70
     total_step: 10
-    silence_duration: 0.55
+    silence_duration: 0.25
     max_chunk_length: 90
-    audio_filter: "asetrate=24000*0.86,aresample=24000,atempo=1.163,highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5"
+    audio_filter: "asetrate=24000*0.86,aresample=24000,highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5"
 rules:
   narrator_must_not_share_voice_with_scripture: true
   scripture_text_must_match_verse_db: true

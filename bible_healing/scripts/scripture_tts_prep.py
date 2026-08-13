@@ -81,38 +81,26 @@ def punctuate_korean_scripture(text: str) -> str:
 
 
 def split_into_speech_units(text: str, max_len: int = 90) -> list[str]:
-    """
-    Split cleaned text at Korean/clause boundaries under max_len.
-    Prefer 。.!?  and then commas / spaces. Never slice inside an eojel.
+    """Split into one clause per TTS call.
+
+    Packing several sentences into one SuperTonic request makes the model
+    rush later clauses. Keep each period-ended clause as its own unit.
+    Never slice inside an eojel.
     """
     t = punctuate_korean_scripture(soften_for_speech(text))
     if not t:
         return []
-    if len(t) <= max_len:
-        return [t]
 
     units: list[str] = []
     parts = re.split(r"(?<=[.?!。])\s+", t)
-    buf = ""
     for part in parts:
         part = part.strip()
         if not part:
             continue
-        if len(part) > max_len:
-            if buf:
-                units.append(buf.strip())
-                buf = ""
-            units.extend(_hard_split(part, max_len))
-            continue
-        cand = f"{buf} {part}".strip() if buf else part
-        if len(cand) <= max_len:
-            buf = cand
+        if len(part) <= max_len:
+            units.append(part)
         else:
-            if buf:
-                units.append(buf.strip())
-            buf = part
-    if buf:
-        units.append(buf.strip())
+            units.extend(_hard_split(part, max_len))
     return _merge_short_units([u for u in units if u], max_len)
 
 
