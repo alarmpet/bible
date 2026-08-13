@@ -1,37 +1,69 @@
 # -*- coding: utf-8 -*-
 """
 Build timed caption cues from locked scene_audio_manifest + scenes.json
-using Hermes single-line split policy (healing_caption_policy.json).
+using sanitize_script + split_korean_caption (lock two-line Korean path).
 """
 from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from caption_split_hermes import format_timestamp, split_plain_text_window  # noqa: E402
+from build_full_audio_aligned_ass import allocate_block_times, load_caption_lock  # noqa: E402
 from paths_bh import CONFIG  # noqa: E402
+from sanitize_script import sanitize_script  # noqa: E402
+from subtitle_layout import split_korean_caption  # noqa: E402
 
 
-def clean_text(text: str, speaker: str) -> str:
-    t = re.sub(r"\s+", " ", (text or "").strip())
-    if speaker == "scripture":
-        t = re.sub(r"\([^)]{0,80}\)", " ", t)
-        t = re.sub(r"\s+", " ", t).strip()
-    return t
+def format_timestamp(milliseconds: int) -> str:
+    value = int(round(milliseconds))
+    hours = value // 3_600_000
+    minutes = (value % 3_600_000) // 60_000
+    seconds = (value % 60_000) // 1000
+    millis = value % 1000
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
+
+
+def clean_text(text: str, speaker: str = "") -> str:
+    del speaker
+    return sanitize_script(text).display
 
 
 def load_policy() -> dict:
     return json.loads((CONFIG / "healing_caption_policy.json").read_text(encoding="utf-8"))
 
 
+def _cues_from_text(text: str, start_ms: int, end_ms: int) -> list[dict]:
+    cleaned = clean_text(text)
+    if not cleaned or end_ms <= start_ms:
+        return []
+    blocks = split_korean_caption(cleaned)
+    timed = allocate_block_times(blocks, start_ms / 1000.0, end_ms / 1000.0)
+    cues: list[dict] = []
+    for open_at, close_at, block in timed:
+        cues.append(
+            {
+                "text": block.text,
+                "startMs": int(round(open_at * 1000)),
+                "endMs": int(round(close_at * 1000)),
+            }
+        )
+    return cues
+
+
+def _max_line_chars(text: str) -> int:
+    if not text:
+        return 0
+    return max(len(line) for line in text.replace("\n", r"\N").split(r"\N"))
+
+
 def build(job: Path) -> dict:
     policy = load_policy()
     disp = policy["display"]
-    max_chars = int(disp.get("maxDisplayCharacters") or disp.get("maxLineChars") or 12)
+    lock_cap = load_caption_lock()
+    max_chars = int(lock_cap.get("max_chars_per_line") or disp.get("maxLineChars") or 20)
     min_sec = float(disp.get("minDisplaySeconds") or 0.65)
 
     scenes = {
@@ -50,32 +82,31 @@ def build(job: Path) -> dict:
         sc = scenes.get(order) or {}
         segs = sc.get("segments") or []
         speaker = (sc.get("meta") or {}).get("speaker") or (segs[0].get("speaker") if segs else "narrator")
-        text = clean_text(sc.get("narration") or item.get("text") or "", speaker)
+        text = sc.get("narration") or item.get("text") or ""
         start_ms = int(round(float(item["startSeconds"]) * 1000))
         end_ms = int(round(float(item["endSeconds"]) * 1000))
-        cues = split_plain_text_window(text, start_ms, end_ms, max_chars, min_sec)
-        for c in cues:
-            c["order"] = order
-            c["speaker"] = speaker
-            c["ref_label"] = (sc.get("meta") or {}).get("ref_label")
-            all_cues.append(c)
+        cues = _cues_from_text(text, start_ms, end_ms)
+        for cue in cues:
+            cue["order"] = order
+            cue["speaker"] = speaker
+            cue["ref_label"] = (sc.get("meta") or {}).get("ref_label")
+            all_cues.append(cue)
         per_scene.append(
             {
                 "order": order,
                 "speaker": speaker,
-                "source_chars": len(text),
+                "source_chars": len(clean_text(text)),
                 "duration_ms": end_ms - start_ms,
                 "cue_count": len(cues),
-                "max_cue_chars": max((len(c["text"]) for c in cues), default=0),
+                "max_cue_chars": max((_max_line_chars(c["text"]) for c in cues), default=0),
             }
         )
 
-    # global SRT
     srt_lines = []
-    for i, c in enumerate(all_cues, 1):
+    for i, cue in enumerate(all_cues, 1):
         srt_lines.append(str(i))
-        srt_lines.append(f"{format_timestamp(c['startMs'])} --> {format_timestamp(c['endMs'])}")
-        srt_lines.append(c["text"])
+        srt_lines.append(f"{format_timestamp(cue['startMs'])} --> {format_timestamp(cue['endMs'])}")
+        srt_lines.append(cue["text"].replace(r"\N", "\n"))
         srt_lines.append("")
     srt_path = job / "subtitles-timed-ko.srt"
     srt_path.write_text("\n".join(srt_lines), encoding="utf-8")
@@ -91,12 +122,13 @@ def build(job: Path) -> dict:
     }
     cues_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # QA summary
     violations = []
-    for c in all_cues:
-        if len(c["text"]) > max_chars:
-            violations.append({"type": "max_chars", "text": c["text"], "len": len(c["text"])})
-        if c["endMs"] - c["startMs"] < int(min_sec * 1000) - 50:
+    for cue in all_cues:
+        if _max_line_chars(cue["text"]) > max_chars:
+            violations.append(
+                {"type": "max_chars", "text": cue["text"], "len": _max_line_chars(cue["text"])}
+            )
+        if cue["endMs"] - cue["startMs"] < int(min_sec * 1000) - 50:
             # allow soft shrink cases
             pass
     report = {
