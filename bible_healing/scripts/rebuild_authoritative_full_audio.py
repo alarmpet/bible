@@ -63,13 +63,42 @@ def rebuild_authoritative_audio(
 
     work = Path(work_dir) if work_dir is not None else job / "authoritative_audio_rebuild"
     work.mkdir(parents=True, exist_ok=True)
+    ff = ffmpeg or ffmpeg_bin()
+    # Concat demuxer treats every file as the first file's sample rate.
+    # Narrator SuperTonic WAVs are 44100 and scripture filter WAVs are 24000,
+    # so a raw concat silently shortens the 24 kHz scenes. Normalize first.
+    norm_dir = work / "normalized_48k"
+    norm_dir.mkdir(parents=True, exist_ok=True)
+    normalized: list[Path] = []
+    for src in wavs:
+        dst = norm_dir / src.name
+        subprocess.run(
+            [
+                ff,
+                "-y",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-i",
+                str(src),
+                "-vn",
+                "-ac",
+                "2",
+                "-ar",
+                "48000",
+                "-c:a",
+                "pcm_s16le",
+                str(dst),
+            ],
+            check=True,
+        )
+        normalized.append(dst)
     lst = work / "scene_audio_concat.txt"
     lst.write_text(
-        "\n".join(f"file '{p.resolve().as_posix()}'" for p in wavs),
+        "\n".join(f"file '{p.resolve().as_posix()}'" for p in normalized),
         encoding="utf-8",
     )
     out = work / output_name
-    ff = ffmpeg or ffmpeg_bin()
     subprocess.run(
         [
             ff,
@@ -83,13 +112,8 @@ def rebuild_authoritative_audio(
             "0",
             "-i",
             str(lst),
-            "-vn",
-            "-ac",
-            "2",
-            "-ar",
-            "48000",
-            "-c:a",
-            "pcm_s16le",
+            "-c",
+            "copy",
             str(out),
         ],
         check=True,

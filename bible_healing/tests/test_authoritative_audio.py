@@ -212,6 +212,7 @@ def test_rebuild_uses_scenes_json_count_not_110(tmp_path, monkeypatch):
     work = job / "authoritative_audio_rebuild"
     lst = (work / "scene_audio_concat.txt").read_text(encoding="utf-8")
     assert lst.count("file ") == 3
+    assert "normalized_48k" in lst
     prov_path = work / "voice_provenance.json"
     assert prov_path.is_file()
     prov = json.loads(prov_path.read_text(encoding="utf-8"))
