@@ -66,6 +66,41 @@ def test_tts_step_never_passes_skip_existing():
     assert any("tts_multi_voice.py" in str(part) for part in tts_cmd)
 
 
+def _job_arg_from_cmd(cmd: list[str]) -> str | None:
+    """Return value after --job in argv, if present."""
+    for i, part in enumerate(cmd):
+        if str(part) == "--job" and i + 1 < len(cmd):
+            return str(cmd[i + 1])
+    return None
+
+
+def test_preflight_tts_rebuild_share_orchestrator_job_path():
+    """TTS / preflight / rebuild / build_full_job all receive the same --job."""
+    job = Path("bible_healing/runs/ep01_anxious_night/hermes_jobs/full")
+    job_s = str(job)
+    steps = pipe.build_steps(
+        job,
+        python="python",
+        tts_python="tts-python",
+        final_mp4=Path(r"D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4"),
+    )
+    by_name = {name: cmd for _, name, cmd in steps}
+    for name in (
+        "media_rules_preflight",
+        "build_full_job",
+        "tts_multi_voice",
+        "verify_voice_provenance",
+        "rebuild_authoritative_full_audio",
+        "verify_authoritative_audio",
+        "build_full_audio_aligned_ass",
+        "ass_qa",
+        "render_authoritative_full",
+        "media_rules_postflight",
+    ):
+        got = _job_arg_from_cmd(by_name[name])
+        assert got == job_s, f"{name}: expected --job {job_s!r}, got {got!r}"
+
+
 def test_run_pipeline_writes_json_and_full_order(tmp_path: Path):
     job = _job(tmp_path)
     work = tmp_path / "pipeline"

@@ -18,13 +18,19 @@ python bible_healing/scripts/run_full_media_pipeline.py --job bible_healing/runs
 - 최종 MP4: `D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4`
 - TTS에 `--skip-existing` 를 넘기지 않는다. 중간 실패 시 중단.
 
-## ⛔ 구 100분본 배포 금지
+## ⛔ 구 본편 / 100분본 배포 금지
 
 | 문제 | 구 산출 |
 |------|---------|
 | 느린 음성 | 0.78/0.72 + 31s 무음 패드 |
 | 이미지 없음 | 그라데이션 더미 |
 | 자막 없음 | SRT만, MP4 미합성 |
+
+**배포 금지 (legacy):** `hermes_jobs/full/final-ep01-full.mp4`,
+`upload_package/final-ep01-full.mp4`,
+`upload_package/final-bible-healing-ep01-100m.mp4`,
+`hermes_jobs/full/final-bible-healing-ep01-100m.mp4`.
+Live 본편은 D: final + 오케스트레이터만.
 
 ## 재작업 진행
 
@@ -43,8 +49,9 @@ python bible_healing/scripts/run_full_media_pipeline.py --job bible_healing/runs
 | 엠비언트 영상 계획 | `../계획서_구약힐링_엠비언트영상_매칭.md` v1.1 |
 | 플레이트 파이프 | ✅ yaml + timeline + assign + qa |
 | 엠비언트 스모크 | `smoke_review/final-sample5-ambient-smoke.mp4` (~6.5분, 플레이트 1) |
-| **최종 본편** | **`hermes_jobs/full/final-ep01-full.mp4` (~50분 14초)** |
-| 업로드 복사본 | `upload_package/final-ep01-full.mp4` |
+| **최종 본편 (live)** | **`D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4`** — `run_full_media_pipeline.py` 만 |
+| ~~구 본편~~ | ~~`hermes_jobs/full/final-ep01-full.mp4`~~ — **legacy, do not deploy** |
+| ~~업로드 복사본~~ | ~~`upload_package/final-ep01-full.mp4`~~ — **legacy** |
 | 권장 청취 샘플 | `voice_casting/sample5_F10_M10_stable.mp3` |
 
 ### 플레이트 스모크 재실행
@@ -74,27 +81,29 @@ python scripts\qa_healing_render.py --job runs\ep01_anxious_night\hermes_jobs\pr
 python scripts\render_healing_v3.py --job runs\ep01_anxious_night\hermes_jobs\preview --final-name final-smoke10-v3.mp4
 ```
 
-### 업로드할 파일 (여기)
+### 업로드 / 배포 (live only)
 
-```
-C:\Users\amd\module\bible_healing\runs\ep01_anxious_night\upload_package\
-  final-bible-healing-ep01-100m.mp4   ← 본편
-  TITLE.txt
-  DESCRIPTION.txt                     ← 챕터 포함
-  TAGS.txt
-  subtitles-ko.srt                    ← 선택
-  CHECKLIST.md
-```
+- **본편 진입점:** `run_full_media_pipeline.py` (위 절)
+- **배포 MP4:** `D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4`
+- 메타(TITLE/DESCRIPTION/TAGS)는 새 렌더 기준으로 다시 패키징한다.
 
-원본 작업 디렉터리:
-`runs/ep01_anxious_night/hermes_jobs/full/final-bible-healing-ep01-100m.mp4`
+### ⛔ Legacy artifacts — do not deploy
 
-### 분량 설명
+| 파일 | 상태 |
+|------|------|
+| `hermes_jobs/full/final-ep01-full.mp4` | legacy 구 본편 |
+| `upload_package/final-ep01-full.mp4` | legacy 복사본 |
+| `upload_package/final-bible-healing-ep01-100m.mp4` | 구 100분본, 배포 금지 |
+| `hermes_jobs/full/final-bible-healing-ep01-100m.mp4` | 구 100분본, 배포 금지 |
+| `final-bible-healing-ep01.mp4` | 구 순수 낭독 경로 |
 
-| 버전 | 길이 | 파일 |
-|------|------|------|
-| 순수 낭독 | 1:25:47 | `final-bible-healing-ep01.mp4` |
-| **+ 유닛 쉼 (권장)** | **1:40:00 (100분)** | `final-bible-healing-ep01-100m.mp4` |
+### 분량 설명 (역사 기록)
+
+| 버전 | 길이 | 파일 | 비고 |
+|------|------|------|------|
+| 순수 낭독 | 1:25:47 | `final-bible-healing-ep01.mp4` | legacy |
+| + 유닛 쉼 | 1:40:00 (100분) | `final-bible-healing-ep01-100m.mp4` | legacy, 배포 금지 |
+| **authoritative 본편** | (pipeline 산출) | `D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4` | **live** |
 
 ## 보이스
 

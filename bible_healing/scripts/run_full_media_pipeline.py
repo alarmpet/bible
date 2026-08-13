@@ -62,7 +62,12 @@ def build_steps(
         (
             2,
             "build_full_job",
-            [python, str(_SCRIPTS / "build_full_job.py")],
+            [
+                python,
+                str(_SCRIPTS / "build_full_job.py"),
+                "--job",
+                job_s,
+            ],
         ),
         (
             3,
