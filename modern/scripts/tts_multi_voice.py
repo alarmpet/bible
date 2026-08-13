@@ -34,7 +34,9 @@ from sanitize_script import assert_no_emotion_triggers  # noqa: E402
 from verify_voice_provenance import (  # noqa: E402
     build_piece_provenance,
     enforce_skip_existing,
+    is_bible_scripture_job,
     load_media_lock,
+    prepare_preview_request,
     prepare_speech_units,
     resolve_total_step,
     run_job_preflight,
@@ -135,25 +137,42 @@ def probe_duration(wav: Path) -> float:
 def preview_only(engine, vm: dict, job: Path) -> dict:
     samples = vm.get("sample_lines") or {}
     speakers = vm.get("speakers") or {}
+    lock = load_media_lock() if is_bible_scripture_job(speakers) else None
     out_dir = job / "voice_previews"
     out_dir.mkdir(exist_ok=True)
     results = []
     for sid, line in samples.items():
         conf = speakers.get(sid) or {}
-        voice = conf.get("voice") or "M1"
-        speed = float(conf.get("speed") or 1.05)
+        req = prepare_preview_request(sid, line, conf, lock=lock, speakers=speakers)
+        voice = req["voice"]
         path = out_dir / f"preview_{sid}_{voice}.wav"
+        raw_path = out_dir / f"preview_{sid}_{voice}.raw.wav" if req["apply_filter"] else path
         info = engine.synthesize_to_file(
-            text=line,
-            output_path=path,
+            text=req["text"],
+            output_path=raw_path,
             voice=voice,
             lang="ko",
-            speed=speed,
-            total_step=int(conf.get("total_step") or 8),
-            silence_duration=0.15,
+            speed=req["speed"],
+            total_step=int(req["total_step"]),
+            silence_duration=float(req["silence_duration"]),
+            max_chunk_length=int(req["max_chunk"]),
             verbose=False,
         )
-        results.append({"speaker": sid, "voice": voice, "path": str(path), "duration": info.get("duration")})
+        if req["apply_filter"]:
+            apply_scripture_filter(raw_path, path)
+            if raw_path != path and raw_path.exists():
+                raw_path.unlink(missing_ok=True)
+        results.append(
+            {
+                "speaker": sid,
+                "voice": voice,
+                "path": str(path),
+                "duration": info.get("duration"),
+                "text": req["text"],
+                "total_step": req["total_step"],
+                "filter_applied": req["apply_filter"],
+            }
+        )
         print(f"preview {sid} {voice} -> {path.name}")
     report = {"ok": True, "previews": results}
     (job / "reports" / "tts_preview_report.json").write_text(
@@ -164,6 +183,7 @@ def preview_only(engine, vm: dict, job: Path) -> dict:
 
 def run_job(job: Path, skip_existing: bool) -> dict:
     lock = run_job_preflight(job, skip_existing)
+    bible = lock is not None
     scenes = json.loads((job / "scenes.json").read_text(encoding="utf-8"))
     vm = json.loads((job / "voice_map.json").read_text(encoding="utf-8"))
     speakers = vm["speakers"]
@@ -183,34 +203,49 @@ def run_job(job: Path, skip_existing: bool) -> dict:
     for sc in scenes:
         order = int(sc["order"])
         scene_wav = job / f"scene_{order}.wav"
+        if skip_existing and not bible and scene_wav.exists() and scene_wav.stat().st_size > 0:
+            items.append({"order": order, "path": str(scene_wav), "skipped": True, "duration": probe_duration(scene_wav)})
+            continue
         segs = sc.get("segments") or [{"speaker": "narrator", "text": sc.get("narration") or "", "seg_id": f"{sc.get('scene_id')}_01"}]
         seg_paths = []
         seg_meta = []
         for seg in segs:
             sid = seg.get("speaker") or "narrator"
-            try:
-                units = prepare_speech_units(seg.get("text") or "", sid, lock)
-            except ValueError as e:
-                ok = False
-                seg_meta.append({"seg_id": seg.get("seg_id"), "error": str(e), "speaker": sid})
-                print(f"FAIL order={order} seg={seg.get('seg_id')}: {e}")
-                continue
             conf = speakers.get(sid) or speakers["narrator"]
-            voice_spec = (lock.get("voice") or {}).get(sid) or {}
-            voice = voice_spec.get("voice") or conf["voice"]
-            speed = float(voice_spec.get("speed") or conf.get("speed") or 1.05)
-            total_step = resolve_total_step(sid, lock)
-            if sid == "scripture":
-                max_chunk = int(voice_spec.get("max_chunk_length") or 90)
-                silence = float(voice_spec.get("silence_seconds") or conf.get("silence_duration") or 0.65)
+            if bible:
+                try:
+                    units = prepare_speech_units(seg.get("text") or "", sid, lock)
+                except ValueError as e:
+                    ok = False
+                    seg_meta.append({"seg_id": seg.get("seg_id"), "error": str(e), "speaker": sid})
+                    print(f"FAIL order={order} seg={seg.get('seg_id')}: {e}")
+                    continue
+                voice_spec = (lock.get("voice") or {}).get(sid) or {}
+                voice = voice_spec.get("voice") or conf["voice"]
+                speed = float(voice_spec.get("speed") or conf.get("speed") or 1.05)
+                total_step = resolve_total_step(sid, lock)
+                if sid == "scripture":
+                    max_chunk = int(voice_spec.get("max_chunk_length") or 90)
+                    silence = float(voice_spec.get("silence_seconds") or conf.get("silence_duration") or 0.65)
+                else:
+                    max_chunk = int(conf.get("max_chunk_length") or 130)
+                    silence = float(voice_spec.get("silence_seconds") or conf.get("silence_duration") or 0.24)
             else:
+                text = clean_for_tts(seg.get("text") or "")
+                if not text:
+                    continue
+                units = [text]
+                voice = conf["voice"]
+                speed = float(conf.get("speed") or 1.05)
+                total_step = int(conf.get("total_step") or 8)
                 max_chunk = int(conf.get("max_chunk_length") or 130)
-                silence = float(voice_spec.get("silence_seconds") or conf.get("silence_duration") or 0.24)
+                silence = float(conf.get("silence_duration") or 0.12)
             for ui, unit in enumerate(units):
-                assert_no_emotion_triggers(unit)
+                if bible:
+                    assert_no_emotion_triggers(unit)
                 stem = f"{seg.get('seg_id', f'o{order}')}_{sid}_{voice}_{ui:02d}"
                 spath = seg_dir / f"{stem}.wav"
-                raw_path = seg_dir / f"{stem}.raw.wav" if sid == "scripture" else spath
+                raw_path = seg_dir / f"{stem}.raw.wav" if bible and sid == "scripture" else spath
                 try:
                     info = engine.synthesize_to_file(
                         text=unit,
@@ -224,7 +259,7 @@ def run_job(job: Path, skip_existing: bool) -> dict:
                         verbose=False,
                     )
                     filter_applied = False
-                    if sid == "scripture":
+                    if bible and sid == "scripture":
                         apply_scripture_filter(
                             raw_path,
                             spath,
@@ -276,7 +311,7 @@ def run_job(job: Path, skip_existing: bool) -> dict:
             items.append({"order": order, "ok": False, "error": "no segments"})
             continue
         speakers_in = [(seg.get("speaker") or "narrator") for seg in (sc.get("segments") or segs)]
-        if any(s == "scripture" for s in speakers_in):
+        if bible and any(s == "scripture" for s in speakers_in):
             gap = float((lock.get("voice") or {}).get("scripture", {}).get("silence_seconds") or 0.65)
         else:
             gap = 0.1
@@ -313,13 +348,14 @@ def run_job(job: Path, skip_existing: bool) -> dict:
     if any(i.get("ok") is False for i in items):
         report["ok"] = False
     (job / "reports").mkdir(exist_ok=True)
-    write_tts_provenance(
-        job,
-        pieces,
-        extra={"tts_root": str(TTS_ROOT), "scene_count": len(scenes), "ok": report["ok"]},
-    )
-    if pieces:
-        verify_tts_provenance(job / "reports" / "tts_provenance.json")
+    if bible:
+        write_tts_provenance(
+            job,
+            pieces,
+            extra={"tts_root": str(TTS_ROOT), "scene_count": len(scenes), "ok": report["ok"]},
+        )
+        if pieces:
+            verify_tts_provenance(job / "reports" / "tts_provenance.json")
     (job / "scene_audio_manifest.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     (job / "reports" / "tts_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print("tts ok=" + str(report["ok"]))
@@ -353,11 +389,12 @@ def main():
     ap.add_argument("--preview-only", action="store_true")
     ap.add_argument("--skip-existing", action="store_true")
     args = ap.parse_args()
-    lock = load_media_lock()
-    enforce_skip_existing(args.skip_existing, lock)
     job = Path(args.job)
     (job / "reports").mkdir(exist_ok=True)
     vm = json.loads((job / "voice_map.json").read_text(encoding="utf-8"))
+    speakers = vm.get("speakers") or {}
+    if is_bible_scripture_job(speakers):
+        enforce_skip_existing(args.skip_existing)
     if not args.preview_only:
         run_job(job, args.skip_existing)
         return

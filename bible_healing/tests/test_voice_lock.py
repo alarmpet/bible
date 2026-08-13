@@ -19,6 +19,7 @@ from verify_voice_provenance import (  # noqa: E402
     build_piece_provenance,
     enforce_skip_existing,
     load_media_lock,
+    prepare_preview_request,
     prepare_speech_units,
     resolve_total_step,
     run_job_preflight,
@@ -177,3 +178,47 @@ def test_resolve_total_step_never_24():
     assert step != 24
     assert step in lock["voice"]["scripture"]["total_step_candidates"]
     assert step not in lock["voice"]["scripture"]["forbidden_total_step"]
+
+
+def test_built_voice_map_scripture_matches_lock():
+    entry = build_full_job.spk("scripture")
+    assert entry["total_step"] == 10
+    assert entry["max_chunk_length"] == 90
+    assert entry["audio_filter"]
+    assert "asetrate" in entry["audio_filter"]
+    assert entry["total_step"] != 24
+    assert entry["max_chunk_length"] != 200
+
+
+def test_modern_job_without_scripture_skips_m4_lock(tmp_path):
+    (tmp_path / "voice_map.json").write_text(
+        json.dumps(
+            {
+                "speakers": {
+                    "narrator": {"voice": "F2", "speed": 1.0},
+                    "character": {"voice": "M2", "speed": 1.05},
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert run_job_preflight(tmp_path, skip_existing=False) is None
+    assert run_job_preflight(tmp_path, skip_existing=True) is None
+
+
+def test_preview_path_sanitizes_scripture_sample():
+    lock = load_media_lock()
+    req = prepare_preview_request(
+        "scripture",
+        "인생들아 ! 네가 어찌하여 낙망하느뇨 ?",
+        {"voice": "M5", "speed": 0.85, "total_step": 24, "max_chunk_length": 200},
+        lock=lock,
+        speakers={"narrator": {}, "scripture": {}},
+    )
+    assert "!" not in req["text"]
+    assert "?" not in req["text"]
+    assert req["voice"] == "M4"
+    assert req["speed"] == 0.72
+    assert req["total_step"] == 10
+    assert req["max_chunk"] == 90
+    assert req["apply_filter"] is True

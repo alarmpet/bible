@@ -79,14 +79,65 @@ def enforce_voice_map(speakers: dict, lock: dict | None = None) -> None:
         raise SystemExit(f"voice lock: extra speakers {sorted(extra)}")
 
 
-def run_job_preflight(job: Path, skip_existing: bool, lock: dict | None = None) -> dict:
-    """Reject --skip-existing and non-lock voices before any SuperTonic import."""
-    lock = lock or load_media_lock()
-    enforce_skip_existing(skip_existing, lock)
+def is_bible_scripture_job(speakers: dict, lock_file: Path | None = None) -> bool:
+    """True only for jobs that have a scripture speaker and a media lock file."""
+    if "scripture" not in (speakers or {}):
+        return False
+    path = Path(lock_file) if lock_file is not None else _LOCK_PATH
+    return path.is_file()
+
+
+def run_job_preflight(job: Path, skip_existing: bool, lock: dict | None = None) -> dict | None:
+    """Enforce bible lock only for scripture jobs. Modern jobs return None."""
     vm_path = Path(job) / "voice_map.json"
     vm = json.loads(vm_path.read_text(encoding="utf-8"))
-    enforce_voice_map(vm.get("speakers") or {}, lock)
+    speakers = vm.get("speakers") or {}
+    if not is_bible_scripture_job(speakers):
+        return None
+    lock = lock or load_media_lock()
+    enforce_skip_existing(skip_existing, lock)
+    enforce_voice_map(speakers, lock)
     return lock
+
+
+def prepare_preview_request(
+    speaker: str,
+    text: str,
+    conf: dict | None = None,
+    lock: dict | None = None,
+    speakers: dict | None = None,
+) -> dict:
+    """Resolve preview synth params (sanitize + lock) without SuperTonic."""
+    conf = conf or {}
+    speakers = speakers if speakers is not None else {speaker: conf}
+    bible = bool(lock) and is_bible_scripture_job(speakers)
+    if bible and speaker in ((lock or {}).get("voice") or {}):
+        spec = lock["voice"][speaker]
+        sanitized = sanitize_script(text).tts
+        if not sanitized.strip():
+            raise ValueError("empty sanitized tts text")
+        assert_no_emotion_triggers(sanitized)
+        max_chunk = int(spec.get("max_chunk_length") or (90 if speaker == "scripture" else 130))
+        return {
+            "speaker": speaker,
+            "text": sanitized,
+            "voice": spec["voice"],
+            "speed": float(spec["speed"]),
+            "total_step": resolve_total_step(speaker, lock),
+            "max_chunk": max_chunk,
+            "silence_duration": float(spec.get("silence_seconds") or 0.15),
+            "apply_filter": speaker == "scripture",
+        }
+    return {
+        "speaker": speaker,
+        "text": text,
+        "voice": conf.get("voice") or "M1",
+        "speed": float(conf.get("speed") or 1.05),
+        "total_step": int(conf.get("total_step") or 8),
+        "max_chunk": int(conf.get("max_chunk_length") or 130),
+        "silence_duration": float(conf.get("silence_duration") or 0.15),
+        "apply_filter": False,
+    }
 
 
 def prepare_speech_units(text: str, speaker: str, lock: dict | None = None) -> list[str]:
