@@ -41,7 +41,8 @@ _JOSA = frozenset(
 _SENTENCE_END = re.compile(r'[.?!\u3002][”"\')\]]?$')
 _CLAUSE_END = re.compile(r'[,，][”"\')\]]?$')
 # Attributive/adnominal endings — avoid leaving these as line-final alone.
-_MODIFIER_END = re.compile(r"(한|된|던|운|인)$")
+# Includes 은/는 forms: 높은, 맑은, 좋은, 예쁜, 있는, …
+_MODIFIER_END = re.compile(r"(한|된|던|운|인|은|는)$")
 
 
 @dataclass(frozen=True)
@@ -88,7 +89,13 @@ def _is_clause_end(token: str) -> bool:
 
 
 def _is_modifier(token: str) -> bool:
+    """True for adnominal/attributive eojels that should not end a line alone."""
     bare = _strip_trail_punct(token)
+    if len(bare) < 2:
+        return False
+    # Bare josa-only tokens are not modifiers (handled by merge).
+    if bare in _JOSA:
+        return False
     return bool(_MODIFIER_END.search(bare))
 
 
@@ -192,13 +199,21 @@ def _split_into_phrases(
     return final
 
 
-def pack_two_lines(phrases: list[str]) -> list[CaptionBlock]:
-    """Pack single-line phrases into CaptionBlocks of 1–2 lines each."""
+def pack_two_lines(phrases: list[str], hard_max: int = 20) -> list[CaptionBlock]:
+    """Pack single-line phrases into CaptionBlocks of 1–2 lines each.
+
+    Phrases longer than hard_max (oversized single eojels) are placed alone
+    in their own block and never character-sliced.
+    """
     blocks: list[CaptionBlock] = []
     i = 0
     n = len(phrases)
     while i < n:
-        if i + 1 < n:
+        if len(phrases[i]) > hard_max:
+            blocks.append(_make_block([phrases[i]]))
+            i += 1
+            continue
+        if i + 1 < n and len(phrases[i + 1]) <= hard_max:
             blocks.append(_make_block([phrases[i], phrases[i + 1]]))
             i += 2
         else:
@@ -237,7 +252,7 @@ def split_korean_caption(
 
     # Pair phrases into up to max_lines per on-screen block.
     if max_lines == 2:
-        return pack_two_lines(phrases)
+        return pack_two_lines(phrases, hard_max=hard_max)
 
     blocks: list[CaptionBlock] = []
     i = 0

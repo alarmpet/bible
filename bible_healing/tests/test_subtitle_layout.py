@@ -28,9 +28,10 @@ def test_two_lines_max_and_hard_limit():
 
 def test_does_not_cut_inside_eomi():
     blocks = split_korean_caption("지금은 무언가를 해내지 않아도 됩니다.")
-    flat = " ".join(b.text.replace(r"\N", " ") for b in blocks)
-    assert "해내지 않아도" in flat
-    assert "해내지" not in [b.lines[0] for b in blocks if b.lines[0] == "해내지"]
+    # 해내지 + 않아도 must share the same line inside a CaptionBlock
+    # (not merely appear adjacent across a flattened multi-block join).
+    assert any("해내지 않아도" in line for b in blocks for line in b.lines)
+    assert not any(line == "해내지" for b in blocks for line in b.lines)
 
 
 def test_strips_then_layouts_scripture():
@@ -82,3 +83,33 @@ def test_never_char_slices_mid_eojel():
             ) >= 1
         for token in ln.split():
             assert token == long_eojel or len(token) <= 20
+
+
+def test_oversized_eojel_emitted_whole():
+    """Eojel longer than hard_max is emitted whole alone — never s[i:i+20]."""
+    huge = "가" * 25  # 25 > 20
+    assert len(huge) > 20
+    blocks = split_korean_caption(f"앞에 {huge} 뒤에", hard_max=20)
+    lines = [ln for b in blocks for ln in b.lines]
+    # Full token present as its own line/block
+    assert huge in lines
+    assert any(b.lines == [huge] for b in blocks)
+    # Not character-sliced into hard_max chunks
+    assert huge[:20] not in lines
+    assert huge[20:] not in lines
+    for ln in lines:
+        for token in ln.split():
+            if token.startswith("가") and set(token) == {"가"}:
+                assert token == huge
+
+
+def test_does_not_split_after_eun_adnominal():
+    """Common 은/는 adnominals (높은, …) must not be left line-final before noun."""
+    blocks = split_korean_caption(
+        "고요한 밤하늘 아래 멀리 보이는 높은 산이 있다."
+    )
+    lines = [ln for b in blocks for ln in b.lines]
+    assert not any(
+        ln.rstrip(".,!?。").endswith("높은") for ln in lines
+    )
+    assert any("높은 산이" in ln for ln in lines)
