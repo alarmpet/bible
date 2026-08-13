@@ -1,0 +1,18 @@
+version: 2
+target_minutes: 100
+min_minutes: 80
+max_minutes: 120
+# speed ~1.0 기준 재산정 (실측 후 갱신)
+chars_per_minute:
+  narrator: 360
+  scripture: 480
+  blended: 400
+unit:
+  target_minutes: 3.5
+  min_minutes: 2.5
+  max_minutes: 5.0
+opening_minutes: 2.5
+closing_minutes: 4.0
+# 전환 여백만 (억지 100분 패드 금지)
+silence_overhead_ratio: 0.03
+max_pad_between_units_sec: 2.0

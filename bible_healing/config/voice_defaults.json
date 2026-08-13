@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "locked_at": "2026-08-11",
+  "label": "ep01 default voices F5 narrator / M4 low pastor scripture",
+  "engine": "supertonic3",
+  "speakers": {
+    "narrator": {"role": "female healing narration", "casting_id": "F_10", "voice": "F5", "speed": 0.95, "total_step": 8, "silence_duration": 0.24},
+    "scripture": {
+      "role": "low, kind, peaceful pastor-like male scripture narration",
+      "casting_id": "M4_LOW_PASTOR",
+      "voice": "M4",
+      "speed": 0.72,
+      "total_step": 24,
+      "silence_duration": 0.65,
+      "pitch_shift_percent": -8,
+      "max_chunk_length": 200,
+      "pipeline": {"verse_level_synthesis": true, "strip_selah_and_headers": true, "soften_exclamation": true, "max_unit_chars": 90}
+    }
+  },
+  "notes": "Locked after listening approval. Reference sample: runs/ep01_anxious_night/voice_ab/pastor_calm_10s_M4_low.wav"
+}

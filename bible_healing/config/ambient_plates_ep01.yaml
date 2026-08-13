@@ -1,0 +1,115 @@
+# ep01 키워드·모티프 계약 (시간 없음 — lock 후 build_plate_timeline 이 배정)
+episode_id: ep01_anxious_night
+policy:
+  minutes_per_plate_target: 10
+  dwell_warn_min_sec: 360
+  dwell_warn_max_sec: 840
+  motion_default: still
+  kenburns_zoom_total_max: 0.04
+  crossfade_sec: 1.5
+  crossfade_required_in_smoke: false
+  no_text_in_image: true
+  # hard: scripture consecutive block never splits plates
+  forbid_plate_change_inside_scripture: true
+  prefer_unit_integrity: true
+
+plates:
+  - id: P01
+    keywords: [밤, 잠, 숨, 불안, 목자]
+    motif: bedroom_moonlight_window
+    preferred_unit_ids: [opening, u01, u02, u03]
+    asset: assets/generated/ep01/plates/P01.jpg
+    fallback_asset: assets/generated/ep01/motif_window_1080.jpg
+    prompt: >
+      Photoreal calm bedroom at night, soft moonlight through sheer curtains,
+      empty room, no people, no text, no logos, 16:9 ambient meditation still
+
+  - id: P02
+    keywords: [빛, 피난처, 거함, 안전]
+    motif: candle_safe_room
+    preferred_unit_ids: [u04, u05, u06]
+    asset: assets/generated/ep01/plates/P02.jpg
+    fallback_asset: assets/generated/ep01/motif_candle_1080.jpg
+    prompt: >
+      Single warm candle in a quiet dark room, soft glow, empty of people,
+      no text, no logos, 16:9 peaceful ambient still
+
+  - id: P03
+    keywords: [지킴, 산, 두려워, 손]
+    motif: distant_hills_night
+    preferred_unit_ids: [u07, u08, u09]
+    asset: assets/generated/ep01/plates/P03.jpg
+    fallback_asset: assets/generated/ep01/motif_lake_1080.jpg
+    prompt: >
+      Distant mountain silhouette under starry night sky, calm, empty landscape,
+      no people, no text, no logos, 16:9 ambient still
+
+  - id: P04
+    keywords: [평강, 시선, 상한, 마음]
+    motif: calm_lake
+    preferred_unit_ids: [u10, u11, u12]
+    asset: assets/generated/ep01/plates/P04.jpg
+    fallback_asset: assets/generated/ep01/motif_lake_1080.jpg
+    prompt: >
+      Calm lake at night with star reflection, soft silver light, empty,
+      no people, no text, no logos, 16:9 meditation still
+
+  - id: P05
+    keywords: [갈증, 평안, 훈계, 영혼]
+    motif: dawn_mist_field
+    preferred_unit_ids: [u13, u14, u15]
+    asset: assets/generated/ep01/plates/P05.jpg
+    fallback_asset: assets/generated/ep01/motif_window_1080.jpg
+    prompt: >
+      Soft dawn mist over an empty field, gentle light, peaceful, no people,
+      no text, no logos, 16:9 ambient still
+
+  - id: P06
+    keywords: [피난, 저녁, 기도, 잠잠]
+    motif: rain_window
+    preferred_unit_ids: [u16, u17, u18]
+    asset: assets/generated/ep01/plates/P06.jpg
+    fallback_asset: assets/generated/ep01/motif_window_1080.jpg
+    prompt: >
+      Rain on a dark window at night, soft bokeh city lights far away, empty room,
+      no people, no text, no logos, 16:9 ambient still
+
+  - id: P07
+    keywords: [광야, 새힘, 들림, 사랑]
+    motif: starry_desert
+    preferred_unit_ids: [u19, u20, u21]
+    asset: assets/generated/ep01/plates/P07.jpg
+    fallback_asset: assets/generated/ep01/motif_lake_1080.jpg
+    prompt: >
+      Wide starry sky over quiet desert hills, serene, empty, no people,
+      no text, no logos, 16:9 ambient still
+
+  - id: P08
+    keywords: [깊음, 존재, 기다림, 담대]
+    motif: forest_path
+    preferred_unit_ids: [u22, u23, u24]
+    asset: assets/generated/ep01/plates/P08.jpg
+    fallback_asset: assets/generated/ep01/motif_candle_1080.jpg
+    prompt: >
+      Quiet forest path at dusk, soft fog, empty trail, no people,
+      no text, no logos, 16:9 ambient still
+
+  - id: P09
+    keywords: [고난, 아침, 긍휼, 회복]
+    motif: horizon_dawn
+    preferred_unit_ids: [u25, u26]
+    asset: assets/generated/ep01/plates/P09.jpg
+    fallback_asset: assets/generated/ep01/motif_window_1080.jpg
+    prompt: >
+      Soft dawn light on empty horizon over calm water, hopeful, no people,
+      no text, no logos, 16:9 ambient still
+
+  - id: P10
+    keywords: [쉼, 축복, 밤, 평안]
+    motif: quiet_room_rest
+    preferred_unit_ids: [closing]
+    asset: assets/generated/ep01/plates/P10.jpg
+    fallback_asset: assets/generated/ep01/motif_candle_1080.jpg
+    prompt: >
+      Quiet peaceful room at night with soft lamp glow, empty chair, restful,
+      no people, no text, no logos, 16:9 ambient still

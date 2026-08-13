@@ -1,0 +1,29 @@
+{
+  "policy_version": 1,
+  "source_manual": "manual.md",
+  "purpose": "Executable guardrails for every final Bible-healing render.",
+  "speakers": ["narrator", "scripture"],
+  "scripture": {
+    "strip_parenthetical_metadata": true,
+    "strip_labels": ["다윗의 시", "영장으로 현악에 맞춘 노래", "셀라", "첼라", "아멘"],
+    "pause_after_endings": ["할지어다", "하리니", "이로다", "이니라", "하시니라", "하였느니라", "되리라", "있으리라", "없느니라"],
+    "minimum_pause_ms": 450,
+    "voice_speed": 0.72,
+    "pitch_shift_percent": -8
+  },
+  "captions": {
+    "max_lines": 2,
+    "max_chars_per_line": 20,
+    "font_size_1080p": 72,
+    "margin_left": 120,
+    "margin_right": 120,
+    "margin_vertical": 70,
+    "must_follow_audio_segments": true,
+    "reject_scene_level_timing": true
+  },
+  "render": {
+    "duration_seconds": 180,
+    "background_speed": 0.333,
+    "require_preflight": true
+  }
+}

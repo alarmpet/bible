@@ -1,0 +1,10 @@
+{
+  "policy_version": 5,
+  "source_manual": "manual.md",
+  "required_background": {"kind": "ambient_video", "directory": "bible_healing/assets/movie-sample/pingpong-1min", "extension": ".mp4", "duration_seconds": 60, "still_images_forbidden": true, "scene_flow_jpg_forbidden": true},
+  "speakers": ["narrator", "scripture"],
+  "caption_mode": "balanced_two_line_longform",
+  "captions": {"max_lines": 2, "max_chars_per_line": 20, "font_size_1080p": 72, "must_follow_audio_segments": true},
+  "chapter_overlay": {"enabled": true, "position": "top_right", "max_lines": 1, "max_chars": 12, "font_size_1080p": 36, "persistent_label": true, "replace_on_topic_change": true},
+  "render": {"duration_seconds": 0, "background_speed": 0.333, "require_preflight": true}
+}

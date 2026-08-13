@@ -1,0 +1,31 @@
+import json
+import shutil
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+from qa_first_minute import evaluate_job  # noqa: E402
+
+TEST_ROOT = Path(__file__).resolve().parent / "_qa_items_job"
+
+
+def test_qa_accepts_operational_tts_items_manifest():
+    TEST_ROOT.mkdir(exist_ok=True)
+    try:
+        (TEST_ROOT / "scene_audio_manifest.json").write_text(json.dumps({"items": [
+            {"order": 1, "duration": 4.0}, {"order": 2, "duration": 12.0},
+            {"order": 3, "duration": 14.0}, {"order": 4, "duration": 13.0},
+            {"order": 5, "duration": 30.0},
+        ]}), encoding="utf-8")
+        (TEST_ROOT / "scenes.json").write_text(json.dumps([
+            {"scene_id": "open_01", "meta": {"hook_phase": "hook"}},
+            {"scene_id": "open_02", "meta": {"hook_phase": "mirror"}},
+            {"scene_id": "open_03", "meta": {"hook_phase": "validate"}},
+            {"scene_id": "open_04", "meta": {"hook_phase": "permission_bridge"}},
+            {"scene_id": "u01_s0", "meta": {}, "speaker": "scripture"},
+        ]), encoding="utf-8")
+        report = evaluate_job(TEST_ROOT)
+        assert report["first_scripture_in_target_window"] is True
+    finally:
+        shutil.rmtree(TEST_ROOT, ignore_errors=True)

@@ -1,0 +1,29 @@
+version: 6
+engine: supertonic3
+preview_approved: true
+default_locked: true
+speakers:
+  narrator:
+    label: narrator_female_healing
+    voice: F5
+    speed: 0.95
+    total_step: 8
+    silence_duration: 0.24
+    audio_filter: ""
+  scripture:
+    label: pastor_calm_low_male_scripture
+    voice: M4
+    speed: 0.72
+    total_step: 24
+    silence_duration: 0.65
+    max_chunk_length: 200
+    audio_filter: "pitch_shift=-8%;highpass=65Hz;lowpass=8500Hz;low_mid_gain=1.5dB"
+rules:
+  narrator_must_not_share_voice_with_scripture: true
+  scripture_text_must_match_verse_db: true
+  max_unit_pad_seconds: 2.0
+  forbid_long_silence_pads: true
+  verse_level_scripture_tts: true
+sample_lines:
+  narrator: "오늘 밤, 마음이 지쳐 있다면 잠시 쉬어도 괜찮습니다."
+  scripture: "하나님은 우리의 피난처시요 힘이시니 환난 중에 만날 큰 도움이시라."

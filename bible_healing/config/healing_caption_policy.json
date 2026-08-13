@@ -1,0 +1,47 @@
+{
+  "policy_id": "healing-longform-v1",
+  "version": 1,
+  "inherits": {
+    "line_split": "hermes-capcut-single-line-v3",
+    "ui_preset": "clean-news",
+    "font": "Malgun Gothic Bold"
+  },
+  "display": {
+    "maxLineChars": 24,
+    "maxLines": 2,
+    "maxDisplayCharacters": 24,
+    "minDisplaySeconds": 0.75,
+    "mode": "single-line-phrases-hermes",
+    "notes": "16:9 가로 롱폼: clean-news 12의 2배(24자), 폰트도 2배. 쇼츠(9:16)와 분리."
+  },
+  "typography_render": {
+    "engine": "ass",
+    "fontName": "Malgun Gothic",
+    "fontPath": "C:\\\\Windows\\\\Fonts\\\\malgunbd.ttf",
+    "fontSizePx_1080p": 96,
+    "outlinePx": 6,
+    "shadowPx": 3,
+    "marginV_px": 90,
+    "marginL_px": 100,
+    "marginR_px": 100,
+    "boxAlpha": 0.5,
+    "primaryColour": "&H00FFFFFF",
+    "outlineColour": "&H00000000",
+    "backColour": "&H80000000",
+    "alignment": 2
+  },
+  "scripture_emphasis": {
+    "fontSizePx_1080p": 100,
+    "primaryColour": "&H00F5F5FF"
+  },
+  "timing": {
+    "prefer": "char-weighted-hermes-split",
+    "fallback": "char-weighted-hermes-split",
+    "maxDriftMs": 150
+  },
+  "image_policy": {
+    "no_text_in_image": true,
+    "procedural_background_production": false,
+    "procedural_allowed_for_dev_smoke": true
+  }
+}

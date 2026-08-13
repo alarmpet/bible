@@ -1,0 +1,23 @@
+opening:
+  - hook_phase: hook
+    speaker: narrator
+    text: >
+      불을 껐는데, 머릿속은 아직 환한 밤이 있습니다.
+  - hook_phase: mirror
+    speaker: narrator
+    text: >
+      오늘 한 말이 자꾸 돌아오고,
+      내일 해야 할 일이 벌써 가슴 위에 올라와 있는 밤.
+      몸은 지쳤는데 마음만 아직 퇴근하지 못했을 때가 있습니다.
+  - hook_phase: validate
+    speaker: narrator
+    text: >
+      그건 당신이 약해서가 아닙니다.
+      오늘을 버티고, 무언가를 지키려 오래 애썼기 때문일 수 있습니다.
+      지금 이 밤에 혼자 깨어 있는 것처럼 느껴져도, 당신만 그런 것은 아닙니다.
+  - hook_phase: permission_bridge
+    speaker: narrator
+    text: >
+      오늘 밤 모든 답을 찾지 않아도 됩니다.
+      편하다면 어깨의 힘만 조금 내려놓으세요.
+      이제 평안히 눕는 밤을 말하는 시편 사 편을 천천히 읽겠습니다.

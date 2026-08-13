@@ -1,0 +1,35 @@
+version: 1
+primary_translation:
+  id: KRV
+  name_ko: 성경전서 개역한글판
+  language: ko
+  status: public_domain_expired_copyright
+  notes: >
+    개역한글판 저작재산권 보호기간 경과로 사용 허가 없이 이용 가능하다는
+    대한성서공회 FAQ·교계 보도 등 정리. 구현 시 provenance 해시 고정.
+  forbidden:
+    - 개역개정
+    - NIV
+    - 새번역
+    - 공동번역 (별도 계약 없으면)
+
+sources:
+  - id: open-bibles-kor
+    url: https://raw.githubusercontent.com/seven1m/open-bibles/master/kor-korean.osis.xml
+    repo: https://github.com/seven1m/open-bibles
+    filename: kor-korean.osis.xml
+    format: OSIS
+
+# 낭독(보이스)에는 넣지 않음. 유튜브 설명란·고정댓글·영상 설명 전용.
+disclaimer_ko: |
+  인용되는 성경은 저작권이 만료된 개역한글 본문입니다.
+  현대 해설은 채널의 해석이며, 특정 교단의 교리를 대표하지 않습니다.
+  또한 이 콘텐츠는 의료나 심리치료, 법률 상담을 대체하지 않습니다.
+  지금 몸과 마음이 위급하게 아프다면, 가까운 전문 기관의 도움을 함께 받으시길 바랍니다.
+  도움 요청은 약한 일이 아니라, 자신을 돌보는 용기입니다.
+
+youtube_credit_ko: |
+  성경 본문: 개역한글 (공개 텍스트 / open-bibles 등 재배포 소스)
+  나레이션·해설: 오리지널
+
+placement: description_and_pinned_comment_only

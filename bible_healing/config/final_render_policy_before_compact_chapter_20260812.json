@@ -1,0 +1,11 @@
+{
+  "policy_version": 2,
+  "source_manual": "manual.md",
+  "speakers": ["narrator", "scripture"],
+  "scripture": {"strip_parenthetical_metadata": true, "voice_speed": 0.72, "pitch_shift_percent": -8},
+  "caption_mode": "balanced_two_line_longform",
+  "captions": {"max_lines": 2, "max_chars_per_line": 20, "font_size_1080p": 72, "margin_left": 120, "margin_right": 120, "margin_vertical": 70, "must_follow_audio_segments": true, "reject_scene_level_timing": true},
+  "chapter_overlay": {"enabled": true, "position": "top_right", "safe_margin_px": 120, "max_chars_per_line": 12, "max_lines": 2, "intro_duration_seconds": 5, "persistent_label": false, "fade_out_seconds": 0.6, "show_on_topic_change_only": true},
+  "youtube_chapters": {"description_required": true, "first_timestamp": "00:00", "minimum_chapter_seconds": 10},
+  "render": {"duration_seconds": 180, "background_speed": 0.333, "require_preflight": true}
+}
