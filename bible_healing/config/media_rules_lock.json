@@ -1,9 +1,61 @@
 {
-  "version": 1,
-  "voice": {"narrator": {"voice": "F5", "speed": 0.95}, "scripture": {"voice": "M4", "speed": 0.72, "pitch": -8, "silence_seconds": 0.65}},
+  "version": 2,
+  "voice": {
+    "narrator": {"voice": "F5", "speed": 0.95, "total_step": 8, "silence_seconds": 0.24, "audio_filter": ""},
+    "scripture": {
+      "voice": "M4",
+      "speed": 0.72,
+      "pitch": -8,
+      "silence_seconds": 0.65,
+      "total_step": "pending_ab",
+      "total_step_candidates": [8, 10, 12],
+      "forbidden_total_step": [24],
+      "max_chunk_length": 90,
+      "audio_filter": "asetrate=24000*0.92,aresample=24000,atempo=1.087,highpass=f=65,lowpass=f=8500,equalizer=f=250:t=q:w=1:g=1.5"
+    }
+  },
   "speakers": ["narrator", "scripture"],
-  "captions": {"max_lines": 2, "target_chars_per_line": [14, 18], "max_chars_per_line": 20, "split_priority": ["sentence_end", "clause_end", "word_boundary"], "forbid_mid_word": true, "remove_parenthetical_text": true},
-  "background": {"directory": "bible_healing/assets/movie-sample/pingpong-1min", "required_count": 12, "duration_seconds": 60, "speed": 0.333, "still_images_forbidden": true},
-  "storage": {"final_root": "D:\\bible_healing_ep01\\final", "work_root": "D:\\bible_healing_ep01\\work"},
-  "release_gates": {"duration_delta_seconds": 0.5, "require_first_caption_matches_first_script": true, "require_authoritative_audio": true}
+  "tts": {
+    "engine": "supertonic3",
+    "skip_existing_forbidden": true,
+    "require_sanitize": true,
+    "require_verse_split": true,
+    "forbid_expression_tags": ["<laugh>", "<breath>", "<sigh>"],
+    "punctuation_to_period": ["!", "！", "!?", "❗", "?", "？"]
+  },
+  "captions": {
+    "max_lines": 2,
+    "target_chars_per_line": [14, 18],
+    "max_chars_per_line": 20,
+    "split_priority": ["sentence_end", "clause_end", "eojel"],
+    "forbid_mid_josa": true,
+    "forbid_mid_eomi": true,
+    "remove_parenthetical_text": true,
+    "fontName": "Malgun Gothic",
+    "fontSizePx_narrator": 96,
+    "fontSizePx_scripture": 100,
+    "outlinePx": 6,
+    "shadowPx": 3,
+    "marginV_px": 90,
+    "marginL_px": 100,
+    "marginR_px": 100
+  },
+  "background": {
+    "directory": "bible_healing/assets/movie-sample/pingpong-1min",
+    "required_count": 12,
+    "duration_seconds": 60,
+    "speed": 0.333,
+    "still_images_forbidden": true
+  },
+  "storage": {
+    "final_root": "D:\\bible_healing_ep01\\final",
+    "work_root": "D:\\bible_healing_ep01\\work"
+  },
+  "release_gates": {
+    "duration_delta_seconds": 0.5,
+    "require_first_caption_matches_first_script": true,
+    "require_authoritative_audio": true,
+    "require_no_selah_or_bang_in_ass": true,
+    "require_no_mid_eojel_split": true
+  }
 }

@@ -7,12 +7,12 @@
     "font": "Malgun Gothic Bold"
   },
   "display": {
-    "maxLineChars": 24,
+    "maxLineChars": 20,
     "maxLines": 2,
-    "maxDisplayCharacters": 24,
+    "maxDisplayCharacters": 20,
     "minDisplaySeconds": 0.75,
     "mode": "single-line-phrases-hermes",
-    "notes": "16:9 가로 롱폼: clean-news 12의 2배(24자), 폰트도 2배. 쇼츠(9:16)와 분리."
+    "notes": "16:9 가로 롱폼: 한 줄 최대 20자, 목표 14~18자. 쇼츠(9:16)와 분리. media_rules_lock.json 우선."
   },
   "typography_render": {
     "engine": "ass",

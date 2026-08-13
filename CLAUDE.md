@@ -4,13 +4,14 @@
 
 ## 작업 전 필수 확인
 
-1. `manual.md`
-2. `research.md`
-3. `bible_healing/config/final_render_policy.json`
-4. `bible_healing/scripts/final_render_preflight.py`
-5. `bible_healing/scripts/final_background_preflight.py`
+1. `bible_healing/config/media_rules_lock.json`
+2. `manual.md`
+3. `research.md`
+4. `bible_healing/config/final_render_policy.json`
+5. `bible_healing/scripts/final_render_preflight.py`
+6. `bible_healing/scripts/final_background_preflight.py`
 
-문서 규칙과 실행 정책이 다르면 실행 정책을 기준으로 삼되, 반드시 문서도 함께 수정한다.
+문서 규칙과 실행 정책이 다르면 `media_rules_lock.json`을 기준으로 삼되, 반드시 문서도 함께 수정한다.
 
 ## 배경영상 규칙
 
@@ -29,15 +30,16 @@ python bible_healing/scripts/final_render_preflight.py
 ## 음성 규칙
 
 - 허용 화자는 `narrator`와 `scripture`뿐이다.
-- 남성 성경 낭독은 승인된 M4 설정을 사용한다.
-- 속도 0.72, pitch -8%, 낮고 인자하며 안정적인 톤을 유지한다.
+- narrator는 F5, scripture는 승인된 M4만 사용한다.
+- 남성 성경 낭독은 속도 0.72, pitch -8%, 낮고 인자하며 안정적인 톤을 유지한다.
 - 성경 본문에서 괄호 설명, 곡 제목, 셀라·첼라, 느낌표를 제거한다.
 - 종결 표현 뒤에는 실제 음성 쉼을 넣는다.
 
 ## 자막 규칙
 
 - 롱폼 균형형 자막을 사용한다.
-- 최대 2줄, 한 줄 최대 20자다.
+- 최대 2줄, 한 줄 목표 14~18자, hard 최대 20자다.
+- 본문 96px, 성경 100px(1080p), outline 6, shadow 3, marginV 90.
 - 자막은 실제 오디오 세그먼트 시작·종료 시각을 따른다.
 - 장면 전체 시각을 여러 자막에 재사용하지 않는다.
 - 자막 크기와 위치를 영상 전체에서 고정한다.
@@ -56,22 +58,20 @@ python bible_healing/scripts/final_render_preflight.py
 - 불완전한 렌더 파일은 검증 전에 배포본으로 보고하지 않는다.
 - 최종 보고에는 배경 MP4 경로, 영상 길이, 코덱, 자막 검사 결과를 기록한다.
 
-## ?�체 배포�??�수 검�?규칙
+## 전체 배포영상 필수 검사 규칙
 
-- 배경?� 반드??`bible_healing/assets/movie-sample/pingpong-1min/*.mp4`??1�??�비?�트 ?�플???�용?�다.
-- 12�??�플???�환 ?�용?�며 ?�일 촛불 ?�상�?반복?��? ?�는??
-- 배경?� `setpts=3*PTS`�?0.333배속 ?�생?�다.
-- 최종 배포본에??`subtitles-timed-ko.ass` 본문 ?�막??반드??번인?�다.
-- 챕터 ?�버?�이�??�고 본문 ?�막???�으�?배포 불�???
-- 최종 ?�더 ??`final_background_preflight.py`?� `final_render_preflight.py`�?모두 ?�과?�다.
+- 배경은 반드시 `bible_healing/assets/movie-sample/pingpong-1min/*.mp4`의 1분 앰비언트 샘플을 사용한다.
+- 12개 샘플을 순환 사용하며 단일 촛불 영상만 반복하지 않는다.
+- 배경은 `setpts=3*PTS`로 0.333배속 재생한다.
+- 최종 배포본에는 `subtitles-timed-ko.ass` 본문 자막을 반드시 번인한다.
+- 챕터 오버레이만 있고 본문 자막이 없으면 배포 불가다.
+- 최종 렌더 전 `final_background_preflight.py`와 `final_render_preflight.py`를 모두 통과한다.
 
+## 음성·자막 전체 파이프라인 검사 규칙
 
-## ?�성·?�막 ?�체 ?�?�라??검�?규칙
-
-- ?�막?� ?�면 번호만으�?만들지 ?�고 ?�제 ?�디??manifest??`startSeconds`?� `endSeconds`�?기�??�로 ?�성?�다.
-- 최종 ?�성 길이?� ?�막 마�?�??�?�코?�는 반드???�치?�야 ?�다. ?�용 ?�차??0.5�??�내??
-- ?�막 마�?�??�?�코?��? ?�성보다 짧으�?배포�?중단?�다.
-- 기존 ?�막 ?�일???�른 ?�체 ?�상???�사?�하지 ?�는?? ?�성·?�막·?�상???�일???�업???�출물인지 ?�인?�다.
-- ?�면 manifest???�는 추�? ?�성 구간??발견?�면 배포?��? ?�고 ?�본 ?�디?��? ?�면 ?�본을 먼�? ?�조한??
-- 최종 검????��: ?�성 길이, ?�막 마�?�??�?�코?? ?�막 ?�벤???? ?�작·종료 ?�각???�름차순, �?구간 ?��?.
-
+- 자막은 장면 번호만으로 만들지 않고 실제 오디오 manifest의 `startSeconds`와 `endSeconds`를 기준으로 생성한다.
+- 최종 음성 길이와 자막 마지막 타임코드는 반드시 일치해야 한다. 허용 오차는 0.5초 이내다.
+- 자막 마지막 타임코드가 음성보다 짧으면 배포를 중단한다.
+- 기존 자막 파일을 다른 전체 영상에 복사하지 않는다. 음성·자막·영상이 동일 작업의 산출물인지 확인한다.
+- 장면 manifest에 없는 추가 음성 구간이 발견되면 배포하지 않고 원본 오디오와 장면 대본을 먼저 대조한다.
+- 최종 검사 항목: 음성 길이, 자막 마지막 타임코드, 자막 이벤트 수, 시작·종료 시각의 오름차순, 빈 구간 없음.
