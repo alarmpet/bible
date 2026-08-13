@@ -25,6 +25,23 @@ from pathlib import Path
 
 from paths import FFMPEG, FFPROBE, TTS_PYTHON, TTS_ROOT
 
+_BH_SCRIPTS = Path(__file__).resolve().parents[2] / "bible_healing" / "scripts"
+if str(_BH_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_BH_SCRIPTS))
+
+from apply_audio_filter import apply_scripture_filter  # noqa: E402
+from sanitize_script import assert_no_emotion_triggers  # noqa: E402
+from verify_voice_provenance import (  # noqa: E402
+    build_piece_provenance,
+    enforce_skip_existing,
+    load_media_lock,
+    prepare_speech_units,
+    resolve_total_step,
+    run_job_preflight,
+    verify_tts_provenance,
+    write_tts_provenance,
+)
+
 def clean_for_tts(text: str) -> str:
     text = re.sub(r"\([^()]*\)|（[^（）]*）", " ", text or "")
     text = text.replace("!", ".").replace("！", ".")
@@ -146,6 +163,7 @@ def preview_only(engine, vm: dict, job: Path) -> dict:
 
 
 def run_job(job: Path, skip_existing: bool) -> dict:
+    lock = run_job_preflight(job, skip_existing)
     scenes = json.loads((job / "scenes.json").read_text(encoding="utf-8"))
     vm = json.loads((job / "voice_map.json").read_text(encoding="utf-8"))
     speakers = vm["speakers"]
@@ -159,66 +177,109 @@ def run_job(job: Path, skip_existing: bool) -> dict:
     seg_dir = job / "segments"
     seg_dir.mkdir(exist_ok=True)
     items = []
+    pieces = []
     ok = True
 
     for sc in scenes:
         order = int(sc["order"])
         scene_wav = job / f"scene_{order}.wav"
-        if skip_existing and scene_wav.exists() and scene_wav.stat().st_size > 0:
-            items.append({"order": order, "path": str(scene_wav), "skipped": True, "duration": probe_duration(scene_wav)})
-            continue
         segs = sc.get("segments") or [{"speaker": "narrator", "text": sc.get("narration") or "", "seg_id": f"{sc.get('scene_id')}_01"}]
         seg_paths = []
         seg_meta = []
         for seg in segs:
-            text = clean_for_tts(seg.get("text") or "")
-            if not text:
-                continue
             sid = seg.get("speaker") or "narrator"
-            conf = speakers.get(sid) or speakers["narrator"]
-            voice = conf["voice"]
-            speed = float(conf.get("speed") or 1.05)
-            # Prefer short semantic units (e.g. bible verse expand) so max_chunk does not mid-cut.
-            max_chunk = conf.get("max_chunk_length")
-            if max_chunk is None:
-                max_chunk = 130
-            spath = seg_dir / f"{seg.get('seg_id', f'o{order}')}_{sid}_{voice}.wav"
             try:
-                info = engine.synthesize_to_file(
-                    text=text,
-                    output_path=spath,
-                    voice=voice,
-                    lang="ko",
-                    speed=speed,
-                    total_step=int(conf.get("total_step") or 8),
-                    silence_duration=float(conf.get("silence_duration") or 0.12),
-                    max_chunk_length=int(max_chunk),
-                    verbose=False,
-                )
-                seg_paths.append(spath)
-                seg_meta.append(
-                    {
-                        "seg_id": seg.get("seg_id"),
-                        "speaker": sid,
-                        "voice": voice,
-                        "speed": speed,
-                        "path": str(spath),
-                        "duration": info.get("duration"),
-                        "text_len": len(text),
-                    }
-                )
-            except Exception as e:
+                units = prepare_speech_units(seg.get("text") or "", sid, lock)
+            except ValueError as e:
                 ok = False
                 seg_meta.append({"seg_id": seg.get("seg_id"), "error": str(e), "speaker": sid})
                 print(f"FAIL order={order} seg={seg.get('seg_id')}: {e}")
+                continue
+            conf = speakers.get(sid) or speakers["narrator"]
+            voice_spec = (lock.get("voice") or {}).get(sid) or {}
+            voice = voice_spec.get("voice") or conf["voice"]
+            speed = float(voice_spec.get("speed") or conf.get("speed") or 1.05)
+            total_step = resolve_total_step(sid, lock)
+            if sid == "scripture":
+                max_chunk = int(voice_spec.get("max_chunk_length") or 90)
+                silence = float(voice_spec.get("silence_seconds") or conf.get("silence_duration") or 0.65)
+            else:
+                max_chunk = int(conf.get("max_chunk_length") or 130)
+                silence = float(voice_spec.get("silence_seconds") or conf.get("silence_duration") or 0.24)
+            for ui, unit in enumerate(units):
+                assert_no_emotion_triggers(unit)
+                stem = f"{seg.get('seg_id', f'o{order}')}_{sid}_{voice}_{ui:02d}"
+                spath = seg_dir / f"{stem}.wav"
+                raw_path = seg_dir / f"{stem}.raw.wav" if sid == "scripture" else spath
+                try:
+                    info = engine.synthesize_to_file(
+                        text=unit,
+                        output_path=raw_path,
+                        voice=voice,
+                        lang="ko",
+                        speed=speed,
+                        total_step=total_step,
+                        silence_duration=silence,
+                        max_chunk_length=int(max_chunk),
+                        verbose=False,
+                    )
+                    filter_applied = False
+                    if sid == "scripture":
+                        apply_scripture_filter(
+                            raw_path,
+                            spath,
+                            pitch_percent=float(voice_spec.get("pitch", -8)),
+                        )
+                        filter_applied = True
+                        if raw_path != spath and raw_path.exists():
+                            raw_path.unlink(missing_ok=True)
+                    piece = build_piece_provenance(
+                        speaker=sid,
+                        voice=voice,
+                        speed=speed,
+                        total_step=total_step,
+                        max_chunk=max_chunk,
+                        text=unit,
+                        wav_path=spath,
+                        filter_applied=filter_applied,
+                        scene_order=order,
+                        scene_id=sc.get("scene_id"),
+                        seg_id=seg.get("seg_id"),
+                        unit_index=ui,
+                        path=str(spath),
+                        duration=info.get("duration"),
+                    )
+                    pieces.append(piece)
+                    seg_paths.append(spath)
+                    seg_meta.append(
+                        {
+                            "seg_id": seg.get("seg_id"),
+                            "unit_index": ui,
+                            "speaker": sid,
+                            "voice": voice,
+                            "speed": speed,
+                            "total_step": total_step,
+                            "max_chunk": max_chunk,
+                            "path": str(spath),
+                            "duration": info.get("duration"),
+                            "text_len": len(unit),
+                            "filter_applied": filter_applied,
+                        }
+                    )
+                except Exception as e:
+                    ok = False
+                    seg_meta.append({"seg_id": seg.get("seg_id"), "unit_index": ui, "error": str(e), "speaker": sid})
+                    print(f"FAIL order={order} seg={seg.get('seg_id')} unit={ui}: {e}")
 
         if not seg_paths:
             ok = False
             items.append({"order": order, "ok": False, "error": "no segments"})
             continue
-        # gap: slightly longer for multi-unit scripture (verse-by-verse)
-        speakers_in = [(seg.get("speaker") or "narrator") for seg in (sc.get("segments") or [])]
-        gap = 0.22 if (len(seg_paths) > 1 and any(s == "scripture" for s in speakers_in)) else 0.1
+        speakers_in = [(seg.get("speaker") or "narrator") for seg in (sc.get("segments") or segs)]
+        if any(s == "scripture" for s in speakers_in):
+            gap = float((lock.get("voice") or {}).get("scripture", {}).get("silence_seconds") or 0.65)
+        else:
+            gap = 0.1
         if not concat_wavs(seg_paths, scene_wav, gap_sec=gap):
             # fallback: copy first
             scene_wav.write_bytes(seg_paths[0].read_bytes())
@@ -251,6 +312,14 @@ def run_job(job: Path, skip_existing: bool) -> dict:
     # strict: any fail => ok false
     if any(i.get("ok") is False for i in items):
         report["ok"] = False
+    (job / "reports").mkdir(exist_ok=True)
+    write_tts_provenance(
+        job,
+        pieces,
+        extra={"tts_root": str(TTS_ROOT), "scene_count": len(scenes), "ok": report["ok"]},
+    )
+    if pieces:
+        verify_tts_provenance(job / "reports" / "tts_provenance.json")
     (job / "scene_audio_manifest.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     (job / "reports" / "tts_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print("tts ok=" + str(report["ok"]))
@@ -284,14 +353,16 @@ def main():
     ap.add_argument("--preview-only", action="store_true")
     ap.add_argument("--skip-existing", action="store_true")
     args = ap.parse_args()
+    lock = load_media_lock()
+    enforce_skip_existing(args.skip_existing, lock)
     job = Path(args.job)
     (job / "reports").mkdir(exist_ok=True)
     vm = json.loads((job / "voice_map.json").read_text(encoding="utf-8"))
-    engine = load_engine(job)
-    if args.preview_only:
-        preview_only(engine, vm, job)
+    if not args.preview_only:
+        run_job(job, args.skip_existing)
         return
-    run_job(job, args.skip_existing)
+    engine = load_engine(job)
+    preview_only(engine, vm, job)
 
 
 if __name__ == "__main__":

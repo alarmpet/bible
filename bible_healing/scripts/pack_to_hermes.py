@@ -10,6 +10,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_full_job import speaker_entry  # noqa: E402
 from paths_bh import CONFIG, episode_dir, job_dir  # noqa: E402
 
 
@@ -41,9 +42,7 @@ def pack(episode_id: str, mode: str = "full", smoke_units: int | None = None) ->
     jdir = job_dir(episode_id, mode if smoke_units is None else "preview")
     jdir.mkdir(parents=True, exist_ok=True)
     (jdir / "scenes.json").write_text(json.dumps(scenes, ensure_ascii=False, indent=2), encoding="utf-8")
-    vm = {"schema_version": "1.0", "engine": voice_cfg.get("engine", "supertonic3"), "preview_approved": bool(voice_cfg.get("preview_approved", False)), "notes": "bible_healing: narrator=여성 점잖음, scripture=말씀 보이스. 공유 금지.", "speakers": {"narrator": dict(voice_cfg["speakers"]["narrator"]), "scripture": dict(voice_cfg["speakers"]["scripture"])}, "rules": {"narration_default_speaker": "narrator", "narrator_must_not_share_voice_with_characters": True}, "sample_lines": dict(voice_cfg.get("sample_lines") or {})}
-    for sid, conf in list(vm["speakers"].items()):
-        vm["speakers"][sid] = {"label": conf.get("label", sid), "voice": conf["voice"], "speed": conf.get("speed", 1.0), "total_step": conf.get("total_step", 8), "silence_duration": conf.get("silence_duration", 0.2), "audio_filter": conf.get("audio_filter", "")}
+    vm = {"schema_version": "1.0", "engine": voice_cfg.get("engine", "supertonic3"), "preview_approved": bool(voice_cfg.get("preview_approved", False)), "notes": "bible_healing: narrator=여성 점잖음, scripture=말씀 보이스. 공유 금지.", "speakers": {"narrator": speaker_entry(voice_cfg, "narrator"), "scripture": speaker_entry(voice_cfg, "scripture")}, "rules": {"narration_default_speaker": "narrator", "narrator_must_not_share_voice_with_characters": True}, "sample_lines": dict(voice_cfg.get("sample_lines") or {})}
     (jdir / "voice_map.json").write_text(json.dumps(vm, ensure_ascii=False, indent=2), encoding="utf-8")
     job = {"type": "bible_healing", "episode_id": episode_id, "mode": jdir.name, "title": manifest.get("title_ko"), "scene_count": len(scenes), "translation": "KRV", "disclaimer": "healing narration; not medical advice"}
     (jdir / "job.json").write_text(json.dumps(job, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -7,7 +7,7 @@
       "speed": 0.72,
       "pitch": -8,
       "silence_seconds": 0.65,
-      "total_step": "pending_ab",
+      "total_step": 10,
       "total_step_candidates": [8, 10, 12],
       "forbidden_total_step": [24],
       "max_chunk_length": 90,
