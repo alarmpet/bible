@@ -296,6 +296,7 @@ def events_for_window(text: str, start: float, end: float, speaker: str) -> list
 def _windows_from_pieces(
     pieces: list[dict],
     scene_start: float,
+    scene_end: float | None = None,
 ) -> list[dict] | None:
     if not pieces:
         return None
@@ -317,6 +318,15 @@ def _windows_from_pieces(
             }
         )
         cursor = end
+    if scene_end is not None and windows:
+        raw_end = windows[-1]["end"]
+        raw_span = raw_end - float(scene_start)
+        target_span = float(scene_end) - float(scene_start)
+        if raw_span > 0.05 and target_span > 0.05 and abs(raw_end - float(scene_end)) > 0.05:
+            scale = target_span / raw_span
+            for window in windows:
+                window["start"] = float(scene_start) + (window["start"] - float(scene_start)) * scale
+                window["end"] = float(scene_start) + (window["end"] - float(scene_start)) * scale
     return windows
 
 
@@ -369,7 +379,7 @@ def build_full_audio_aligned_ass(job: Path, output: Path | None = None) -> Path:
         end = float(item["endSeconds"])
         speaker = _scene_speaker(scene)
         scene_pieces = _pieces_for_order(pieces, order)
-        windows = _windows_from_pieces(scene_pieces, start)
+        windows = _windows_from_pieces(scene_pieces, start, end)
         if windows:
             for window in windows:
                 events.extend(

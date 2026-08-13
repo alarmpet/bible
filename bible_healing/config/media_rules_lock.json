@@ -4,7 +4,7 @@
     "narrator": {"voice": "F5", "speed": 0.95, "total_step": 8, "silence_seconds": 0.24, "audio_filter": ""},
     "scripture": {
       "voice": "M4",
-      "speed": 0.70,
+      "speed": 0.72,
       "pitch": -14,
       "silence_seconds": 0.25,
       "total_step": 10,

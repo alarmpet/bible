@@ -7,6 +7,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
@@ -302,14 +304,15 @@ def test_provenance_piece_windows_used(tmp_path):
     events = result["events"]
     scene1 = [e for e in events if e["style"] == "Narrator"]
     assert scene1
-    assert max(e["end"] for e in scene1) <= 2.0 + 1e-6
+    assert max(e["end"] for e in scene1) == pytest.approx(4.0, abs=1e-3)
     scene2 = [e for e in events if e["style"] == "Scripture"]
     assert scene2
     assert min(e["start"] for e in scene2) >= 4.0 - 1e-6
-    assert max(e["end"] for e in scene2) <= 9.0 + 1e-6
+    # Piece durs 2.5+2.5 are shorter than the 6s scene; scale to the scene end.
+    assert max(e["end"] for e in scene2) == pytest.approx(10.0, abs=1e-3)
     later = [e for e in scene2 if "알지어다" in e["text"]]
     assert later
-    assert min(e["start"] for e in later) >= 6.5 - 1e-6
+    assert min(e["start"] for e in later) >= 7.0 - 1e-3
 
 
 def test_generated_ass_keeps_adjective_with_noun(tmp_path):

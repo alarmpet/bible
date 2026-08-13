@@ -261,11 +261,13 @@ def run_job(job: Path, skip_existing: bool) -> dict:
                         apply_scripture_filter(
                             raw_path,
                             spath,
-                            pitch_percent=float(voice_spec.get("pitch", -8)),
+                            pitch_percent=float(voice_spec.get("pitch", -14)),
                         )
                         filter_applied = True
                         if raw_path != spath and raw_path.exists():
                             raw_path.unlink(missing_ok=True)
+                    probed = probe_duration(spath)
+                    piece_dur = probed if probed and probed > 0 else info.get("duration")
                     piece = build_piece_provenance(
                         speaker=sid,
                         voice=voice,
@@ -280,7 +282,7 @@ def run_job(job: Path, skip_existing: bool) -> dict:
                         seg_id=seg.get("seg_id"),
                         unit_index=ui,
                         path=str(spath),
-                        duration=info.get("duration"),
+                        duration=piece_dur,
                     )
                     pieces.append(piece)
                     seg_paths.append(spath)
