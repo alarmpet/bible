@@ -8,10 +8,17 @@
 2. `manual.md`
 3. `research.md`
 4. `bible_healing/config/final_render_policy.json`
-5. `bible_healing/scripts/final_render_preflight.py`
+5. `bible_healing/scripts/media_rules_preflight.py` (본편 full-job 게이트)
 6. `bible_healing/scripts/final_background_preflight.py`
+7. `bible_healing/scripts/final_render_preflight.py` (first3min/preview 전용; 본편 아님)
 
 문서 규칙과 실행 정책이 다르면 `media_rules_lock.json`을 기준으로 삼되, 반드시 문서도 함께 수정한다.
+
+## 본편 게이트
+
+- **본편(full) preflight:** `python bible_healing/scripts/media_rules_preflight.py --job <full>`
+- **본편 postflight:** `python bible_healing/scripts/media_rules_postflight.py <mp4> --job <full>`
+- `final_render_preflight.py`는 `actual_first3min_pause_split` 등 프리뷰 경로용이다. 본편 배포 게이트로 쓰지 않는다.
 
 ## 배경영상 규칙
 
@@ -22,7 +29,10 @@
 
 ```powershell
 python bible_healing/scripts/final_background_preflight.py
-python bible_healing/scripts/final_render_preflight.py
+# 본편 full job:
+python bible_healing/scripts/media_rules_preflight.py --job bible_healing/runs/ep01_anxious_night/hermes_jobs/full
+# first3min/preview only:
+python bible_healing/scripts/final_render_preflight.py --job <preview_job>
 ```
 
 검사 실패 시 렌더를 시작하지 않는다.
@@ -65,7 +75,8 @@ python bible_healing/scripts/final_render_preflight.py
 - 배경은 `setpts=3*PTS`로 0.333배속 재생한다.
 - 최종 배포본에는 `subtitles-timed-ko.ass` 본문 자막을 반드시 번인한다.
 - 챕터 오버레이만 있고 본문 자막이 없으면 배포 불가다.
-- 최종 렌더 전 `final_background_preflight.py`와 `final_render_preflight.py`를 모두 통과한다.
+- 최종 렌더 전 `final_background_preflight.py`와 **본편** `media_rules_preflight.py --job <full>`을 모두 통과한다.
+- first3min/preview는 `final_render_preflight.py`를 사용한다 (본편 경로 아님).
 
 ## 음성·자막 전체 파이프라인 검사 규칙
 
