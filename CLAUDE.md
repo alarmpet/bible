@@ -73,7 +73,7 @@ python bible_healing/scripts/final_render_preflight.py --job <preview_job>
 - 배경은 반드시 `bible_healing/assets/movie-sample/pingpong-1min/*.mp4`의 1분 앰비언트 샘플을 사용한다.
 - 12개 샘플을 순환 사용하며 단일 촛불 영상만 반복하지 않는다.
 - 배경은 `setpts=3*PTS`로 0.333배속 재생한다.
-- 최종 배포본에는 `subtitles-timed-ko.ass` 본문 자막을 반드시 번인한다.
+- 최종 배포본에는 `subtitles-full-audio-aligned.ass` 본문 자막을 반드시 번인한다.
 - 챕터 오버레이만 있고 본문 자막이 없으면 배포 불가다.
 - 최종 렌더 전 `final_background_preflight.py`와 **본편** `media_rules_preflight.py --job <full>`을 모두 통과한다.
 - first3min/preview는 `final_render_preflight.py`를 사용한다 (본편 경로 아님).

@@ -4,8 +4,12 @@
 Usage:
   python media_rules_preflight.py --job <jobDir> [--lock path]
 
-Checks are pure functions so tests can call them without D: or a real 50-min MP4.
-본편(full) release gate — prefer this over final_render_preflight.py (first3min).
+Orchestrator step 1 is config/lock only: speakers, lock voice IDs, speeds,
+D: root, background bank, skip-existing forbidden. Job scenes, ASS,
+provenance, auth WAV, and stale voice_map are later-step checks.
+
+Job-state helpers (check_scenes_text, check_ass_text, check_provenance,
+check_voice_map) stay here for later gates and unit tests.
 """
 from __future__ import annotations
 
@@ -294,60 +298,78 @@ def check_background(lock: dict, root: Path | None = None) -> list[str]:
     return errors
 
 
+def check_preflight_config(lock: dict, root: Path | None = None) -> list[str]:
+    """Config/lock-only checks for orchestrator step 1.
+
+    Speakers, lock voice IDs, speeds, D: root, background bank,
+    skip-existing forbidden. Does not inspect job scenes, ASS,
+    provenance, auth WAV, or a stale job voice_map.
+    """
+    errors: list[str] = []
+    allowed = ["narrator", "scripture"]
+    speakers = list(lock.get("speakers") or [])
+    for sid in allowed:
+        if sid not in speakers:
+            errors.append(f"lock: missing speaker {sid}")
+    for sid in speakers:
+        if sid not in allowed:
+            errors.append(f"lock: extra speaker {sid}")
+
+    expected_voice = {"narrator": "F5", "scripture": "M4"}
+    expected_speed = {"narrator": 0.95, "scripture": 0.72}
+    voice = lock.get("voice") or {}
+    for sid in allowed:
+        spec = voice.get(sid) or {}
+        got_voice = spec.get("voice")
+        if got_voice in FORBIDDEN_VOICES:
+            errors.append(f"lock: forbidden voice {got_voice!r} for {sid}")
+        want_voice = expected_voice[sid]
+        if not got_voice:
+            errors.append(f"lock: {sid} voice missing")
+        elif got_voice != want_voice:
+            errors.append(
+                f"lock: {sid} voice {got_voice!r} != locked {want_voice!r}"
+            )
+        try:
+            got_speed = float(spec.get("speed"))
+        except (TypeError, ValueError):
+            errors.append(f"lock: {sid} missing/invalid speed")
+            got_speed = None
+        if got_speed is not None:
+            if got_speed in STALE_SPEEDS:
+                errors.append(f"lock: stale speed {got_speed} for {sid}")
+            want_speed = expected_speed[sid]
+            if abs(got_speed - want_speed) > 1e-6:
+                errors.append(
+                    f"lock: {sid} speed {got_speed} != locked {want_speed}"
+                )
+        if sid == "scripture" and not (spec.get("audio_filter") or "").strip():
+            errors.append("lock: empty scripture audio_filter")
+
+    tts = lock.get("tts") or {}
+    if not tts.get("skip_existing_forbidden", False):
+        errors.append("lock: skip_existing_forbidden must be true")
+
+    errors.extend(check_storage(lock))
+    errors.extend(check_background(lock, root=root))
+    return errors
+
 def run_preflight(
     job: Path,
     lock: dict | None = None,
     lock_path: Path | None = None,
     root: Path | None = None,
 ) -> dict:
-    """Run all preflight checks against a job directory. Pure-ish; returns JSON-able dict."""
+    """Early config/lock gate. Job scenes/ASS/provenance/WAV are later steps."""
     job = Path(job)
     lock = lock if lock is not None else load_lock(lock_path)
-    errors: list[str] = []
-
-    vm = _read_json(job / "voice_map.json")
-    if not isinstance(vm, dict):
-        errors.append("missing_voice_map")
-    else:
-        errors.extend(check_voice_map(vm, lock))
-
-    ro = _read_json(job / "render-options.json")
-    if not isinstance(ro, dict):
-        errors.append("missing_render_options")
-    else:
-        errors.extend(check_render_options(ro, lock))
-
-    scenes = _read_json(job / "scenes.json")
-    if isinstance(scenes, list):
-        errors.extend(check_scenes_text(scenes))
-    elif scenes is not None:
-        errors.append("scenes.json must be a list")
-
-    ass_path = job / "subtitles-full-audio-aligned.ass"
-    if ass_path.is_file():
-        errors.extend(check_ass_text(ass_path.read_text(encoding="utf-8-sig")))
-
-    tts_report = _read_json(job / "reports" / "tts_report.json")
-    if isinstance(tts_report, dict):
-        errors.extend(check_tts_report(tts_report, lock))
-
-    errors.extend(check_provenance(job))
-    errors.extend(check_storage(lock))
-    errors.extend(check_background(lock, root=root))
-
-    # Authoritative audio required by release_gates when flag set
-    if (lock.get("release_gates") or {}).get("require_authoritative_audio", True):
-        auth = job / "authoritative_audio_rebuild" / "full-authoritative-audio.wav"
-        if not auth.is_file():
-            msg = "missing_authoritative_audio"
-            if msg not in errors:
-                errors.append(msg)
-
+    errors = check_preflight_config(lock, root=root)
     return {
         "ok": not errors,
         "job": str(job),
         "errors": errors,
         "canonical": str(lock_path or _DEFAULT_LOCK),
+        "mode": "config",
     }
 
 

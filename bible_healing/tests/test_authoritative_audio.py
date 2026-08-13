@@ -212,6 +212,12 @@ def test_rebuild_uses_scenes_json_count_not_110(tmp_path, monkeypatch):
     work = job / "authoritative_audio_rebuild"
     lst = (work / "scene_audio_concat.txt").read_text(encoding="utf-8")
     assert lst.count("file ") == 3
+    prov_path = work / "voice_provenance.json"
+    assert prov_path.is_file()
+    prov = json.loads(prov_path.read_text(encoding="utf-8"))
+    assert prov["scene_count"] == 3
+    assert Path(prov["audio"]).name == "full-authoritative-audio.wav"
+    assert prov["sha256"] == hashlib.sha256(b"RIFFOUT").hexdigest()
 
 
 def test_rebuild_refuses_on_verify_fail(tmp_path, monkeypatch):

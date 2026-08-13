@@ -361,14 +361,47 @@ def test_preflight_ok_clean_job(tmp_path, monkeypatch):
     assert result["errors"] == []
 
 
-def test_preflight_run_collects_stale_voice(tmp_path, monkeypatch):
+def test_preflight_config_ignores_stale_job_voice_map(tmp_path, monkeypatch):
     job = make_job(tmp_path, voice_map=_voice_map(scripture_voice="M5", scripture_step=24))
     lock = _lock()
     monkeypatch.setattr(pre, "check_background", lambda *a, **k: [])
     monkeypatch.setattr(pre, "check_storage", lambda *a, **k: [])
     result = pre.run_preflight(job, lock=lock, root=tmp_path)
-    assert result["ok"] is False
-    assert result["errors"]
+    assert result["ok"] is True, result
+    assert result["errors"] == []
+    assert result.get("mode") == "config"
+
+
+def test_preflight_config_allows_dirty_scripture_in_scenes(tmp_path, monkeypatch):
+    scenes = [
+        {
+            "order": 1,
+            "segments": [{"speaker": "scripture", "text": DIRTY_SCRIPTURE}],
+            "meta": {"speaker": "scripture"},
+        }
+    ]
+    job = make_job(
+        tmp_path,
+        scenes=scenes,
+        voice_map=_voice_map(
+            scripture_voice="M5",
+            scripture_step=24,
+            max_chunk=200,
+            audio_filter="",
+        ),
+        write_provenance=False,
+        write_ass=True,
+        ass_text=_ass_with([_dialogue("0:00:00.00", "0:00:02.00", "인생들아! (셀라)")]),
+        write_auth_audio=False,
+    )
+    lock = _lock()
+    monkeypatch.setattr(pre, "check_background", lambda *a, **k: [])
+    monkeypatch.setattr(pre, "check_storage", lambda *a, **k: [])
+    result = pre.run_preflight(job, lock=lock, root=tmp_path)
+    assert result["ok"] is True, result
+    assert result["errors"] == []
+    errors = pre.check_preflight_config(lock, root=tmp_path)
+    assert errors == []
 
 
 # ---------------------------------------------------------------------------

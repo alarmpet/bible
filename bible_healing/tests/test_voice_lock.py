@@ -10,7 +10,9 @@ import pytest
 import yaml
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+MODERN_SCRIPTS = Path(__file__).resolve().parents[2] / "modern" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(MODERN_SCRIPTS))
 
 import build_full_job  # noqa: E402
 from apply_audio_filter import apply_scripture_filter  # noqa: E402
@@ -204,6 +206,27 @@ def test_modern_job_without_scripture_skips_m4_lock(tmp_path):
     )
     assert run_job_preflight(tmp_path, skip_existing=False) is None
     assert run_job_preflight(tmp_path, skip_existing=True) is None
+
+
+def test_concat_wavs_fails_when_ffmpeg_fails_for_multiple_pieces(tmp_path, monkeypatch):
+    import tts_multi_voice as tts
+
+    first = tmp_path / "a.wav"
+    second = tmp_path / "b.wav"
+    first.write_bytes(b"RIFF1")
+    second.write_bytes(b"RIFF2")
+    out = tmp_path / "out.wav"
+
+    class _Fail:
+        returncode = 1
+        stdout = b""
+        stderr = b"concat boom"
+
+    monkeypatch.setattr(tts, "ffmpeg_bin", lambda: "ffmpeg")
+    monkeypatch.setattr(tts.subprocess, "run", lambda *a, **k: _Fail())
+
+    assert tts.concat_wavs([first, second], out) is False
+    assert not out.exists() or out.read_bytes() != first.read_bytes()
 
 
 def test_preview_path_sanitizes_scripture_sample():

@@ -57,6 +57,8 @@ def build_steps(
         (
             1,
             "media_rules_preflight",
+            # Config/lock only (speakers, lock voices, D:, background, skip-existing).
+            # Job scenes/ASS/provenance/auth WAV/stale voice_map are later steps.
             [python, str(_SCRIPTS / "media_rules_preflight.py"), "--job", job_s],
         ),
         (

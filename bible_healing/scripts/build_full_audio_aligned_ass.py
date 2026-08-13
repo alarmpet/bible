@@ -150,6 +150,8 @@ def qa_ass(source: str | Path) -> dict:
         text = source
     events = parse_ass_events(text)
     errors: list[str] = []
+    if not events:
+        errors.append("no_dialogue_events")
     for index, event in enumerate(events):
         body = event["text"]
         match = FORBIDDEN_CAPTION_RE.search(body)
@@ -318,6 +320,35 @@ def _windows_from_pieces(
     return windows
 
 
+def _timed_manifest_items(manifest: dict) -> list[dict]:
+    """Normalize scenes or TTS items rows into start/end windows."""
+    rows = list(manifest.get("scenes") or manifest.get("items") or [])
+    rows = sorted(rows, key=lambda row: int(row.get("order", 0)))
+    timed: list[dict] = []
+    cursor = 0.0
+    for index, item in enumerate(rows, 1):
+        duration = float(
+            item.get("duration")
+            or item.get("durationSeconds")
+            or item.get("measuredDurationSeconds")
+            or 0.0
+        )
+        start = item.get("startSeconds", item.get("startSec"))
+        start_value = float(start) if start is not None else cursor
+        end = item.get("endSeconds", item.get("endSec"))
+        end_value = float(end) if end is not None else start_value + duration
+        timed.append(
+            {
+                **item,
+                "order": int(item.get("order", index)),
+                "startSeconds": start_value,
+                "endSeconds": end_value,
+                "duration": duration if duration else max(0.0, end_value - start_value),
+            }
+        )
+        cursor = end_value
+    return timed
+
 def build_full_audio_aligned_ass(job: Path, output: Path | None = None) -> Path:
     job = Path(job)
     scenes_raw = _load_json(job / "scenes.json")
@@ -327,7 +358,7 @@ def build_full_audio_aligned_ass(job: Path, output: Path | None = None) -> Path:
         if isinstance(scene, dict) and scene.get("order") is not None
     }
     manifest = _load_json(job / "scene_audio_manifest.json")
-    items = list(manifest.get("scenes") or [])
+    items = _timed_manifest_items(manifest if isinstance(manifest, dict) else {})
     pieces = _load_provenance_pieces(job)
     header = build_ass_header()
     events: list[str] = []

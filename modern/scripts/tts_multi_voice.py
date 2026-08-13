@@ -105,9 +105,7 @@ def concat_wavs(paths: list[Path], out: Path, gap_sec: float = 0.1) -> bool:
         sil.unlink(missing_ok=True)
     lst.unlink(missing_ok=True)
     if res.returncode != 0:
-        # last resort: copy first segment
-        shutil.copy2(paths[0], out)
-        return out.exists()
+        return False
     return out.exists() and out.stat().st_size > 0
 
 
@@ -316,8 +314,17 @@ def run_job(job: Path, skip_existing: bool) -> dict:
         else:
             gap = 0.1
         if not concat_wavs(seg_paths, scene_wav, gap_sec=gap):
-            # fallback: copy first
-            scene_wav.write_bytes(seg_paths[0].read_bytes())
+            ok = False
+            items.append(
+                {
+                    "order": order,
+                    "scene_id": sc.get("scene_id"),
+                    "ok": False,
+                    "error": "concat_wavs_failed",
+                }
+            )
+            print(f"FAIL order={order}: concat_wavs failed for {len(seg_paths)} pieces")
+            continue
         dur = probe_duration(scene_wav)
         size_ok = scene_wav.exists() and scene_wav.stat().st_size > 1000
         # dur==-1 means probe unavailable but file present

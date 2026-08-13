@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -93,6 +94,27 @@ def rebuild_authoritative_audio(
         ],
         check=True,
     )
+    sha256 = ""
+    if out.is_file():
+        digest = hashlib.sha256()
+        with out.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        sha256 = digest.hexdigest()
+    provenance = {
+        "ok": True,
+        "scene_count": result["scene_count"],
+        "source_scene_count": result["scene_count"],
+        "audio": str(out),
+        "audio_path": str(out),
+        "sha256": sha256,
+        "audio_sha256": sha256,
+    }
+    prov_path = work / "voice_provenance.json"
+    prov_path.write_text(
+        json.dumps(provenance, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     info = {
         "ok": True,
         "output": str(out),
@@ -100,6 +122,8 @@ def rebuild_authoritative_audio(
         "scene_count": result["scene_count"],
         "job": str(job),
         "concat_list": str(lst),
+        "voice_provenance": str(prov_path),
+        "sha256": sha256,
     }
     return info
 

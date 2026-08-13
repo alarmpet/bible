@@ -178,6 +178,61 @@ def test_qa_fails_on_reversed_times():
     assert any("역전" in e or "reverse" in e.lower() or "time" in e.lower() for e in result["errors"])
 
 
+def test_qa_fails_on_zero_events():
+    result = qa_ass(_ass_with([]))
+    assert result["ok"] is False
+    assert result["event_count"] == 0
+    assert any("event" in e.lower() or "dialogue" in e.lower() for e in result["errors"])
+
+
+def test_builder_uses_items_manifest_durations(tmp_path):
+    scenes = [
+        {
+            "scene_id": "s1",
+            "order": 1,
+            "narration": CLEAN_NARRATION,
+            "segments": [{"speaker": "narrator", "text": CLEAN_NARRATION}],
+            "meta": {"speaker": "narrator"},
+        },
+        {
+            "scene_id": "s2",
+            "order": 2,
+            "narration": "내 의의 하나님이여 내가 부를 때에 응답하소서.",
+            "segments": [
+                {
+                    "speaker": "scripture",
+                    "text": "내 의의 하나님이여 내가 부를 때에 응답하소서.",
+                }
+            ],
+            "meta": {"speaker": "scripture"},
+        },
+    ]
+    job = tmp_path / "items_job"
+    job.mkdir()
+    (job / "scenes.json").write_text(
+        json.dumps(scenes, ensure_ascii=False), encoding="utf-8"
+    )
+    (job / "scene_audio_manifest.json").write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "items": [
+                    {"order": 1, "path": "scene_1.wav", "duration": 4.0},
+                    {"order": 2, "path": "scene_2.wav", "duration": 6.0},
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    text = build_full_audio_aligned_ass(job).read_text(encoding="utf-8-sig")
+    assert "Dialogue:" in text
+    result = qa_ass(text)
+    assert result["ok"] is True, result
+    assert result["event_count"] > 0
+    assert abs(result["last_end_seconds"] - 10.0) <= 0.5
+
+
 def test_tmp_job_sanitizes_and_passes_qa(tmp_path):
     job = make_job(tmp_path)
     out = build_full_audio_aligned_ass(job)
