@@ -414,6 +414,20 @@ def test_postflight_fails_first_caption_mismatch():
     assert any("first" in e.lower() or "caption" in e.lower() for e in errors)
 
 
+def test_postflight_fails_first_caption_head_only_in_middle():
+    """Head substring mid-caption is not prefix alignment — must fail."""
+    san = sanitize_script(CLEAN_NARRATION).display
+    head = san[: max(4, min(10, len(san)))]
+    # head appears only in the middle, not as a prefix
+    mid = f"앞말{head}입니다"
+    assert not mid.startswith(head)
+    assert head in mid
+    ass = _ass_with([_dialogue("0:00:00.00", "0:00:02.00", mid)])
+    errors = post.check_first_caption(ass, CLEAN_NARRATION)
+    assert errors
+    assert any("first_caption" in e for e in errors)
+
+
 def test_postflight_fails_ass_qa_selah_bang_long_line():
     ass = _ass_with(
         [
@@ -460,7 +474,8 @@ def test_postflight_ok_with_mocked_probe(tmp_path):
     assert result["ok"] is True, result
 
 
-def test_postflight_skips_stream_when_ffprobe_missing(tmp_path, monkeypatch):
+def test_postflight_fails_when_ffprobe_missing_and_mp4_exists(tmp_path, monkeypatch):
+    """MP4 present but no probe → fail closed with ffprobe_unavailable."""
     san = sanitize_script(CLEAN_NARRATION).display
     first = san[:18] if len(san) > 18 else san
     ass = _ass_with([_dialogue("0:00:00.00", "0:00:10.00", first)])
@@ -469,11 +484,10 @@ def test_postflight_skips_stream_when_ffprobe_missing(tmp_path, monkeypatch):
     out.write_bytes(b"fake")
     monkeypatch.setattr(post, "resolve_ffprobe", lambda: None)
     monkeypatch.setattr(post, "ffprobe_media", lambda *a, **k: None)
-    # No probe provided and ffprobe missing → stream checks skipped, ASS still validated.
     result = post.run_postflight(out, job=job, lock=_lock(), probe=None)
-    # Without duration, duration delta may be skipped; ASS QA should pass.
-    assert "errors" in result
-    # Must not crash; stream codec errors must not invent h264 missing without probe.
+    assert result["ok"] is False
+    assert any("ffprobe_unavailable" in e for e in result["errors"])
+    # Do not invent codec errors without a probe payload.
     assert not any("h264" in e.lower() for e in result["errors"])
 
 

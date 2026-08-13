@@ -4,7 +4,8 @@
 Usage:
   python media_rules_postflight.py <output.mp4> [--job <jobDir>] [--ass path] [--lock path]
 
-Stream checks use ffprobe when available; tests may pass probe= or mock subprocess.
+Stream checks use ffprobe; if the MP4 exists but probe cannot be obtained,
+postflight fails with ffprobe_unavailable (fail closed). Tests may inject probe=.
 Does not require a real D: deploy MP4 for unit tests.
 """
 from __future__ import annotations
@@ -129,7 +130,14 @@ def _strip_ass_overrides(text: str) -> str:
 
 
 def check_first_caption(ass_text: str, first_script: str) -> list[str]:
-    """First ASS dialogue must match the start of the sanitized first script."""
+    """First ASS dialogue must prefix-align with the sanitized first script.
+
+    Accept only:
+      - exact match
+      - caption.startswith(head)  (caption starts with script head)
+      - sanitized.startswith(caption)  (first-line split is a prefix of full script)
+    Reject mid-string containment of head (e.g. filler + head + filler).
+    """
     errors: list[str] = []
     events = parse_ass_events(ass_text)
     if not events:
@@ -141,22 +149,15 @@ def check_first_caption(ass_text: str, first_script: str) -> list[str]:
         return ["first_caption: empty first dialogue"]
     if not sanitized_norm:
         return ["first_caption: empty sanitized first script"]
-    # Accept exact match, caption as prefix of script, or script prefix of caption.
     if caption == sanitized_norm:
         return errors
-    if sanitized_norm.startswith(caption) or caption.startswith(sanitized_norm[: min(8, len(sanitized_norm))]):
-        # Prefer caption being a prefix of full sanitized narration (split lines).
-        if sanitized_norm.startswith(caption) or caption.startswith(sanitized_norm.split(",")[0][:6]):
-            # Stronger: first 4+ chars of sanitized appear at start of caption
-            head = sanitized_norm[: max(4, min(8, len(sanitized_norm)))]
-            if caption.startswith(head) or sanitized_norm.startswith(caption[: len(head)]):
-                return errors
     head = sanitized_norm[: max(4, min(10, len(sanitized_norm)))]
-    if not caption.startswith(head) and head not in caption:
-        errors.append(
-            f"first_caption_mismatch: caption={caption!r} expected_start={head!r} "
-            f"sanitized={sanitized_norm!r}"
-        )
+    if caption.startswith(head) or sanitized_norm.startswith(caption):
+        return errors
+    errors.append(
+        f"first_caption_mismatch: caption={caption!r} expected_start={head!r} "
+        f"sanitized={sanitized_norm!r}"
+    )
     return errors
 
 
@@ -233,7 +234,11 @@ def run_postflight(
         probe = ffprobe_media(output)
 
     if probe is None:
-        notes.append("ffprobe_skipped_or_missing")
+        # Fail closed when the MP4 exists but streams cannot be verified.
+        if output.is_file():
+            errors.append("ffprobe_unavailable")
+        else:
+            notes.append("ffprobe_skipped_missing_output")
     else:
         stream_errors = check_streams(probe)
         errors.extend(stream_errors)
