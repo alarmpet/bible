@@ -42,19 +42,56 @@ def soften_for_speech(text: str) -> str:
     return t
 
 
+# Longer endings first so 리로다 is not split as 로다.
+_CLAUSE_ENDINGS = (
+    "이니이다",
+    "시니이다",
+    "하나이다",
+    "니이다",
+    "말지어다",
+    "지어다",
+    "옵소서",
+    "소서",
+    "겠는고",
+    "는고",
+    "리로다",
+    "이로다",
+    "하도다",
+    "도다",
+    "로다",
+    "이라",
+    "니라",
+    "시요",
+)
+
+
+def punctuate_korean_scripture(text: str) -> str:
+    """Insert periods after KRV clause endings so TTS can breathe.
+
+    KRV often has no commas. SuperTonic then reads 90-char slices mid-word
+    (e.g. 여 / 호와께서). Periods are TTS-only breath marks.
+    """
+    t = text or ""
+    for ending in _CLAUSE_ENDINGS:
+        t = re.sub(rf"({re.escape(ending)})(?=\s+\S)", r"\1.", t)
+    t = re.sub(r"\s+\.", ".", t)
+    t = re.sub(r"[.]{2,}", ".", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
+
 def split_into_speech_units(text: str, max_len: int = 90) -> list[str]:
     """
     Split cleaned text at Korean/clause boundaries under max_len.
-    Prefer 。.!?  and then commas / spaces.
+    Prefer 。.!?  and then commas / spaces. Never slice inside an eojel.
     """
-    t = soften_for_speech(text)
+    t = punctuate_korean_scripture(soften_for_speech(text))
     if not t:
         return []
     if len(t) <= max_len:
         return [t]
 
     units: list[str] = []
-    # first split by strong punctuation
     parts = re.split(r"(?<=[.?!。])\s+", t)
     buf = ""
     for part in parts:
@@ -62,7 +99,6 @@ def split_into_speech_units(text: str, max_len: int = 90) -> list[str]:
         if not part:
             continue
         if len(part) > max_len:
-            # flush buf
             if buf:
                 units.append(buf.strip())
                 buf = ""
@@ -77,11 +113,11 @@ def split_into_speech_units(text: str, max_len: int = 90) -> list[str]:
             buf = part
     if buf:
         units.append(buf.strip())
-    return [u for u in units if u]
+    return _merge_short_units([u for u in units if u], max_len)
 
 
 def _hard_split(text: str, max_len: int) -> list[str]:
-    # try commas
+    # commas first, then eojel (spaces). Never tok[i:i+max_len].
     out: list[str] = []
     buf = ""
     tokens = re.split(r"(?<=[,，])\s*", text)
@@ -89,22 +125,58 @@ def _hard_split(text: str, max_len: int) -> list[str]:
         tok = tok.strip()
         if not tok:
             continue
-        cand = f"{buf}{tok}".strip() if buf else tok
+        cand = f"{buf} {tok}".strip() if buf else tok
         if len(cand) <= max_len:
-            buf = cand + (" " if not tok.endswith((",", "，")) else "")
             buf = cand
-        else:
-            if buf:
-                out.append(buf.strip())
-            if len(tok) <= max_len:
-                buf = tok
-            else:
-                for i in range(0, len(tok), max_len):
-                    out.append(tok[i : i + max_len].strip())
-                buf = ""
+            continue
+        if buf:
+            out.append(buf.strip())
+        if len(tok) <= max_len:
+            buf = tok
+            continue
+        out.extend(_split_eojel(tok, max_len))
+        buf = ""
     if buf:
         out.append(buf.strip())
     return [x for x in out if x]
+
+
+def _split_eojel(text: str, max_len: int) -> list[str]:
+    words = [w for w in text.split() if w]
+    out: list[str] = []
+    buf = ""
+    for word in words:
+        cand = f"{buf} {word}".strip() if buf else word
+        if len(cand) <= max_len:
+            buf = cand
+            continue
+        if buf:
+            out.append(buf)
+        # Keep an oversized eojel whole rather than cutting 여호와.
+        buf = word
+    if buf:
+        out.append(buf)
+    return out
+
+
+def _merge_short_units(units: list[str], max_len: int, min_len: int = 12) -> list[str]:
+    """Attach leftover vocatives like '여호와여,' to the next/previous clause."""
+    if not units:
+        return []
+    out: list[str] = []
+    for unit in units:
+        if out and len(out[-1]) < min_len:
+            merged = f"{out[-1]} {unit}".strip()
+            if len(merged) <= max_len:
+                out[-1] = merged
+                continue
+        if out and len(unit) < min_len:
+            merged = f"{out[-1]} {unit}".strip()
+            if len(merged) <= max_len:
+                out[-1] = merged
+                continue
+        out.append(unit)
+    return out
 
 
 def verses_to_speech_units(ref: str, max_len: int = 90) -> list[dict]:

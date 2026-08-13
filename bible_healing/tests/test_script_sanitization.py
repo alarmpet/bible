@@ -46,3 +46,27 @@ def test_blocks_expression_tags():
 def test_tts_and_display_share_body():
     s = sanitize_script(PS4)
     assert s.tts.replace(".", "").replace(" ", "") == s.display.replace(".", "").replace(" ", "")
+
+
+def test_does_not_cut_yehowa_mid_name():
+    from verify_voice_provenance import prepare_speech_units
+
+    units = prepare_speech_units(PS4 + " 내가 부를 때에 여호와께서 들으시리로다", "scripture")
+    assert units
+    assert all(len(u) <= 90 for u in units)
+    assert not any(u.lstrip("., ").startswith("호와") for u in units)
+
+
+def test_clause_endings_become_split_points():
+    from scripture_tts_prep import punctuate_korean_scripture, split_into_speech_units
+
+    raw = (
+        "너희는 떨며 범죄치 말지어다 자리에 누워 심중에 말하고 잠잠할지어다 "
+        "의의 제사를 드리고 여호와를 의뢰할지어다"
+    )
+    punct = punctuate_korean_scripture(raw)
+    assert punct.count("지어다.") >= 2
+    units = split_into_speech_units(punct, max_len=90)
+    assert units
+    # Periods stay inside a unit so SuperTonic breathes without a hard cut.
+    assert any("지어다." in u for u in units)

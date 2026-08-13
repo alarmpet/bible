@@ -147,10 +147,10 @@ def test_apply_scripture_filter_uses_lock_asetrate(tmp_path, monkeypatch):
     monkeypatch.setattr(aaf, "ffmpeg_bin", lambda: "ffmpeg")
     info = apply_scripture_filter(src, dst)
     assert info["filter_applied"] is True
-    assert "asetrate=24000*0.92" in info["filter"]
+    assert "asetrate=24000*0.86" in info["filter"]
     joined = " ".join(str(x) for x in captured["cmd"])
-    assert "asetrate=24000*0.92" in joined
-    assert info["pitch_percent"] == -8.0
+    assert "asetrate=24000*0.86" in joined
+    assert info["pitch_percent"] == -14.0
 
 
 def test_tts_provenance_shape(tmp_path):
@@ -241,7 +241,7 @@ def test_preview_path_sanitizes_scripture_sample():
     assert "!" not in req["text"]
     assert "?" not in req["text"]
     assert req["voice"] == "M4"
-    assert req["speed"] == 0.72
+    assert req["speed"] == 0.70
     assert req["total_step"] == 10
     assert req["max_chunk"] == 90
     assert req["apply_filter"] is True

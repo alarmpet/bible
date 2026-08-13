@@ -13,8 +13,8 @@ from pathlib import Path
 _BH_ROOT = Path(__file__).resolve().parents[1]
 _LOCK_PATH = _BH_ROOT / "config" / "media_rules_lock.json"
 _LOCK_FILTER_DEFAULT = (
-    "asetrate=24000*0.92,aresample=24000,atempo=1.087,"
-    "highpass=f=65,lowpass=f=8500,equalizer=f=250:t=q:w=1:g=1.5"
+    "asetrate=24000*0.86,aresample=24000,atempo=1.163,"
+    "highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5"
 )
 
 
@@ -22,11 +22,11 @@ def load_media_lock(path: Path | None = None) -> dict:
     return json.loads((path or _LOCK_PATH).read_text(encoding="utf-8"))
 
 
-def scripture_ffmpeg_filter(lock: dict | None = None, pitch_percent: float = -8.0) -> str:
+def scripture_ffmpeg_filter(lock: dict | None = None, pitch_percent: float = -14.0) -> str:
     """Return the lock ffmpeg chain; rebuild asetrate/atempo if pitch differs."""
     lock = lock or load_media_lock()
     base = (lock.get("voice") or {}).get("scripture", {}).get("audio_filter") or _LOCK_FILTER_DEFAULT
-    locked_pitch = float((lock.get("voice") or {}).get("scripture", {}).get("pitch", -8))
+    locked_pitch = float((lock.get("voice") or {}).get("scripture", {}).get("pitch", -14))
     if abs(float(pitch_percent) - locked_pitch) < 1e-6:
         return str(base)
     rate = 1.0 + float(pitch_percent) / 100.0
@@ -60,7 +60,7 @@ def ffmpeg_bin() -> str:
     raise FileNotFoundError("ffmpeg not found")
 
 
-def apply_scripture_filter(src: Path, dst: Path, pitch_percent: float = -8.0) -> dict:
+def apply_scripture_filter(src: Path, dst: Path, pitch_percent: float = -14.0) -> dict:
     """Pitch-shift scripture WAV with the lock asetrate chain, then restore duration."""
     src = Path(src)
     dst = Path(dst)
@@ -107,7 +107,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Apply locked scripture audio filter")
     ap.add_argument("--src", required=True)
     ap.add_argument("--dst", required=True)
-    ap.add_argument("--pitch", type=float, default=-8.0)
+    ap.add_argument("--pitch", type=float, default=-14.0)
     args = ap.parse_args()
     info = apply_scripture_filter(Path(args.src), Path(args.dst), pitch_percent=args.pitch)
     print(json.dumps(info, ensure_ascii=False))
