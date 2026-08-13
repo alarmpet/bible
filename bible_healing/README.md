@@ -2,7 +2,18 @@
 
 약 100분(±20%) 유튜브형 콘텐츠 파이프라인.
 
-## 빠른 시작
+## 본편 (유일한 진입점)
+
+```powershell
+cd C:\Users\amd\module
+python bible_healing/scripts/run_full_media_pipeline.py --job bible_healing/runs/ep01_anxious_night/hermes_jobs/full
+```
+
+오케스트레이터가 preflight → job 재빌드 → TTS(skip-existing 없음) → provenance →
+authoritative audio → ASS+QA → D: 렌더 → postflight 를 순서대로 실행한다.
+중간 실패 시 다음 단계를 돌리지 않는다. 단계 리포트: `D:\bible_healing_ep01\work\pipeline\`.
+
+## 빠른 시작 (준비 단계)
 
 ```powershell
 cd C:\Users\amd\module\bible_healing
@@ -18,25 +29,17 @@ python scripts\build_episode.py --episode ep01_anxious_night
 python scripts\qa_healing_script.py --episode ep01_anxious_night
 python scripts\estimate_duration.py --episode ep01_anxious_night
 
-# 4) Hermes job 패킹 (scenes + voice_map)
+# 4) Hermes job 패킹 (scenes + voice_map) — 본편은 오케스트레이터가 build_full_job 재실행
 python scripts\pack_to_hermes.py --episode ep01_anxious_night --mode full
 
-# 5) 보이스 프리뷰 / 본편 TTS (SuperTonic venv)
+# 5) 보이스 프리뷰만 (본편 TTS는 오케스트레이터)
 & "C:\Users\amd\supertonic3-local-tts-20260517-r4\supertonic3-local-tts\.venv-win\Scripts\python.exe" `
   ..\modern\scripts\tts_multi_voice.py --job runs\ep01_anxious_night\hermes_jobs\full --preview-only
-
-# 6) 미디어 준비 + TTS 본편 + lock + 빠른 렌더
-python scripts\prepare_job_media.py --job runs\ep01_anxious_night\hermes_jobs\full
-& "C:\Users\amd\supertonic3-local-tts-20260517-r4\supertonic3-local-tts\.venv-win\Scripts\python.exe" `
-  ..\modern\scripts\tts_multi_voice.py --job runs\ep01_anxious_night\hermes_jobs\full
-python ..\modern\scripts\lock_audio_manifest.py --job runs\ep01_anxious_night\hermes_jobs\full --backup
-python scripts\build_chapter_timestamps.py --job runs\ep01_anxious_night\hermes_jobs\full
-python scripts\render_simple_longform.py --job runs\ep01_anxious_night\hermes_jobs\full --workers 4
 ```
 
 ## 현재 산출 (ep01)
 
-- 최종 영상: `runs/ep01_anxious_night/hermes_jobs/full/final-bible-healing-ep01.mp4` (~86분)
+- 최종 배포 경로: `D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4`
 - 운영 메모: `HANDOFF.md`
 
 

@@ -364,9 +364,22 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("--job", required=True, type=Path)
     parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument(
+        "--qa-only",
+        action="store_true",
+        help="Only run qa_ass on existing ASS (no rebuild)",
+    )
     args = parser.parse_args(argv)
-    out = build_full_audio_aligned_ass(Path(args.job).resolve(), output=args.output)
-    report = qa_ass(out)
+    job = Path(args.job).resolve()
+    if args.qa_only:
+        ass_path = Path(args.output) if args.output else job / "subtitles-full-audio-aligned.ass"
+        if not ass_path.is_file():
+            raise SystemExit(f"ASS not found for qa-only: {ass_path}")
+        out = ass_path
+        report = qa_ass(out)
+    else:
+        out = build_full_audio_aligned_ass(job, output=args.output)
+        report = qa_ass(out)
     print(
         json.dumps(
             {
@@ -375,6 +388,7 @@ def main(argv: list[str] | None = None) -> None:
                 "events": report["event_count"],
                 "last_end": report["last_end_seconds"],
                 "errors": report["errors"],
+                "qa_only": bool(args.qa_only),
             },
             ensure_ascii=False,
             indent=2,

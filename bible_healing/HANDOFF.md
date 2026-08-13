@@ -2,10 +2,21 @@
 
 > **구 보이스 문서.** 보이스·자막·배경·저장 경로는 `config/media_rules_lock.json`이 우선한다. 이 파일과 충돌하면 lock을 따른다.
 >
-> 마지막 갱신: 2026-08-13  
+> 마지막 갱신: 2026-08-14  
 > 설계 문서: `../계획서_구약_힐링_낭독_파이프라인.md`  
 > **품질 진단(재작업 필수):** `../계획서_구약힐링_ep01_품질진단_재작업.md`  
 > **미디어 잠금:** `config/media_rules_lock.json` (version 2)
+
+## 본편 실행 (유일한 진입점)
+
+```powershell
+cd C:\Users\amd\module
+python bible_healing/scripts/run_full_media_pipeline.py --job bible_healing/runs/ep01_anxious_night/hermes_jobs/full
+```
+
+- 단계 리포트: `D:\bible_healing_ep01\work\pipeline\`
+- 최종 MP4: `D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4`
+- TTS에 `--skip-existing` 를 넘기지 않는다. 중간 실패 시 중단.
 
 ## ⛔ 구 100분본 배포 금지
 
@@ -95,9 +106,17 @@ C:\Users\amd\module\bible_healing\runs\ep01_anxious_night\upload_package\
 
 ```
 download → parse OSIS → build_episode → QA → pack_to_hermes
-→ prepare_job_media → tts_multi_voice → lock_audio_manifest
-→ render_simple_longform → extend_to_target_duration (100m)
-→ build_chapter_timestamps_padded → build_upload_package
+→ run_full_media_pipeline.py (유일한 본편 경로)
+   1 media_rules_preflight
+   2 build_full_job
+   3 tts_multi_voice  (no --skip-existing)
+   4 verify_voice_provenance
+   5 rebuild_authoritative_full_audio
+   6 verify_authoritative_audio
+   7 build_full_audio_aligned_ass
+   8 ASS qa_ass
+   9 render_authoritative_full → D:\bible_healing_ep01\final\...
+  10 media_rules_postflight
 ```
 
 ## ep02
