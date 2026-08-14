@@ -15,7 +15,7 @@
 
 - 화자는 `narrator`와 `scripture` 두 종류만 허용한다.
 - narrator = **F5 @ 0.95**, total_step 8, 쉼 0.24초, 필터 없음.
-- scripture = **M4 @ 0.8**, total_step 10, 쉼 0.25초, 피치 **-14%** (`asetrate=24000*0.86`, atempo 없음). 체감 속도 약 0.69.
+- scripture = **M4 @ 0.88**, total_step 10, 쉼 0.25초, 피치 **-14%** (`asetrate=24000*0.86`, atempo 없음). 체감 속도 약 0.76.
 - 성경은 절(마침표)마다 따로 합성한다. `max_chunk_length` 90, 어절 중간 절단 금지.
 - 성경 본문에서 괄호 설명, 곡 제목, `다윗의 시`, `영장으로`, `셀라`, 느낌표·물음표를 제거한다.
 - F3/M2/M3/M5는 사용하지 않는다. 자세한 표는 `MEDIA_RULES.md`와 `media_rules_lock.json`.

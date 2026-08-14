@@ -47,7 +47,7 @@ python scripts\pack_to_hermes.py --episode ep01_anxious_night --mode full
 | | 여성 narrator | 남성 scripture |
 |---|---|---|
 | ID | F5 | M4 |
-| 엔진 속도 | 0.95 | 0.8 |
+| 엔진 속도 | 0.95 | 0.88 |
 | 피치 | 없음 | -14% (asetrate 0.86, atempo 없음) |
 | 쉼 / step | 0.24s / 8 | 0.25s / 10 |
 
