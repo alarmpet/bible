@@ -9,7 +9,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "runs" / "ep01_anxious_night" / "hermes_jobs" / "full"
-DST = ROOT / "runs" / "ep01_anxious_night" / "hermes_jobs" / "first3min_clause_aged"
+DST = ROOT / "runs" / "ep01_anxious_night" / "hermes_jobs" / "first3min_speed095"
 
 
 def main() -> None:

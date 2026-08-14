@@ -36,7 +36,7 @@ def _lock(**overrides) -> dict:
             },
             "scripture": {
                 "voice": "M4",
-                "speed": 0.88,
+                "speed": 0.95,
                 "pitch": -14,
                 "silence_seconds": 0.25,
                 "total_step": 10,
@@ -97,7 +97,7 @@ def _lock(**overrides) -> dict:
 def _voice_map(
     *,
     scripture_voice: str = "M4",
-    scripture_speed: float = 0.88,
+    scripture_speed: float = 0.95,
     scripture_step: int = 10,
     max_chunk: int = 90,
     audio_filter: str | None = None,

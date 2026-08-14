@@ -132,7 +132,7 @@ def check_render_options(render_options: dict, lock: dict) -> list[str]:
         errors.append(f"render-options: forbidden engineVoice {engine!r}")
     scripture = (lock.get("voice") or {}).get("scripture") or {}
     want_voice = scripture.get("voice") or "M4"
-    want_speed = float(scripture.get("speed") or 0.88)
+    want_speed = float(scripture.get("speed") or 0.95)
     if engine and engine != want_voice and not render_options.get("multiVoice"):
         errors.append(
             f"render-options: engineVoice {engine!r} != locked {want_voice!r}"
@@ -316,7 +316,7 @@ def check_preflight_config(lock: dict, root: Path | None = None) -> list[str]:
             errors.append(f"lock: extra speaker {sid}")
 
     expected_voice = {"narrator": "F5", "scripture": "M4"}
-    expected_speed = {"narrator": 0.95, "scripture": 0.88}
+    expected_speed = {"narrator": 0.95, "scripture": 0.95}
     voice = lock.get("voice") or {}
     for sid in allowed:
         spec = voice.get(sid) or {}

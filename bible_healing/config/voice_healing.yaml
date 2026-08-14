@@ -13,7 +13,7 @@ speakers:
   scripture:
     label: pastor_calm_low_male_scripture
     voice: M4
-    speed: 0.88
+    speed: 0.95
     total_step: 10
     silence_duration: 0.25
     max_chunk_length: 90

@@ -241,7 +241,7 @@ def test_preview_path_sanitizes_scripture_sample():
     assert "!" not in req["text"]
     assert "?" not in req["text"]
     assert req["voice"] == "M4"
-    assert req["speed"] == 0.88
+    assert req["speed"] == 0.95
     assert req["total_step"] == 10
     assert req["max_chunk"] == 90
     assert req["apply_filter"] is True

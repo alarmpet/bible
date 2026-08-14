@@ -41,7 +41,7 @@ python bible_healing/scripts/final_render_preflight.py --job <preview_job>
 
 - 허용 화자는 `narrator`와 `scripture`뿐이다. F3/M2/M3/M5 금지.
 - **여성 narrator:** F5, speed **0.95**, total_step 8, silence 0.24, 필터 없음.
-- **남성 scripture:** M4, speed **0.88**, total_step **10**, silence **0.25**, pitch **-14%** (`asetrate=24000*0.86,aresample=24000`, **atempo 없음**). 체감 속도 약 0.76.
+- **남성 scripture:** M4, speed **0.95** (여성과 동일), total_step **10**, silence **0.25**, pitch **-14%** (`asetrate=24000*0.86,aresample=24000`, **atempo 없음**). 체감 속도 약 0.82.
 - 성경은 절 하나 = TTS 1회. `max_chunk` 90. 자막 시간은 필터 후 WAV 길이.
 - 성경 본문에서 괄호·표제·셀라·느낌표·물음표를 제거한다.
 
