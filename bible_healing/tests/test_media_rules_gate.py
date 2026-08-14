@@ -36,16 +36,16 @@ def _lock(**overrides) -> dict:
             },
             "scripture": {
                 "voice": "M4",
-                "speed": 0.72,
-                "pitch": -8,
-                "silence_seconds": 0.65,
+                "speed": 0.8,
+                "pitch": -14,
+                "silence_seconds": 0.25,
                 "total_step": 10,
                 "total_step_candidates": [8, 10, 12],
                 "forbidden_total_step": [24],
                 "max_chunk_length": 90,
                 "audio_filter": (
-                    "asetrate=24000*0.92,aresample=24000,atempo=1.087,"
-                    "highpass=f=65,lowpass=f=8500,equalizer=f=250:t=q:w=1:g=1.5"
+                    "asetrate=24000*0.86,aresample=24000,"
+                    "highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5"
                 ),
             },
         },
@@ -97,7 +97,7 @@ def _lock(**overrides) -> dict:
 def _voice_map(
     *,
     scripture_voice: str = "M4",
-    scripture_speed: float = 0.72,
+    scripture_speed: float = 0.8,
     scripture_step: int = 10,
     max_chunk: int = 90,
     audio_filter: str | None = None,
