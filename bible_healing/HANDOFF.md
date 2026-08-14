@@ -45,7 +45,7 @@ Live 본편은 D: final + 오케스트레이터만.
 | 타임드 큐 | preview/smoke only — `build_cues_from_manifest.py` → `subtitles-timed-ko.ass` (**본편 아님**) |
 | 렌더 v3 | ✅ 이미지 무텍스트 + ASS burn-in |
 | 실이미지 | ✅ Imagine 3종 시작 (`assets/generated/ep01/`) — 대량 생성은 후속 |
-| **기본 보이스** | **F5@0.95 / M4@0.72 pitch -8** — `config/media_rules_lock.json` 고정 |
+| **기본 보이스** | **F5@0.95 / M4@0.72 pitch -14 (atempo 없음)** — `config/media_rules_lock.json` |
 | 면책 문구 | 낭독 **제외** → 설명란만 (`licenses.yaml`) |
 | 엠비언트 영상 계획 | `../계획서_구약힐링_엠비언트영상_매칭.md` v1.1 |
 | 플레이트 파이프 | ✅ yaml + timeline + assign + qa |
@@ -107,11 +107,20 @@ python scripts\render_healing_v3.py --job runs\ep01_anxious_night\hermes_jobs\pr
 | + 유닛 쉼 | 1:40:00 (100분) | `final-bible-healing-ep01-100m.mp4` | legacy, 배포 금지 |
 | **authoritative 본편** | (pipeline 산출) | `D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4` | **live** |
 
-## 보이스
+## 보이스 (2026-08-14)
 
-- narrator **F5** @ 0.95 / scripture **M4** @ 0.72, pitch -8  
-- 단일 기준: `config/media_rules_lock.json`  
-- yaml 참고: `config/voice_healing.yaml` (lock과 다르면 lock 우선)
+| | narrator (여) | scripture (남) |
+|---|---|---|
+| ID | F5 | M4 |
+| 엔진 속도 | 0.95 | 0.72 |
+| total_step | 8 | 10 |
+| 쉼 | 0.24s | 0.25s |
+| 피치 | 없음 | -14% (`asetrate=24000*0.86`, atempo 없음) |
+| 체감 속도 | 0.95 | ≈0.62 |
+| 합성 | 장면 단위 | 절(마침표) 1회, max_chunk 90 |
+
+- 단일 기준: `config/media_rules_lock.json`
+- yaml: `config/voice_healing.yaml` (다르면 lock 우선)
 
 ## 파이프 요약
 

@@ -2,15 +2,22 @@
 
 모든 생성기는 `bible_healing/config/media_rules_lock.json`을 단일 기준으로 사용한다. `manual.md`, `CLAUDE.md`, `bible_healing/HANDOFF.md`, 연구·계획 문서와 런타임 설정이 다르면 렌더를 중단하고 이 잠금 파일을 기준으로 동기화한다.
 
-## 음성
+## 음성 (2026-08-14 고정)
 
-- 화자 종류는 `narrator`와 `scripture` 두 개만 허용한다.
-- narrator는 F5 (speed 0.95, total_step 8, silence 0.24), scripture는 승인된 남성 M4만 사용한다.
-- scripture는 속도 0.72, pitch -8%, 문장 종결 뒤 0.65초 쉼, `max_chunk_length` 90을 사용한다.
-- scripture `total_step`은 A/B 전까지 `pending_ab`이며 후보는 8·10·12다. 24는 금지한다.
-- TTS 입력에서 `! ！ !? ❗ ? ？`는 마침표로 바꾸고, `<laugh> <breath> <sigh>`는 금지한다.
-- `--skip-existing`로 예전 WAV를 재사용하지 않는다.
-- F3, M2, M3, M5, 이전 MP4 오디오, 임의 voice loop는 최종 음성으로 금지한다.
+| | 여성 narrator | 남성 scripture |
+|---|---|---|
+| 보이스 | **F5** | **M4** |
+| 엔진 속도 | **0.95** | **0.72** (엔진 하한 0.70) |
+| total_step | 8 | **10** (24 금지) |
+| 조각 사이 쉼 | 0.24초 | **0.25초** |
+| 피치 | 없음 | **-14%** (`asetrate=24000*0.86,aresample=24000`, **atempo 없음**) |
+| 체감 속도 | 0.95 | 약 **0.62** (0.72×0.86) |
+| 필터 | 없음 | highpass 60Hz, lowpass 7000Hz, EQ 180Hz +2.5dB |
+| 합성 단위 | 장면 문장 | **절(마침표) 하나 = TTS 1회**, `max_chunk_length` 90, 어절 중간 절단 금지 |
+
+- 화자는 `narrator`와 `scripture`만 허용한다. F3/M2/M3/M5 금지.
+- TTS 입력에서 `! ！ !? ❗ ? ？`는 마침표, `<laugh> <breath> <sigh>`·표제·셀라 금지.
+- 자막 시간은 필터 **후** 실제 WAV 길이를 쓴다. `--skip-existing` 금지.
 
 ## 자막
 

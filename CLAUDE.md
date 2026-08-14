@@ -37,13 +37,13 @@ python bible_healing/scripts/final_render_preflight.py --job <preview_job>
 
 검사 실패 시 렌더를 시작하지 않는다.
 
-## 음성 규칙
+## 음성 규칙 (lock과 동일해야 함)
 
-- 허용 화자는 `narrator`와 `scripture`뿐이다.
-- narrator는 F5, scripture는 승인된 M4만 사용한다.
-- 남성 성경 낭독은 속도 0.72, pitch -8%, 낮고 인자하며 안정적인 톤을 유지한다.
-- 성경 본문에서 괄호 설명, 곡 제목, 셀라·첼라, 느낌표를 제거한다.
-- 종결 표현 뒤에는 실제 음성 쉼을 넣는다.
+- 허용 화자는 `narrator`와 `scripture`뿐이다. F3/M2/M3/M5 금지.
+- **여성 narrator:** F5, speed **0.95**, total_step 8, silence 0.24, 필터 없음.
+- **남성 scripture:** M4, speed **0.72**, total_step **10**, silence **0.25**, pitch **-14%** (`asetrate=24000*0.86,aresample=24000`, **atempo 없음**). 체감 속도 약 0.62.
+- 성경은 절 하나 = TTS 1회. `max_chunk` 90. 자막 시간은 필터 후 WAV 길이.
+- 성경 본문에서 괄호·표제·셀라·느낌표·물음표를 제거한다.
 
 ## 자막 규칙
 
