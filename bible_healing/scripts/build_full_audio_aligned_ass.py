@@ -383,6 +383,46 @@ def _timed_manifest_items(manifest: dict, scene_gap: float | None = None) -> lis
         cursor = end_value
     return timed
 
+def _scene_chapter_label(scene: dict) -> str:
+    meta = scene.get("meta") or {}
+    ref_label = meta.get("ref_label")
+    if ref_label:
+        raw = str(ref_label).strip()
+        # Remove parentheses and internal text
+        text = re.sub(r"\(.*?\)", "", raw).strip()
+        # Standardize abbreviation
+        if text.startswith("시 "):
+            text = "시편 " + text[2:]
+        elif text.startswith("시") and len(text) > 1 and text[1].isdigit():
+            text = "시편 " + text[1:]
+        # Format chapter:verse
+        if "시편" in text and ":" in text:
+            m = re.match(r"시편\s*(\d+):([\d\-]+)", text)
+            if m:
+                text = f"시편 {m.group(1)}편 {m.group(2)}절"
+        elif ":" in text:
+            m = re.match(r"([가-힣]+)\s*(\d+):([\d\-]+)", text)
+            if m:
+                text = f"{m.group(1)} {m.group(2)}장 {m.group(3)}절"
+        return f"- {text.strip()} -"
+
+    title = scene.get("title")
+    if title:
+        clean = re.sub(r"[\(\)\[\]\{\}!?,]", "", str(title)).strip()
+        if len(clean) > 16:
+            clean = clean[:16].strip()
+        return f"- {clean} -"
+    return "- 말씀 묵상 -"
+
+
+def _chapter_dialogue_line(start: float, end: float, label: str) -> str:
+    body = _escape_ass_text(label)
+    return (
+        f"Dialogue: 1,{seconds_to_ass(start)},{seconds_to_ass(end)},"
+        f"Chapter,,0,0,0,,{body}"
+    )
+
+
 def build_full_audio_aligned_ass(job: Path, output: Path | None = None) -> Path:
     job = Path(job)
     scenes_raw = _load_json(job / "scenes.json")
@@ -396,12 +436,23 @@ def build_full_audio_aligned_ass(job: Path, output: Path | None = None) -> Path:
     pieces = _load_provenance_pieces(job)
     header = build_ass_header()
     events: list[str] = []
+    chapter_spans: list[tuple[float, float, str]] = []
+
     for item in sorted(items, key=lambda row: int(row["order"])):
         order = int(item["order"])
         scene = scenes.get(order) or {}
         start = float(item["startSeconds"])
         end = float(item["endSeconds"])
         speaker = _scene_speaker(scene)
+
+        # Record chapter label for top-right overlay
+        label = _scene_chapter_label(scene)
+        if chapter_spans and chapter_spans[-1][2] == label and abs(chapter_spans[-1][1] - start) <= 1.0:
+            prev_start, _, prev_label = chapter_spans.pop()
+            chapter_spans.append((prev_start, end, prev_label))
+        else:
+            chapter_spans.append((start, end, label))
+
         scene_pieces = _pieces_for_order(pieces, order)
         windows = _windows_from_pieces(scene_pieces, start, end)
         if windows:
@@ -416,6 +467,11 @@ def build_full_audio_aligned_ass(job: Path, output: Path | None = None) -> Path:
                 )
             continue
         events.extend(events_for_window(_scene_text(scene, item), start, end, speaker))
+
+    # Add merged chapter overlay events (Layer 1)
+    for c_start, c_end, c_label in chapter_spans:
+        if c_end > c_start:
+            events.append(_chapter_dialogue_line(c_start, c_end, c_label))
 
     out = Path(output) if output else job / "subtitles-full-audio-aligned.ass"
     out.parent.mkdir(parents=True, exist_ok=True)

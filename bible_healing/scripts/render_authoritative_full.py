@@ -98,12 +98,12 @@ def render_authoritative_full(
     if not samples:
         raise SystemExit(f"no pingpong samples in {bg}")
 
-    # Prepare 0.333x speed 60s clips so ambient video runs in slow-motion while switching every 1 minute
-    seg_dir = work / "ambient_slow033_60s"
+    # Prepare 0.1x speed 60s clips so ambient video runs in ultra slow-motion (0.1x) while switching every 1 minute
+    seg_dir = work / "ambient_slow010_60s"
     seg_dir.mkdir(parents=True, exist_ok=True)
     slow_segments: list[Path] = []
     for s in samples:
-        target = seg_dir / f"{s.stem}_slow033_60s.mp4"
+        target = seg_dir / f"{s.stem}_slow010_60s.mp4"
         if not target.is_file() or target.stat().st_size < 10000:
             subprocess.run(
                 [
@@ -115,7 +115,7 @@ def render_authoritative_full(
                     "-i",
                     str(s),
                     "-vf",
-                    "setpts=3*PTS",
+                    "setpts=10*PTS",
                     "-t",
                     "60.0",
                     "-c:v",
