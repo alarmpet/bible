@@ -170,7 +170,7 @@ def render_authoritative_full(
             "-preset",
             "ultrafast",
             "-crf",
-            "30",
+            "23",
             "-pix_fmt",
             "yuv420p",
             "-c:a",
@@ -183,12 +183,24 @@ def render_authoritative_full(
         ],
         check=True,
     )
-    if out.exists():
-        out.unlink(missing_ok=True)
-    tmp_out.replace(out)
+    final_target = out
+    try:
+        if out.exists():
+            out.unlink(missing_ok=True)
+        tmp_out.replace(out)
+    except PermissionError:
+        fallback = out.with_name(f"{out.stem}-slow033{out.suffix}")
+        if fallback.exists():
+            try:
+                fallback.unlink(missing_ok=True)
+            except Exception:
+                pass
+        tmp_out.replace(fallback)
+        final_target = fallback
+
     return {
         "ok": True,
-        "output": str(out),
+        "output": str(final_target),
         "duration": dur,
         "samples": len(samples),
         "audio_source": str(audio),
