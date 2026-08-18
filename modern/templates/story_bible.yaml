@@ -1,0 +1,30 @@
+episode_id: "E0001"
+sequence_id: "H01"
+characters:
+  - character_id: C01
+    public_want: ""
+    private_need: ""
+    fear: ""
+    false_belief: ""
+    leverage: ""
+    boundary: ""
+    irreversible_choices: []
+    price_paid: ""
+    change_or_refusal: ""
+    speech_dna:
+      sentence_length: mixed
+      honorific_strategy: ""
+      concealment_style: ""
+      forbidden_words: []
+      repeated_gesture: ""
+relationships:
+  - from: C01
+    to: C02
+    wants_from: ""
+    withholds: ""
+    misreads: ""
+    power_source: ""
+    turning_scene: ""
+timeline: []
+continuity_facts: []
+

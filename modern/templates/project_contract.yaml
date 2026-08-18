@@ -1,0 +1,17 @@
+episode_id: "E0001"
+lane: "L3_TWIST"
+truth_mode: "FICTION_REALISTIC"
+duration_tier: "standard"
+target_duration_min: 35
+sequence_id: "W01"
+makjang_intensity: 0
+core_twists: 1
+content_disclosure: "등장인물과 사건은 허구입니다."
+source_packet_required: false
+active_subplots: 0
+goal_state_changes: 0
+independent_act_goals: 0
+pilot_approved: false
+portfolio_exceptions: []
+filler_allowlist: []
+

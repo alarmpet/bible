@@ -40,8 +40,8 @@ python bible_healing/scripts/final_render_preflight.py --job <preview_job>
 ## 음성 규칙 (lock과 동일해야 함)
 
 - 허용 화자는 `narrator`와 `scripture`뿐이다. F3/M2/M3/M5 금지.
-- **여성 narrator:** F5, speed **0.95**, total_step 8, silence 0.24, 필터 없음.
-- **남성 scripture:** M4, speed **0.95** (여성과 동일), total_step **10**, silence **0.25**, pitch **-14%** (`asetrate=24000*0.86,aresample=24000`, **atempo 없음**). 체감 속도 약 0.82.
+- **여성 narrator:** F5, speed **0.95**, total_step 8, silence 0.24, pitch **-4%** (`asetrate=24000*0.96,aresample=24000`, atempo 없음, lowpass 6000, EQ 180+3 / 120+2). 샘플 `09_F5_less_thin`.
+- **남성 scripture:** M4, speed **0.86** (10% 감속으로 차분한 낭독 템포), total_step **10**, silence **0.35**, 동일 화자 간격 **0.40s**, pitch **-10%** (`asetrate=24000*0.90,aresample=24000`, **atempo 없음**, lowpass 6000, EQ 180+3 / 120+2). 체감 속도 약 0.77. 샘플 `09_M4_less_thin`.
 - 성경은 절 하나 = TTS 1회. `max_chunk` 90. 자막 시간은 필터 후 WAV 길이.
 - 성경 본문에서 괄호·표제·셀라·느낌표·물음표를 제거한다.
 
@@ -72,7 +72,8 @@ python bible_healing/scripts/final_render_preflight.py --job <preview_job>
 
 - 배경은 반드시 `bible_healing/assets/movie-sample/pingpong-1min/*.mp4`의 1분 앰비언트 샘플을 사용한다.
 - 12개 샘플을 순환 사용하며 단일 촛불 영상만 반복하지 않는다.
-- 배경은 `setpts=3*PTS`로 0.333배속 재생한다.
+- **배경 재생 속도**: `setpts=3*PTS`로 **0.333배속 슬로우 모션**을 적용하여 몽환적이고 평온한 앰비언트 모션을 유지한다.
+- **배경 전환 주기**: 각 배경 영상은 **정확히 1분(60초)마다 다음 샘플로 순환 전환**된다 (1분 주기 컷 전환).
 - 최종 배포본에는 `subtitles-full-audio-aligned.ass` 본문 자막을 반드시 번인한다.
 - 챕터 오버레이만 있고 본문 자막이 없으면 배포 불가다.
 - 최종 렌더 전 `final_background_preflight.py`와 **본편** `media_rules_preflight.py --job <full>`을 모두 통과한다.

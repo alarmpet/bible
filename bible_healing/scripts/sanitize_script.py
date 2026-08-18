@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from korean_number_reading import numbers_to_korean_speech
+
 
 BANGS = ["!?", "❗", "！", "!", "？", "?"]
 PARENS = re.compile(r"\([^()]*\)|（[^（）]*）")
@@ -47,13 +49,12 @@ def assert_no_emotion_triggers(text: str) -> None:
 def sanitize_script(text: str) -> SanitizedText:
     """Strip headers/selah/tags and soften punctuation for calm TTS.
 
-    Returns SanitizedText with tts and display sharing the cleaned body.
+    display keeps Arabic digits for captions. tts converts digits to Korean.
     """
     original = text or ""
     t = PARENS.sub(" ", original)
     t = TAGS.sub(" ", t)
     removed: list[str] = []
-    # 괄호 밖 표제/셀라도 제거
     t = HEADERS.sub(" ", t)
     for mark in BANGS:
         t = t.replace(mark, ".")
@@ -61,4 +62,6 @@ def sanitize_script(text: str) -> SanitizedText:
     t = re.sub(r"\s+\.", ".", t)
     t = re.sub(r"\s+", " ", t).strip()
     assert_no_emotion_triggers(t)
-    return SanitizedText(original=original, tts=t, display=t, removed=removed)
+    spoken = numbers_to_korean_speech(t)
+    assert_no_emotion_triggers(spoken)
+    return SanitizedText(original=original, tts=spoken, display=t, removed=removed)

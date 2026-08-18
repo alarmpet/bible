@@ -1,0 +1,19 @@
+version: 2
+modes:
+  TRUE_VERIFIED:
+    source_packet_required: true
+    disclosure: "확인된 자료를 바탕으로 재구성했습니다."
+  TRUE_PERMISSIONED:
+    source_packet_required: true
+    consent_required: true
+    disclosure: "당사자 제공 자료를 바탕으로 각색했습니다."
+  INSPIRED_COMPOSITE:
+    source_packet_required: false
+    disclosure: "여러 사례에서 영감을 얻어 재구성한 창작물입니다."
+  FICTION_REALISTIC:
+    source_packet_required: false
+    disclosure: "등장인물과 사건은 허구입니다."
+  FICTION_HEIGHTENED:
+    source_packet_required: false
+    disclosure: "등장인물과 사건은 허구인 창작극입니다."
+

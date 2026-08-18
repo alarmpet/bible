@@ -47,9 +47,9 @@ python scripts\pack_to_hermes.py --episode ep01_anxious_night --mode full
 | | 여성 narrator | 남성 scripture |
 |---|---|---|
 | ID | F5 | M4 |
-| 엔진 속도 | 0.95 | 0.95 |
-| 피치 | 없음 | -14% (asetrate 0.86, atempo 없음) |
-| 쉼 / step | 0.24s / 8 | 0.25s / 10 |
+| 엔진 속도 | 0.95 | 0.86 |
+| 피치 | -4% (`09_F5_less_thin`) | -10% (`09_M4_less_thin`) |
+| 쉼 / step | 0.24s / 8 | 0.35s / 10 |
 
 값은 `config/media_rules_lock.json`이 원본이다.
 

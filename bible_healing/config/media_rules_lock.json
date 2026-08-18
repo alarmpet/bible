@@ -1,17 +1,24 @@
 {
   "version": 2,
   "voice": {
-    "narrator": {"voice": "F5", "speed": 0.95, "total_step": 8, "silence_seconds": 0.24, "audio_filter": ""},
+    "narrator": {
+      "voice": "F5",
+      "speed": 0.95,
+      "total_step": 8,
+      "silence_seconds": 0.24,
+      "pitch": -4,
+      "audio_filter": "asetrate=24000*0.96,aresample=24000,highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,equalizer=f=120:t=q:w=1:g=2.0"
+    },
     "scripture": {
       "voice": "M4",
-      "speed": 0.95,
-      "pitch": -14,
-      "silence_seconds": 0.25,
+      "speed": 0.86,
+      "pitch": -10,
+      "silence_seconds": 0.35,
       "total_step": 10,
       "total_step_candidates": [8, 10, 12],
       "forbidden_total_step": [24],
       "max_chunk_length": 90,
-      "audio_filter": "asetrate=24000*0.86,aresample=24000,highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5"
+      "audio_filter": "asetrate=24000*0.90,aresample=24000,highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,equalizer=f=120:t=q:w=1:g=2.0"
     }
   },
   "speakers": ["narrator", "scripture"],
@@ -20,6 +27,12 @@
     "skip_existing_forbidden": true,
     "require_sanitize": true,
     "require_verse_split": true,
+    "require_korean_numbers": true,
+    "trim_engine_padding": true,
+    "prefer_http": true,
+    "http_url": "http://127.0.0.1:3093",
+    "assembly_gap_same_speaker": 0.40,
+    "assembly_gap_scene": 0.6,
     "forbid_expression_tags": ["<laugh>", "<breath>", "<sigh>"],
     "punctuation_to_period": ["!", "！", "!?", "❗", "?", "？"]
   },
@@ -45,6 +58,7 @@
     "required_count": 12,
     "duration_seconds": 60,
     "speed": 0.333,
+    "switch_interval_seconds": 60,
     "still_images_forbidden": true
   },
   "storage": {

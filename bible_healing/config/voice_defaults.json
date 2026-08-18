@@ -1,20 +1,29 @@
 {
   "version": 2,
-  "locked_at": "2026-08-14",
-  "label": "ep01 F5 narrator / M4 aged pastor scripture (pitch -14, no atempo)",
+  "locked_at": "2026-08-16",
+  "label": "ep01 F5 less-thin narrator / M4 less-thin pastor (pitch -4 / -10, no atempo)",
   "engine": "supertonic3",
   "speakers": {
-    "narrator": {"role": "female healing narration", "casting_id": "F_10", "voice": "F5", "speed": 0.95, "total_step": 8, "silence_duration": 0.24},
+    "narrator": {
+      "role": "female healing narration",
+      "casting_id": "F5_LESS_THIN",
+      "voice": "F5",
+      "speed": 0.95,
+      "total_step": 8,
+      "silence_duration": 0.24,
+      "pitch_shift_percent": -4,
+      "audio_filter": "asetrate=24000*0.96,aresample=24000,highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,equalizer=f=120:t=q:w=1:g=2.0"
+    },
     "scripture": {
       "role": "low, older, peaceful pastor-like male scripture narration",
       "casting_id": "M4_LOW_PASTOR",
       "voice": "M4",
-      "speed": 0.95,
+      "speed": 0.86,
       "total_step": 10,
-      "silence_duration": 0.25,
-      "pitch_shift_percent": -14,
+      "silence_duration": 0.35,
+      "pitch_shift_percent": -10,
       "max_chunk_length": 90,
-      "audio_filter": "asetrate=24000*0.86,aresample=24000,highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5",
+      "audio_filter": "asetrate=24000*0.90,aresample=24000,highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,equalizer=f=120:t=q:w=1:g=2.0",
       "pipeline": {"one_clause_per_call": true, "strip_selah_and_headers": true, "soften_exclamation": true, "probe_filtered_duration": true}
     }
   },

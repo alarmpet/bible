@@ -232,7 +232,7 @@ def test_builder_uses_items_manifest_durations(tmp_path):
     result = qa_ass(text)
     assert result["ok"] is True, result
     assert result["event_count"] > 0
-    assert abs(result["last_end_seconds"] - 10.0) <= 0.5
+    assert abs(result["last_end_seconds"] - 10.6) <= 0.5
 
 
 def test_tmp_job_sanitizes_and_passes_qa(tmp_path):

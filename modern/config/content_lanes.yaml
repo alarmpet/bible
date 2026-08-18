@@ -1,0 +1,29 @@
+version: 2
+channel_promise: "감정적으로 선명하고 인과가 납득되며 끝난 뒤 한 장면이 남는 한국형 드라마"
+lanes:
+  L1_TRUE:
+    label: "검증 실화"
+    truth_modes: [TRUE_VERIFIED, TRUE_PERMISSIONED]
+    sequence_ids: [T01, T02, T03]
+  L2_HEART:
+    label: "감동 합성허구"
+    truth_modes: [INSPIRED_COMPOSITE, FICTION_REALISTIC]
+    sequence_ids: [H01, H02, H03]
+  L3_TWIST:
+    label: "공정 반전"
+    truth_modes: [FICTION_REALISTIC, FICTION_HEIGHTENED]
+    sequence_ids: [W01, W02, W03]
+  L4_MAKJANG:
+    label: "고밀도 멜로·복수"
+    truth_modes: [FICTION_HEIGHTENED]
+    sequence_ids: [M01, M02, M03]
+  L5_ROTATION:
+    label: "실험 회차"
+    truth_modes: [INSPIRED_COMPOSITE, FICTION_REALISTIC, FICTION_HEIGHTENED]
+    sequence_ids: [R01, R02, R03]
+portfolio:
+  recent_window: 20
+  recent_ten_lane_min: 1
+  recent_ten_lane_max: 3
+  consecutive_execution_pair_block: 3
+

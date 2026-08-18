@@ -31,6 +31,8 @@ if str(_BH_SCRIPTS) not in sys.path:
 
 from apply_audio_filter import apply_scripture_filter  # noqa: E402
 from sanitize_script import assert_no_emotion_triggers  # noqa: E402
+from trim_tts_padding import trim_engine_padding  # noqa: E402
+from tts_assembly import assembly_gap_seconds, load_assembly_policy  # noqa: E402
 from verify_voice_provenance import (  # noqa: E402
     build_piece_provenance,
     enforce_skip_existing,
@@ -50,7 +52,25 @@ def clean_for_tts(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def load_engine(job_dir: Path):
+def load_engine(job_dir: Path, engine_name: str = "supertonic3", lock: dict | None = None):
+    name = (engine_name or "supertonic3").strip().lower()
+    if name in {"cosyvoice3", "cosyvoice", "fun-cosyvoice3"}:
+        from cosyvoice3_engine import CosyVoice3Engine
+
+        return CosyVoice3Engine(output_dir=job_dir)
+    from supertonic3_http import (
+        HttpSupertonicEngine,
+        prefer_http,
+        resolve_supertonic_http_url,
+        server_is_up,
+    )
+
+    if prefer_http(env=os.environ, lock=lock):
+        url = resolve_supertonic_http_url(env=os.environ, lock=lock)
+        if server_is_up(url):
+            print(f"tts via http {url}")
+            return HttpSupertonicEngine(base_url=url, output_dir=job_dir)
+        print(f"tts http down ({url}), in-process SuperTonic fallback")
     sys.path.insert(0, str(TTS_ROOT / "src"))
     from supertonic3_engine import Supertonic3Engine  # type: ignore
 
@@ -73,8 +93,14 @@ def ffprobe_bin() -> str:
     return os.environ.get("FFPROBE_BIN") or "ffprobe"
 
 
-def concat_wavs(paths: list[Path], out: Path, gap_sec: float = 0.1) -> bool:
-    """Concat wavs with optional silence using ffmpeg."""
+def concat_wavs(
+    paths: list[Path],
+    out: Path,
+    gap_sec: float = 0.1,
+    gaps: list[float] | None = None,
+    sample_rate: int = 24000,
+) -> bool:
+    """Concat wavs with per-join silence. Resample to a shared rate first."""
     import shutil
 
     if not paths:
@@ -82,31 +108,90 @@ def concat_wavs(paths: list[Path], out: Path, gap_sec: float = 0.1) -> bool:
     if len(paths) == 1:
         shutil.copy2(paths[0], out)
         return out.exists() and out.stat().st_size > 0
-    ff = ffmpeg_bin()
-    # re-encode concat is more reliable across slightly different wav headers
-    # filter_complex amix alternative: concat demuxer with regenerated silence
-    sil = out.parent / "_sil.wav"
-    subprocess.run(
-        [ff, "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", str(gap_sec), str(sil)],
-        capture_output=True,
-    )
-    lst = out.parent / "_concat_list.txt"
-    lines = []
-    for i, p in enumerate(paths):
-        lines.append(f"file '{p.resolve().as_posix()}'")
-        if i < len(paths) - 1 and sil.exists():
-            lines.append(f"file '{sil.resolve().as_posix()}'")
-    lst.write_text("\n".join(lines), encoding="utf-8")
-    res = subprocess.run(
-        [ff, "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c:a", "pcm_s16le", str(out)],
-        capture_output=True,
-    )
-    if sil.exists():
-        sil.unlink(missing_ok=True)
-    lst.unlink(missing_ok=True)
-    if res.returncode != 0:
+    if gaps is None:
+        gaps = [float(gap_sec)] * (len(paths) - 1)
+    if len(gaps) != len(paths) - 1:
         return False
-    return out.exists() and out.stat().st_size > 0
+    ff = ffmpeg_bin()
+    work = out.parent / f"_concat_{out.stem}"
+    work.mkdir(exist_ok=True)
+    try:
+        normed: list[Path] = []
+        for i, src in enumerate(paths):
+            dst = work / f"n{i:03d}.wav"
+            res = subprocess.run(
+                [
+                    ff,
+                    "-y",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(src),
+                    "-ac",
+                    "1",
+                    "-ar",
+                    str(sample_rate),
+                    "-c:a",
+                    "pcm_s16le",
+                    str(dst),
+                ],
+                capture_output=True,
+            )
+            if res.returncode != 0 or not dst.exists() or dst.stat().st_size <= 0:
+                return False
+            normed.append(dst)
+        lines: list[str] = []
+        for i, src in enumerate(normed):
+            lines.append(f"file '{src.resolve().as_posix()}'")
+            if i < len(gaps) and float(gaps[i]) > 0:
+                sil = work / f"sil_{i:03d}.wav"
+                res = subprocess.run(
+                    [
+                        ff,
+                        "-y",
+                        "-hide_banner",
+                        "-loglevel",
+                        "error",
+                        "-f",
+                        "lavfi",
+                        "-i",
+                        f"anullsrc=r={sample_rate}:cl=mono",
+                        "-t",
+                        str(float(gaps[i])),
+                        "-c:a",
+                        "pcm_s16le",
+                        str(sil),
+                    ],
+                    capture_output=True,
+                )
+                if res.returncode != 0 or not sil.exists():
+                    return False
+                lines.append(f"file '{sil.resolve().as_posix()}'")
+        lst = work / "list.txt"
+        lst.write_text("\n".join(lines), encoding="utf-8")
+        res = subprocess.run(
+            [
+                ff,
+                "-y",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                str(lst),
+                "-c:a",
+                "pcm_s16le",
+                str(out),
+            ],
+            capture_output=True,
+        )
+        return res.returncode == 0 and out.exists() and out.stat().st_size > 0
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
 
 
 def probe_duration(wav: Path) -> float:
@@ -157,15 +242,21 @@ def preview_only(engine, vm: dict, job: Path) -> dict:
             verbose=False,
         )
         if req["apply_filter"]:
-            apply_scripture_filter(raw_path, path)
+            apply_scripture_filter(
+                raw_path,
+                path,
+                pitch_percent=float(req.get("pitch") or 0),
+            )
             if raw_path != path and raw_path.exists():
                 raw_path.unlink(missing_ok=True)
+        trim_engine_padding(path)
+        probed = probe_duration(path)
         results.append(
             {
                 "speaker": sid,
                 "voice": voice,
                 "path": str(path),
-                "duration": info.get("duration"),
+                "duration": probed if probed and probed > 0 else info.get("duration"),
                 "text": req["text"],
                 "total_step": req["total_step"],
                 "filter_applied": req["apply_filter"],
@@ -179,7 +270,7 @@ def preview_only(engine, vm: dict, job: Path) -> dict:
     return report
 
 
-def run_job(job: Path, skip_existing: bool) -> dict:
+def run_job(job: Path, skip_existing: bool, engine_name: str = "supertonic3") -> dict:
     lock = run_job_preflight(job, skip_existing)
     bible = lock is not None
     scenes = json.loads((job / "scenes.json").read_text(encoding="utf-8"))
@@ -191,7 +282,7 @@ def run_job(job: Path, skip_existing: bool) -> dict:
         if sid != "narrator" and c.get("voice") == narr_v:
             raise SystemExit(f"VOICE_MAP_DISTINCT fail: narrator={narr_v} used by {sid}")
 
-    engine = load_engine(job)
+    engine = load_engine(job, engine_name, lock=lock)
     seg_dir = job / "segments"
     seg_dir.mkdir(exist_ok=True)
     items = []
@@ -243,7 +334,10 @@ def run_job(job: Path, skip_existing: bool) -> dict:
                     assert_no_emotion_triggers(unit)
                 stem = f"{seg.get('seg_id', f'o{order}')}_{sid}_{voice}_{ui:02d}"
                 spath = seg_dir / f"{stem}.wav"
-                raw_path = seg_dir / f"{stem}.raw.wav" if bible and sid == "scripture" else spath
+                want_filter = bool(
+                    bible and ((voice_spec.get("audio_filter") or "").strip() or sid == "scripture")
+                )
+                raw_path = seg_dir / f"{stem}.raw.wav" if want_filter else spath
                 try:
                     info = engine.synthesize_to_file(
                         text=unit,
@@ -257,15 +351,17 @@ def run_job(job: Path, skip_existing: bool) -> dict:
                         verbose=False,
                     )
                     filter_applied = False
-                    if bible and sid == "scripture":
+                    if want_filter:
+                        default_pitch = -10.0 if sid == "scripture" else 0.0
                         apply_scripture_filter(
                             raw_path,
                             spath,
-                            pitch_percent=float(voice_spec.get("pitch", -14)),
+                            pitch_percent=float(voice_spec.get("pitch", default_pitch)),
                         )
                         filter_applied = True
                         if raw_path != spath and raw_path.exists():
                             raw_path.unlink(missing_ok=True)
+                    trim_engine_padding(spath)
                     probed = probe_duration(spath)
                     piece_dur = probed if probed and probed > 0 else info.get("duration")
                     piece = build_piece_provenance(
@@ -311,11 +407,15 @@ def run_job(job: Path, skip_existing: bool) -> dict:
             items.append({"order": order, "ok": False, "error": "no segments"})
             continue
         speakers_in = [(seg.get("speaker") or "narrator") for seg in (sc.get("segments") or segs)]
-        if bible and any(s == "scripture" for s in speakers_in):
-            gap = float((lock.get("voice") or {}).get("scripture", {}).get("silence_seconds") or 0.65)
-        else:
-            gap = 0.1
-        if not concat_wavs(seg_paths, scene_wav, gap_sec=gap):
+        piece_speakers = [m.get("speaker") or "narrator" for m in seg_meta if m.get("path")]
+        if len(piece_speakers) != len(seg_paths):
+            piece_speakers = speakers_in[: len(seg_paths)] or ["narrator"] * len(seg_paths)
+        policy = load_assembly_policy(lock or {})
+        gaps = [
+            assembly_gap_seconds(piece_speakers[i], piece_speakers[i + 1], policy)
+            for i in range(max(0, len(seg_paths) - 1))
+        ]
+        if not concat_wavs(seg_paths, scene_wav, gaps=gaps):
             ok = False
             items.append(
                 {
@@ -373,8 +473,22 @@ def run_job(job: Path, skip_existing: bool) -> dict:
     return report
 
 
-def ensure_tts_python():
-    """Re-exec under SuperTonic venv if current interpreter lacks `supertonic`."""
+def ensure_tts_python(engine_name: str = "supertonic3"):
+    """Re-exec under SuperTonic venv unless the HTTP server already holds the model."""
+    name = (engine_name or "supertonic3").strip().lower()
+    if name in {"cosyvoice3", "cosyvoice", "fun-cosyvoice3"}:
+        return
+    from supertonic3_http import prefer_http, resolve_supertonic_http_url, server_is_up
+
+    lock = None
+    try:
+        lock = load_media_lock()
+    except Exception:
+        lock = None
+    if prefer_http(env=os.environ, lock=lock):
+        url = resolve_supertonic_http_url(env=os.environ, lock=lock)
+        if server_is_up(url):
+            return
     try:
         import supertonic  # noqa: F401
         return
@@ -392,11 +506,20 @@ def ensure_tts_python():
 
 
 def main():
-    ensure_tts_python()
+    pre = argparse.ArgumentParser(add_help=False)
+    pre.add_argument("--engine", default="supertonic3")
+    pre_args, _ = pre.parse_known_args()
+    ensure_tts_python(pre_args.engine)
     ap = argparse.ArgumentParser()
     ap.add_argument("--job", required=True)
     ap.add_argument("--preview-only", action="store_true")
     ap.add_argument("--skip-existing", action="store_true")
+    ap.add_argument(
+        "--engine",
+        default="supertonic3",
+        choices=("supertonic3", "cosyvoice3"),
+        help="Production default is SuperTonic3. CosyVoice3 is an opt-in test path.",
+    )
     args = ap.parse_args()
     job = Path(args.job)
     (job / "reports").mkdir(exist_ok=True)
@@ -404,10 +527,11 @@ def main():
     speakers = vm.get("speakers") or {}
     if is_bible_scripture_job(speakers):
         enforce_skip_existing(args.skip_existing)
+    lock = load_media_lock() if is_bible_scripture_job(speakers) else None
     if not args.preview_only:
-        run_job(job, args.skip_existing)
+        run_job(job, args.skip_existing, args.engine)
         return
-    engine = load_engine(job)
+    engine = load_engine(job, args.engine, lock=lock)
     preview_only(engine, vm, job)
 
 

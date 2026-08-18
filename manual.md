@@ -14,10 +14,14 @@
 ## 화자와 성경 본문
 
 - 화자는 `narrator`와 `scripture` 두 종류만 허용한다.
-- narrator = **F5 @ 0.95**, total_step 8, 쉼 0.24초, 필터 없음.
-- scripture = **M4 @ 0.95** (여성과 동일), total_step 10, 쉼 0.25초, 피치 **-14%** (`asetrate=24000*0.86`, atempo 없음). 체감 속도 약 0.82.
+- narrator = **F5 @ 0.95**, total_step 8, 쉼 0.24초, 피치 **-4%** (`asetrate=24000*0.96`, atempo 없음, lowpass 6000, EQ 180+3 / 120+2). 샘플 `09_F5_less_thin`.
+- scripture = **M4 @ 0.86** (10% 감속으로 차분한 낭독 템포), total_step 10, 쉼 0.35초, 동일 화자 간격 0.40초, 피치 **-10%** (`asetrate=24000*0.90`, atempo 없음, lowpass 6000, EQ 180+3 / 120+2). 체감 속도 약 0.77. 샘플 `09_M4_less_thin`.
 - 성경은 절(마침표)마다 따로 합성한다. `max_chunk_length` 90, 어절 중간 절단 금지.
 - 성경 본문에서 괄호 설명, 곡 제목, `다윗의 시`, `영장으로`, `셀라`, 느낌표·물음표를 제거한다.
+- TTS 입력의 숫자는 한글로 읽힌다 (`1814년`→`천팔백십사년`). 자막은 숫자를 그대로 둔다.
+- 합성 후 엔진 앞뒤 정적을 자른다. 같은 화자 간격 0.40초(숨 쉴 틈 확보), 장면·화자 전환 0.6초는 조립 단계에서 넣는다.
+- SuperTonic HTTP 서버(`http://127.0.0.1:3093`)가 켜져 있으면 그쪽으로 합성한다. 꺼져 있으면 기존 엔진으로 폴백한다. CosyVoice 등 새 TTS는 설치하지 않는다.
+- 서버 기동: `powershell -File bible_healing/scripts/start_supertonic3_server.ps1`
 - F3/M2/M3/M5는 사용하지 않는다. 자세한 표는 `MEDIA_RULES.md`와 `media_rules_lock.json`.
 
 ## 우측 상단 주제 표시 정책
@@ -37,7 +41,8 @@
 - 최종영상 배경은 반드시 `bible_healing/assets/movie-sample/pingpong-1min`의 1분 MP4를 사용한다.
 - `scene_*_flow.jpg`, `bg_*.jpg`, 정지 이미지, 단색 plate는 최종 배경으로 사용 금지.
 - 12개 1분 앰비언트 MP4를 순환 사용하고, 단일 촛불 영상만 반복하지 않는다.
-- 배경은 `setpts=3*PTS`(0.333배속)로 재생한다.
+- **배경 재생 속도**: `setpts=3*PTS`로 **0.333배속 슬로우 모션**을 적용하여 몽환적이고 평온한 앰비언트 모션을 유지한다.
+- **배경 전환 주기**: 각 배경 영상은 **정확히 1분(60초)마다 다음 샘플로 순환 전환**된다 (각 영상의 0.333배속 60초 구간 순차 렌더링).
 - 렌더 시작 전 `final_background_preflight.py`를 통과해야 한다.
 
 ## 전체 배포영상 필수 검사 규칙

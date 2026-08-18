@@ -97,13 +97,51 @@ def render_authoritative_full(
     samples = sorted(bg.glob("*.mp4"))
     if not samples:
         raise SystemExit(f"no pingpong samples in {bg}")
+
+    # Prepare 0.333x speed 60s clips so ambient video runs in slow-motion while switching every 1 minute
+    seg_dir = work / "ambient_slow033_60s"
+    seg_dir.mkdir(parents=True, exist_ok=True)
+    slow_segments: list[Path] = []
+    for s in samples:
+        target = seg_dir / f"{s.stem}_slow033_60s.mp4"
+        if not target.is_file() or target.stat().st_size < 10000:
+            subprocess.run(
+                [
+                    ff,
+                    "-y",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(s),
+                    "-vf",
+                    "setpts=3*PTS",
+                    "-t",
+                    "60.0",
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "ultrafast",
+                    "-crf",
+                    "22",
+                    "-pix_fmt",
+                    "yuv420p",
+                    str(target),
+                ],
+                check=True,
+            )
+        slow_segments.append(target)
+
     lst = work / "background_concat.txt"
     lst.write_text(
-        "\n".join(f"file '{p.as_posix()}'" for _ in range(6) for p in samples),
+        "\n".join(f"file '{p.as_posix()}'" for _ in range(8) for p in slow_segments),
         encoding="utf-8",
     )
     esc = str(ass).replace("\\", "/").replace(":", "\\:")
-    vf = f"setpts=3*PTS,trim=duration={dur:.3f},subtitles='{esc}'"
+    vf = f"subtitles='{esc}'"
+    tmp_out = out.with_name(f"{out.stem}.rendering{out.suffix}")
+    if tmp_out.exists():
+        tmp_out.unlink(missing_ok=True)
     subprocess.run(
         [
             ff,
@@ -141,10 +179,13 @@ def render_authoritative_full(
             "192k",
             "-movflags",
             "+faststart",
-            str(out),
+            str(tmp_out),
         ],
         check=True,
     )
+    if out.exists():
+        out.unlink(missing_ok=True)
+    tmp_out.replace(out)
     return {
         "ok": True,
         "output": str(out),

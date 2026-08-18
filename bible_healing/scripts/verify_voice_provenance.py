@@ -126,7 +126,8 @@ def prepare_preview_request(
             "total_step": resolve_total_step(speaker, lock),
             "max_chunk": max_chunk,
             "silence_duration": float(spec.get("silence_seconds") or 0.15),
-            "apply_filter": speaker == "scripture",
+            "pitch": float(spec.get("pitch") or 0),
+            "apply_filter": bool((spec.get("audio_filter") or "").strip()),
         }
     return {
         "speaker": speaker,

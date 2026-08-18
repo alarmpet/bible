@@ -1,0 +1,10 @@
+{
+  "downloaded_at": "2026-08-10T08:57:31.370989+00:00",
+  "url": "https://raw.githubusercontent.com/seven1m/open-bibles/master/kor-korean.osis.xml",
+  "filename": "kor-korean.osis.xml",
+  "bytes": 5742069,
+  "sha256": "ea64979f802469e62b3f3792bb8b01204c4448a4683a699be9cb08b715ebd01a",
+  "translation_id": "KRV",
+  "repo": "https://github.com/seven1m/open-bibles",
+  "license_note": "Public domain Korean Bible text as packaged by open-bibles"
+}

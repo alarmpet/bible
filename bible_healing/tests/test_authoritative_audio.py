@@ -208,11 +208,11 @@ def test_rebuild_uses_scenes_json_count_not_110(tmp_path, monkeypatch):
     assert info["scenes"] == 3
     assert info["scenes"] != 110
     assert Path(info["output"]).exists()
-    # concat list should reference exactly 3 wavs
+    # concat list should reference exactly 3 scene wavs plus 2 scene gaps
     work = job / "authoritative_audio_rebuild"
     lst = (work / "scene_audio_concat.txt").read_text(encoding="utf-8")
-    assert lst.count("file ") == 3
-    assert "normalized_48k" in lst
+    assert lst.count("normalized_48k") == 3
+    assert lst.count("file ") == 5
     prov_path = work / "voice_provenance.json"
     assert prov_path.is_file()
     prov = json.loads(prov_path.read_text(encoding="utf-8"))

@@ -1,0 +1,11 @@
+twists:
+  - twist_id: TW01
+    reveal: ""
+    clues:
+      - clue_id: CL01
+        first_appearance: "chapter/scene"
+        surface_meaning: ""
+        true_meaning: ""
+        visible_without_spoiling: true
+        payoff_scene: ""
+

@@ -1,0 +1,28 @@
+version: 2
+default_tier: standard
+tiers:
+  quick:
+    min_minutes: 15
+    max_minutes: 25
+    plot_shape: "한 관계, 한 선택, 한 핵심 반전"
+  standard:
+    min_minutes: 25
+    max_minutes: 45
+    plot_shape: "주 플롯 1개와 얕은 보조선 1개"
+  deep:
+    min_minutes: 45
+    max_minutes: 70
+    plot_shape: "주 플롯과 독립 욕망을 가진 보조선 1~2개"
+  special:
+    min_minutes: 80
+    max_minutes: 120
+    plot_shape: "각 막이 독립 목표를 가진 대형 단일 이야기"
+  anthology:
+    min_minutes: 80
+    max_minutes: 120
+    plot_shape: "25~35분 이야기 3편을 하나의 정서 주제로 묶음"
+special_approval:
+  minimum_active_subplots: 2
+  minimum_goal_state_changes: 3
+  pilot_minutes: 10
+

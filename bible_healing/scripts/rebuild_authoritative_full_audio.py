@@ -14,6 +14,8 @@ _SCRIPTS = Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
+from media_rules_preflight import load_lock  # noqa: E402
+from tts_assembly import load_assembly_policy  # noqa: E402
 from verify_authoritative_audio import (  # noqa: E402
     backup_unsanitized_wavs,
     verify_authoritative_audio,
@@ -93,11 +95,35 @@ def rebuild_authoritative_audio(
             check=True,
         )
         normalized.append(dst)
+    scene_gap = load_assembly_policy(load_lock())["scene"]
+    concat_entries: list[str] = []
+    sil = work / f"scene_gap_{scene_gap:.2f}.wav"
+    if len(normalized) > 1 and scene_gap > 0:
+        subprocess.run(
+            [
+                ff,
+                "-y",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-f",
+                "lavfi",
+                "-i",
+                "anullsrc=r=48000:cl=stereo",
+                "-t",
+                str(scene_gap),
+                "-c:a",
+                "pcm_s16le",
+                str(sil),
+            ],
+            check=True,
+        )
+    for i, p in enumerate(normalized):
+        concat_entries.append(f"file '{p.resolve().as_posix()}'")
+        if i < len(normalized) - 1 and sil.exists():
+            concat_entries.append(f"file '{sil.resolve().as_posix()}'")
     lst = work / "scene_audio_concat.txt"
-    lst.write_text(
-        "\n".join(f"file '{p.resolve().as_posix()}'" for p in normalized),
-        encoding="utf-8",
-    )
+    lst.write_text("\n".join(concat_entries), encoding="utf-8")
     out = work / output_name
     subprocess.run(
         [

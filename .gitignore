@@ -1,28 +1,50 @@
-.superpowers/sdd/
-.worktrees/
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Pytest and test caches
 .pytest_cache/
 pytest-cache-files-*/
 _pytest_basetemp/
+
+# Logs
 *.log
 *.err.log
 *.out.log
+
+# Virtual Environments
 .venv/
 venv/
+ENV/
+env/
 
-# Generated / locked media (never commit)
-bible_healing/runs/**/*.wav
-bible_healing/runs/**/*.mp3
-bible_healing/runs/**/*.mp4
-bible_healing/runs/**/*.jpg
-bible_healing/runs/**/*.ass
-bible_healing/runs/**/*.srt
-bible_healing/assets/movie-sample/**/*.mp4
+# IDE / Editor
+.serena/
+.superpowers/sdd/
+.worktrees/
+.vscode/
+.idea/
+
+# Large media files and models (never commit binaries)
+*.mp4
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.ogg
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+
+# Allow essential voice reference samples in repository
+!bible_healing/assets/voice_refs/*.wav
+
+# Video assets and generated runtime folders
+bible_healing/assets/movie-sample/
 bible_healing/assets/generated/
-modern/runs/**/*.wav
-modern/runs/**/*.mp3
-modern/runs/**/*.mp4
-modern/runs/**/*.jpg
-modern/runs/**/*.ass
+bible_healing/runs/
+modern/runs/smoke_g1/
+

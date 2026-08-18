@@ -147,10 +147,10 @@ def test_apply_scripture_filter_uses_lock_asetrate(tmp_path, monkeypatch):
     monkeypatch.setattr(aaf, "ffmpeg_bin", lambda: "ffmpeg")
     info = apply_scripture_filter(src, dst)
     assert info["filter_applied"] is True
-    assert "asetrate=24000*0.86" in info["filter"]
+    assert "asetrate=24000*0.90" in info["filter"]
     joined = " ".join(str(x) for x in captured["cmd"])
-    assert "asetrate=24000*0.86" in joined
-    assert info["pitch_percent"] == -14.0
+    assert "asetrate=24000*0.90" in joined
+    assert info["pitch_percent"] == -10.0
 
 
 def test_tts_provenance_shape(tmp_path):
@@ -241,7 +241,22 @@ def test_preview_path_sanitizes_scripture_sample():
     assert "!" not in req["text"]
     assert "?" not in req["text"]
     assert req["voice"] == "M4"
-    assert req["speed"] == 0.95
+    assert req["speed"] == 0.86
     assert req["total_step"] == 10
     assert req["max_chunk"] == 90
     assert req["apply_filter"] is True
+    assert req["pitch"] == -10
+
+
+def test_preview_path_applies_narrator_less_thin_filter():
+    lock = load_media_lock()
+    req = prepare_preview_request(
+        "narrator",
+        "오늘 밤, 마음이 지쳐 있다면 잠시 쉬어도 괜찮습니다.",
+        {"voice": "F5", "speed": 0.95, "total_step": 8},
+        lock=lock,
+        speakers={"narrator": {}, "scripture": {}},
+    )
+    assert req["voice"] == "F5"
+    assert req["apply_filter"] is True
+    assert req["pitch"] == -4

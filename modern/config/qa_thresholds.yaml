@@ -1,0 +1,15 @@
+version: 2
+filler:
+  exact_sentence_block_count: 3
+  repeated_block_sentence_count: 3
+  unique_sentence_warn_ratio: 0.90
+  unique_sentence_block_ratio: 0.80
+quality:
+  pass_score: 82
+  character_or_causality_minimum: 12
+twist:
+  minimum_clues_per_core_twist: 3
+portfolio:
+  recent_episode_window: 20
+  consecutive_execution_pair_block: 3
+

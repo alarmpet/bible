@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "engine": "cosyvoice3",
+  "notes": "Opt-in test mapping only. SuperTonic F5/M4 stay production. CosyVoice3 clones these short Korean refs.",
+  "production_engine": "supertonic3",
+  "voices": {
+    "F5": {
+      "role": "narrator",
+      "ref_wav": "bible_healing/assets/voice_refs/narrator_F5_ref.wav",
+      "prompt_text": "오늘 밤, 마음이 지쳐 있다면 잠시 쉬어도 괜찮습니다.",
+      "mode": "instruct2",
+      "instruct": "You are a helpful assistant. Speak Korean. Calm, warm female narrator for a healing Bible video. Gentle and clear, never theatrical. Use speaking speed 0.95.<|endofprompt|>"
+    },
+    "M4": {
+      "role": "scripture",
+      "ref_wav": "bible_healing/assets/voice_refs/scripture_M4_ref.wav",
+      "prompt_text": "여호와는 나의 목자시니 내게 부족함이 없으리로다.",
+      "mode": "instruct2",
+      "instruct": "You are a helpful assistant. Speak Korean. Calm, low, kind elderly male pastor reading Scripture. Steady and gentle, never angry or rushed. Use speaking speed 0.95.<|endofprompt|>"
+    }
+  }
+}

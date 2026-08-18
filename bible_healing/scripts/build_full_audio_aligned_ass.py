@@ -13,6 +13,7 @@ from pathlib import Path
 
 from sanitize_script import sanitize_script
 from subtitle_layout import CaptionBlock, split_korean_caption
+from tts_assembly import accumulate_scene_windows, load_assembly_policy
 
 _BH_ROOT = Path(__file__).resolve().parents[1]
 _LOCK_PATH = _BH_ROOT / "config" / "media_rules_lock.json"
@@ -330,23 +331,46 @@ def _windows_from_pieces(
     return windows
 
 
-def _timed_manifest_items(manifest: dict) -> list[dict]:
+def _timed_manifest_items(manifest: dict, scene_gap: float | None = None) -> list[dict]:
     """Normalize scenes or TTS items rows into start/end windows."""
     rows = list(manifest.get("scenes") or manifest.get("items") or [])
     rows = sorted(rows, key=lambda row: int(row.get("order", 0)))
-    timed: list[dict] = []
-    cursor = 0.0
-    for index, item in enumerate(rows, 1):
+    explicit = all(
+        item.get("startSeconds", item.get("startSec")) is not None
+        and item.get("endSeconds", item.get("endSec")) is not None
+        for item in rows
+    )
+    if scene_gap is None:
+        try:
+            scene_gap = load_assembly_policy(
+                json.loads(_LOCK_PATH.read_text(encoding="utf-8"))
+            )["scene"]
+        except Exception:
+            scene_gap = 0.6
+    durations: list[float] = []
+    for item in rows:
         duration = float(
             item.get("duration")
             or item.get("durationSeconds")
             or item.get("measuredDurationSeconds")
             or 0.0
         )
+        durations.append(duration)
+    if not explicit:
+        windows = accumulate_scene_windows(durations, scene_gap=float(scene_gap))
+    else:
+        windows = []
+    timed: list[dict] = []
+    cursor = 0.0
+    for index, item in enumerate(rows, 1):
+        duration = durations[index - 1]
         start = item.get("startSeconds", item.get("startSec"))
-        start_value = float(start) if start is not None else cursor
         end = item.get("endSeconds", item.get("endSec"))
-        end_value = float(end) if end is not None else start_value + duration
+        if explicit:
+            start_value = float(start)
+            end_value = float(end)
+        else:
+            start_value, end_value = windows[index - 1]
         timed.append(
             {
                 **item,

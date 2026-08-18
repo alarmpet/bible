@@ -9,15 +9,15 @@ speakers:
     speed: 0.95
     total_step: 8
     silence_duration: 0.24
-    audio_filter: ""
+    audio_filter: "asetrate=24000*0.96,aresample=24000,highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,equalizer=f=120:t=q:w=1:g=2.0"
   scripture:
     label: pastor_calm_low_male_scripture
     voice: M4
-    speed: 0.95
+    speed: 0.86
     total_step: 10
-    silence_duration: 0.25
+    silence_duration: 0.35
     max_chunk_length: 90
-    audio_filter: "asetrate=24000*0.86,aresample=24000,highpass=f=60,lowpass=f=7000,equalizer=f=180:t=q:w=1:g=2.5"
+    audio_filter: "asetrate=24000*0.90,aresample=24000,highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,equalizer=f=120:t=q:w=1:g=2.0"
 rules:
   narrator_must_not_share_voice_with_scripture: true
   scripture_text_must_match_verse_db: true

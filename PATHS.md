@@ -39,6 +39,11 @@
 | Hermes 루트 | `C:\Users\amd\hermes` |
 | SuperTonic3 TTS | `C:\Users\amd\supertonic3-local-tts-20260517-r4\supertonic3-local-tts` |
 | SuperTonic Python | `…\supertonic3-local-tts\.venv-win\Scripts\python.exe` |
+| Fun-CosyVoice3 (시험 전용) | `D:\Fun-CosyVoice3` |
+| CosyVoice3 Python 3.10 | `C:\Users\amd\.venvs\cosyvoice3-py310\Scripts\python.exe` |
+| CosyVoice3 모델 | `D:\Fun-CosyVoice3\pretrained_models\Fun-CosyVoice3-0.5B` |
+| CosyVoice3 어댑터 | `modern/scripts/cosyvoice3_engine.py` |
+| CosyVoice3 목소맵 | `bible_healing/config/cosyvoice3_voices.json` |
 | 브리지 스크립트 | `modern/scripts/` |
 | smoke_g1 job (preview) | `modern/runs/smoke_g1/hermes_jobs/preview/` |
 | 스모크 g1 | `modern/runs/smoke_g1/final.txt` |
