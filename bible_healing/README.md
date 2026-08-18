@@ -42,6 +42,12 @@ python scripts\pack_to_hermes.py --episode ep01_anxious_night --mode full
 - 최종 배포 경로: `D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4`
 - 운영 메모: `HANDOFF.md`
 
+## 고정 미디어 및 자막 규격
+
+- **배경 영상**: 12개 1분 앰비언트 영상, **0.1배속 초슬로우 모션 (`setpts=10*PTS`)**, 1분 주기 컷 전환
+- **하단 본문 자막**: 2줄 균형형 자막 (본문 96px, 성경 100px, outline 6, shadow 3, marginV 90)
+- **우측 상단 챕터 자막**: 권/장/절(`- 시편 4편 -`) 또는 큰 주제(`- 오프닝 -`), **하단 자막의 70% 크기 (70px, Alignment 9)** 지속 노출
+
 ## 고정 보이스
 
 | | 여성 narrator | 남성 scripture |

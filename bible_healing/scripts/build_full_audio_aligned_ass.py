@@ -42,6 +42,7 @@ def build_ass_header(captions: dict | None = None) -> str:
     scripture_primary = "&H00F5F5FF"
     outline_c = "&H00000000"
     back = "&H80000000"
+    size_c = int(cap.get("fontSizePx_chapter") or round(size_s * 0.70))
     return (
         "[Script Info]\n"
         "ScriptType: v4.00+\n"
@@ -61,8 +62,8 @@ def build_ass_header(captions: dict | None = None) -> str:
         f"Style: Scripture,{font},{size_s},{scripture_primary},&H000000FF,{outline_c},"
         f"{back},-1,0,0,0,100,100,0,0,1,{outline},{shadow},2,"
         f"{margin_l},{margin_r},{margin_v},1\n"
-        f"Style: Chapter,{font},36,&H00E8E0D0,&H00E8E0D0,{outline_c},"
-        f"&H90000000,0,0,0,0,100,100,0,0,1,2,1,9,120,120,90,1\n"
+        f"Style: Chapter,{font},{size_c},&H00E8E0D0,&H00E8E0D0,{outline_c},"
+        f"&H90000000,0,0,0,0,100,100,0,0,1,3,2,9,120,120,90,1\n"
         "\n"
         "[Events]\n"
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
