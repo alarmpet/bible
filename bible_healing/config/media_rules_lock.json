@@ -2,12 +2,12 @@
   "version": 2,
   "voice": {
     "narrator": {
-      "voice": "F5",
+      "voice": "M2",
       "speed": 0.95,
-      "total_step": 8,
-      "silence_seconds": 0.24,
-      "pitch": -4,
-      "audio_filter": "asetrate=24000*0.96,aresample=24000,highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,equalizer=f=120:t=q:w=1:g=2.0"
+      "total_step": 10,
+      "silence_seconds": 0.25,
+      "pitch": 0,
+      "audio_filter": "highpass=f=50,lowpass=f=7500,equalizer=f=160:t=q:w=1:g=2.5,equalizer=f=3000:t=q:w=1:g=1.2"
     },
     "scripture": {
       "voice": "M4",

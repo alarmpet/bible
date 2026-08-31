@@ -1,0 +1,67 @@
+version: 3
+pipeline: "human_archive"
+persona: "ship_seonbi"
+
+story:
+  required_beats:
+    - "hook"
+    - "roadmap"
+    - "body"
+    - "analogy"
+    - "source_commentary"
+    - "insight"
+    - "outro"
+  hook_end_sec_max: 15.0
+  roadmap_end_sec_max: 45.0
+  analogy_spoken_sec_max: 3.5
+  narrative_formula: "5단 반전 팩트체크 서사: [도발적 야사 훅 & 통념 깨기] -> [궁중 암투 스릴러 긴장 묘사] -> [선비의 실록/사료 팩트폭격] -> [인간적 고뇌 & 권력 구조 해부] -> [선비의 촌철살인 심야 성찰]"
+
+voice:
+  signature_hook: "허허, 천만의 말씀!"
+  signature_hook_min: 1
+  signature_hook_max: 3
+  sentence_max_chars: 65
+  prohibited_patterns:
+    - "안녕하세요 구독자 여러분"
+    - "좋아요와 구독 부탁드립니다"
+    - "댓글로 의견을 남겨주세요"
+  speech_patterns:
+    - "에헴!"
+    - "아니 글쎄!"
+    - "기가 막히지요?"
+    - "이게 무슨 소리냐고요?"
+    - "쯧쯧쯧..."
+    - "~라는 말씀!"
+    - "~이지 뭡니까!"
+  neutral_outro: "다음에도 귀에 쏙 박히는 역사로 찾아오지요!"
+
+human_review:
+  victim_dignity_required: true
+  analogy_fidelity_required: true
+  insight_not_presented_as_fact: true
+
+narration:
+  default_voice: "M2"
+  speed: 0.95
+  pitch_semitones: -0.5
+  silence_between_sentences_sec: 0.30
+  silence_between_sections_sec: 0.70
+  tone: "쉽선비 (ShipSeonbi): 겉은 헛기침하며 점잖은 척하지만 역사의 뒤편을 속 시원하게 폭로하는 입담 좋은 괴짜 선비. 찰진 감탄사(에헴, 아니 글쎄!), 반전 질문, 현대적 비유, 명쾌하고 유쾌한 구어체(~지요, ~했답니다, ~이지 뭡니까!, ~라는 말씀!)"
+
+audio_layering:
+  layer_1_voice: "center, 48kHz mono, normalized -16 LUFS, primary clarity, deep baritone narration"
+  layer_2_night_ambience: "처마 밑 귀뚜라미, 은은한 밤바람, 대숲 소리 (-28dB)"
+  layer_3_seonbi_foley: "한지 책장 넘김, 먹 가는 소리, 붓 서걱임 (-22dB)"
+  layer_4_music: "애잔한 해금/단소 중심 국악 퓨전 앰비언트 (-18dB, sidechain ducking -4dB on speech)"
+
+audio_filter: "highpass=f=50,lowpass=f=7500,equalizer=f=160:t=q:w=1:g=2.0,equalizer=f=3000:t=q:w=1:g=1.5"
+
+visual_branding:
+  font_name: "Malgun Gothic"
+  font_size: 90
+  primary_color: "&H00FFFFFF"
+  highlight_color: "&H0000FFFF"
+  transition_style: "brush_wipe"
+  quote_card_font: "KoPubBatang" # 사료 원문 인용 시 품격 있는 명조체 카드 적용
+  quote_card_style: "gold_accent_box_with_parchment_texture"
+  seal_badge: "red_vermilion_seal_bottom_right" # 우측 하단 쉽선비 검증 붉은 낙관 인장

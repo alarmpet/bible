@@ -45,7 +45,7 @@ Live 본편은 D: final + 오케스트레이터만.
 | 타임드 큐 | preview/smoke only — `build_cues_from_manifest.py` → `subtitles-timed-ko.ass` (**본편 아님**) |
 | 렌더 v3 | ✅ 이미지 무텍스트 + ASS burn-in |
 | 실이미지 | ✅ Imagine 3종 시작 (`assets/generated/ep01/`) — 대량 생성은 후속 |
-| **기본 보이스** | **F5@0.95 pitch -4 (`09_F5_less_thin`) / M4@0.95 pitch -10 (`09_M4_less_thin`)** — `config/media_rules_lock.json` |
+| **기본 보이스** | **M2 warm@0.95 / M4@0.86 pitch -10** — `config/media_rules_lock.json` |
 | 면책 문구 | 낭독 **제외** → 설명란만 (`licenses.yaml`) |
 | 엠비언트 영상 계획 | `../계획서_구약힐링_엠비언트영상_매칭.md` v1.1 |
 | 플레이트 파이프 | ✅ yaml + timeline + assign + qa |
@@ -109,13 +109,13 @@ python scripts\render_healing_v3.py --job runs\ep01_anxious_night\hermes_jobs\pr
 
 ## 보이스 (2026-08-16)
 
-| | narrator (여) | scripture (남) |
+| | narrator (남, M2 warm) | scripture (남, M4) |
 |---|---|---|
-| ID | F5 | M4 |
+| ID | M2 warm | M4 |
 | 엔진 속도 | 0.95 | 0.86 |
 | total_step | 8 | 10 |
 | 쉼 | 0.24s | 0.35s (동일 화자 간격 0.40s) |
-| 피치 | -4% (`asetrate=24000*0.96`, `09_F5_less_thin`) | -10% (`asetrate=24000*0.90`, `09_M4_less_thin`) |
+| 피치 | 0% (M2 warm 기준) | -10% (`asetrate=24000*0.90`, `09_M4_less_thin`) |
 | 체감 속도 | ≈0.91 | ≈0.77 |
 | 합성 | 장면 단위 | 절(마침표) 1회, max_chunk 90 |
 

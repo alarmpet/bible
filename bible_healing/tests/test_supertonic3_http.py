@@ -46,7 +46,7 @@ def test_canonical_lock_stays_on_supertonic_http():
     assert lock["tts"]["engine"] == "supertonic3"
     assert lock["tts"]["prefer_http"] is True
     assert lock["tts"]["require_korean_numbers"] is True
-    assert lock["voice"]["narrator"]["voice"] == "F5"
+    assert lock["voice"]["narrator"]["voice"] == "M2"
     assert lock["voice"]["scripture"]["voice"] == "M4"
-    assert lock["voice"]["narrator"]["total_step"] == 8
+    assert lock["voice"]["narrator"]["total_step"] == 10
     assert lock["voice"]["scripture"]["total_step"] == 10

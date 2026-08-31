@@ -1,0 +1,26 @@
+version: 2
+pipeline: "human_archive"
+narration:
+  default_voice: "M2"
+  speed: 0.95
+  pitch_semitones: -0.8
+  silence_between_sentences_sec: 0.35
+  silence_between_sections_sec: 0.8
+  sentence_target_chars: 28
+  sentence_max_chars: 42
+  tone: "차분하고 절제된 고품격 다큐멘터리 해설 톤 (~였습니다, ~던 것입니다)"
+  prohibited_patterns:
+    - "안녕하세요 구독자 여러분"
+    - "좋아요와 구독 부탁드립니다"
+    - "오늘은 ~에 대해 알아보겠습니다"
+  required_patterns:
+    - "첫 12초 이내에 상식에 반하는 반전 사실 제시"
+    - "첫 40초 이내에 핵심 질문 및 탐구 범위 제시"
+    - "결말부에 현대 인간의 삶과 연결되는 인문학적 통찰 제시"
+audio_filter: "highpass=f=50,lowpass=f=7500,equalizer=f=160:t=q:w=1:g=2.5,equalizer=f=3000:t=q:w=1:g=1.2"
+visual_density:
+  hook_12s_policy: "1_2_shots_ultra_high_density"
+  hook_40s_policy: "4_to_8_sec_per_cut"
+  chapter_1_policy: "6_to_10_sec_per_cut"
+  chapter_1_budget_ratio: 0.40
+  chapter_2_plus_policy: "10_to_18_sec_scene_based"

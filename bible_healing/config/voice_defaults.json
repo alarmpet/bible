@@ -1,18 +1,18 @@
 {
   "version": 2,
   "locked_at": "2026-08-16",
-  "label": "ep01 F5 less-thin narrator / M4 less-thin pastor (pitch -4 / -10, no atempo)",
+  "label": "M2 warm narrator / M4 less-thin pastor (no atempo)",
   "engine": "supertonic3",
   "speakers": {
     "narrator": {
-      "role": "female healing narration",
-      "casting_id": "F5_LESS_THIN",
-      "voice": "F5",
+      "role": "male warm documentary narration",
+      "casting_id": "M2_WARM",
+      "voice": "M2",
       "speed": 0.95,
-      "total_step": 8,
-      "silence_duration": 0.24,
-      "pitch_shift_percent": -4,
-      "audio_filter": "asetrate=24000*0.96,aresample=24000,highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,equalizer=f=120:t=q:w=1:g=2.0"
+      "total_step": 10,
+      "silence_duration": 0.25,
+      "pitch_shift_percent": 0,
+      "audio_filter": "highpass=f=50,lowpass=f=7500,equalizer=f=160:t=q:w=1:g=2.5,equalizer=f=3000:t=q:w=1:g=1.2"
     },
     "scripture": {
       "role": "low, older, peaceful pastor-like male scripture narration",
