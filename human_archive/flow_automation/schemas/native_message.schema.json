@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NativeMessage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "message_id",
+    "type",
+    "job_id",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "message_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "HELLO",
+        "LOAD_JOB",
+        "JOB_START_REQUESTED",
+        "SHOT_SUBMITTED",
+        "SHOT_RESULT_FOUND",
+        "DOWNLOAD_STARTED",
+        "DOWNLOAD_COMPLETED",
+        "SHOT_FAILED",
+        "JOB_STOPPED",
+        "JOB_STATE",
+        "RUN_SHOT",
+        "SHOT_ACCEPTED",
+        "SHOT_RETRY",
+        "JOB_PAUSED",
+        "JOB_COMPLETED"
+      ]
+    },
+    "job_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

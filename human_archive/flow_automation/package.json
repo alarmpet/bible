@@ -1,0 +1,7 @@
+{
+  "name": "flow-automation",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/extension/protocol.test.js"
+  }
+}
