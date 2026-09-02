@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+from pathlib import Path
 
 import pytest
 
@@ -15,7 +16,7 @@ from flow_automation.native_host.protocol import (
 
 def valid_message() -> dict[str, object]:
     return {
-        "schema_version": 1,
+        "protocol_version": 1,
         "message_id": "123e4567-e89b-42d3-a456-426614174000",
         "type": "SHOT_SUBMITTED",
         "job_id": "HIMALAYA-v1",
@@ -53,3 +54,25 @@ def test_read_message_validates_the_frame_payload() -> None:
     stream = io.BytesIO(len(encoded).to_bytes(4, "little") + encoded)
     assert read_message(stream) == valid_message()
 
+
+
+@pytest.mark.parametrize("field", ["message_id", "job_id", "type", "payload", "protocol_version"])
+def test_validate_envelope_rejects_missing_required_fields(field: str) -> None:
+    message = valid_message()
+    del message[field]
+    with pytest.raises(ProtocolError, match=field):
+        validate_envelope(message)
+
+
+def test_validate_envelope_requires_protocol_version_and_rejects_schema_version() -> None:
+    message = valid_message() | {"schema_version": 1}
+    with pytest.raises(ProtocolError, match="Unknown envelope field|protocol_version"):
+        validate_envelope(message)
+
+
+def test_python_allowlist_matches_canonical_resource() -> None:
+    from flow_automation.native_host.protocol import MESSAGE_TYPES
+
+    resource = Path(__file__).parents[1] / "extension" / "shared" / "message_types.json"
+    assert MESSAGE_TYPES == frozenset(json.loads(resource.read_text(encoding="utf-8")))
+    assert len(MESSAGE_TYPES) == 15

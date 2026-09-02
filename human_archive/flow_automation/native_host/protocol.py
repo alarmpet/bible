@@ -10,9 +10,11 @@ import jsonschema
 
 
 SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "native_message.schema.json"
+MESSAGE_TYPES_PATH = Path(__file__).resolve().parents[1] / "extension" / "shared" / "message_types.json"
 MAX_MESSAGE_BYTES = 1_048_576
+MESSAGE_TYPES = frozenset(json.loads(MESSAGE_TYPES_PATH.read_text(encoding="utf-8")))
 _ALLOWED_KEYS = frozenset(
-    {"schema_version", "message_id", "type", "job_id", "payload"}
+    {"protocol_version", "message_id", "type", "job_id", "payload"}
 )
 
 
@@ -48,6 +50,9 @@ def validate_envelope(
         path = "/".join(str(part) for part in first.path) or "message"
         raise ProtocolError(f"Invalid {path}: {first.message}")
 
+    if message["type"] not in MESSAGE_TYPES:
+        raise ProtocolError("type must be an allowlisted message type")
+
     job_id = str(message["job_id"]).strip()
     if not job_id:
         raise ProtocolError("job_id must be non-empty")
@@ -59,7 +64,7 @@ def validate_envelope(
         raise ProtocolError("payload must be an object")
 
     return {
-        "schema_version": 1,
+        "protocol_version": 1,
         "message_id": str(message["message_id"]),
         "type": str(message["type"]),
         "job_id": job_id,
