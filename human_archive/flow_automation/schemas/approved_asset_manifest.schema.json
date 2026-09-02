@@ -53,7 +53,10 @@
             "pattern": "^[a-f0-9]{64}$"
           },
           "file_path": { "type": "string" },
-          "sha256": { "type": "string" },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
           "bytes": { "type": "integer", "minimum": 0 },
           "width": { "type": "integer", "minimum": 0 },
           "height": { "type": "integer", "minimum": 0 },

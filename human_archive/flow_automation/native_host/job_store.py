@@ -85,6 +85,10 @@ def _scene_duration(scene: Mapping[str, Any], shot_id: str) -> float:
     return value
 
 
+def _expected_filename(shot_id: str, prompt_sha256: str) -> str:
+    return f"{shot_id}__{prompt_sha256[:8]}.png"
+
+
 def compile_job(
     source_manifest: Path,
     episode_dir: Path,
@@ -117,7 +121,7 @@ def compile_job(
                 "prompt": prompt,
                 "prompt_sha256": prompt_sha256,
                 "duration_sec": _scene_duration(scene, shot_id),
-                "expected_filename": f"{shot_id}__{prompt_sha256[:8]}.png",
+                "expected_filename": _expected_filename(shot_id, prompt_sha256),
             }
         )
 
@@ -186,12 +190,17 @@ def validate_job(job: Mapping[str, Any], episode_dir: Path) -> None:
         expected_filename = str(shot.get("expected_filename", "")).strip()
         if expected_filename in seen_filenames:
             raise ValueError(f"duplicate expected_filename: {expected_filename}")
+        canonical_filename = _expected_filename(shot_id, prompt_sha256)
+        if expected_filename != canonical_filename:
+            raise ValueError(
+                f"expected_filename must equal the derived prompt hash filename: {shot_id}"
+            )
+        candidate_path = (output_path / expected_filename).resolve()
+        if not candidate_path.is_relative_to(output_path):
+            raise ValueError(
+                f"expected_filename must stay within the generation directory: {shot_id}"
+            )
         seen_filenames.add(expected_filename)
-
-        if not expected_filename.startswith(f"{shot_id}__"):
-            raise ValueError(f"expected_filename does not match shot_id: {shot_id}")
-        if not expected_filename.endswith(".png"):
-            raise ValueError(f"expected_filename must end with .png: {shot_id}")
 
         duration_sec = float(shot.get("duration_sec", 0.0))
         if duration_sec <= 0:
