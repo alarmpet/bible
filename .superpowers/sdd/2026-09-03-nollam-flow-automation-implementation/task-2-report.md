@@ -170,3 +170,139 @@ Pending at report-write time. The next step is to stage only the Task 2 files an
 git add bible/human_archive/flow_automation/native_host/job_store.py bible/human_archive/flow_automation/tests/test_job_store.py bible/.superpowers/sdd/2026-09-03-nollam-flow-automation-implementation/task-2-report.md
 git commit -m "feat(flow-automation): persist and replay generation state"
 ```
+
+## Fix round 1 — reviewer findings addressed
+
+Reviewer findings implemented verbatim:
+- Tightened EOF recovery so `replay_job()` tolerates only structurally truncated final JSON records, not arbitrary garbage without a trailing newline.
+- Moved `job_id` validation ahead of duplicate-`event_id` suppression so a mismatched envelope is always rejected.
+
+### Regression tests added
+
+- `test_replay_rejects_malformed_eof_without_newline`
+- `test_replay_rejects_mismatched_job_id_even_for_duplicate_event_id`
+
+### Red verification before fix
+
+Command:
+
+```powershell
+cd D:\module\bible\human_archive
+python -m pytest flow_automation/tests/test_job_store.py -k "replay or runnable" -v
+```
+
+Output:
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\shs\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\module\bible
+configfile: pytest.ini
+plugins: anyio-4.11.0
+collecting ... collected 23 items / 13 deselected / 10 selected
+
+flow_automation\tests\test_job_store.py::test_replay_ignores_duplicate_event_id PASSED [ 10%]
+flow_automation\tests\test_job_store.py::test_replay_truncated_last_line_preserves_prior_events PASSED [ 20%]
+flow_automation\tests\test_job_store.py::test_replay_waiting_for_result_blocks_next_runnable PASSED [ 30%]
+flow_automation\tests\test_job_store.py::test_replay_pause_blocks_runnable_shot PASSED [ 40%]
+flow_automation\tests\test_job_store.py::test_replay_stop_blocks_runnable_shot PASSED [ 50%]
+flow_automation\tests\test_job_store.py::test_replay_failed_shot_exhaustion_skips_to_next_shot PASSED [ 60%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_mismatched_job_id PASSED [ 70%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_malformed_complete_line PASSED [ 80%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_malformed_eof_without_newline FAILED [ 90%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_mismatched_job_id_even_for_duplicate_event_id FAILED [100%]
+
+================================== FAILURES ===================================
+______________ test_replay_rejects_malformed_eof_without_newline ______________
+...
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+______ test_replay_rejects_mismatched_job_id_even_for_duplicate_event_id ______
+...
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+=========================== short test summary info ===========================
+FAILED flow_automation\tests\test_job_store.py::test_replay_rejects_malformed_eof_without_newline - Failed: DID NOT RAISE <class 'ValueError'>
+FAILED flow_automation\tests\test_job_store.py::test_replay_rejects_mismatched_job_id_even_for_duplicate_event_id - Failed: DID NOT RAISE <class 'ValueError'>
+================= 2 failed, 8 passed, 13 deselected in 1.30s ==================
+```
+
+### Green verification after fix
+
+Command:
+
+```powershell
+cd D:\module\bible\human_archive
+python -m pytest flow_automation/tests/test_job_store.py -k "replay or runnable" -v
+```
+
+Output:
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\shs\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\module\bible
+configfile: pytest.ini
+plugins: anyio-4.11.0
+collecting ... collected 23 items / 13 deselected / 10 selected
+
+flow_automation\tests\test_job_store.py::test_replay_ignores_duplicate_event_id PASSED [ 10%]
+flow_automation\tests\test_job_store.py::test_replay_truncated_last_line_preserves_prior_events PASSED [ 20%]
+flow_automation\tests\test_job_store.py::test_replay_waiting_for_result_blocks_next_runnable PASSED [ 30%]
+flow_automation\tests\test_job_store.py::test_replay_pause_blocks_runnable_shot PASSED [ 40%]
+flow_automation\tests\test_job_store.py::test_replay_stop_blocks_runnable_shot PASSED [ 50%]
+flow_automation\tests\test_job_store.py::test_replay_failed_shot_exhaustion_skips_to_next_shot PASSED [ 60%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_mismatched_job_id PASSED [ 70%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_malformed_complete_line PASSED [ 80%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_malformed_eof_without_newline PASSED [ 90%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_mismatched_job_id_even_for_duplicate_event_id PASSED [100%]
+
+====================== 10 passed, 13 deselected in 1.01s ======================
+```
+
+Command:
+
+```powershell
+cd D:\module\bible\human_archive
+python -m pytest flow_automation/tests/test_job_store.py -v
+```
+
+Output:
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\shs\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\module\bible
+configfile: pytest.ini
+plugins: anyio-4.11.0
+collecting ... collected 23 items
+
+flow_automation\tests\test_job_store.py::test_compile_job_hashes_exact_submission_prompt PASSED [  4%]
+flow_automation\tests\test_job_store.py::test_validate_job_rejects_duplicate_shot_id PASSED [  8%]
+flow_automation\tests\test_job_store.py::test_validate_job_rejects_duplicate_prompt_sha256 PASSED [ 13%]
+flow_automation\tests\test_job_store.py::test_validate_job_rejects_duplicate_expected_filename PASSED [ 17%]
+flow_automation\tests\test_job_store.py::test_validate_job_rejects_hash_mismatched_expected_filename PASSED [ 21%]
+flow_automation\tests\test_job_store.py::test_validate_job_rejects_filename_traversal PASSED [ 26%]
+flow_automation\tests\test_job_store.py::test_validate_job_rejects_nonpositive_duration PASSED [ 30%]
+flow_automation\tests\test_job_store.py::test_approved_asset_manifest_schema_rejects_invalid_sha256 PASSED [ 34%]
+flow_automation\tests\test_job_store.py::test_validate_job_rejects_output_escape PASSED [ 39%]
+flow_automation\tests\test_job_store.py::test_atomic_write_json_round_trips_payload PASSED [ 43%]
+flow_automation\tests\test_job_store.py::test_append_event_appends_json_line PASSED [ 47%]
+flow_automation\tests\test_job_store.py::test_replay_ignores_duplicate_event_id PASSED [ 52%]
+flow_automation\tests\test_job_store.py::test_generate_missing_never_returns_accepted_shot PASSED [ 56%]
+flow_automation\tests\test_job_store.py::test_replay_truncated_last_line_preserves_prior_events PASSED [ 60%]
+flow_automation\tests\test_job_store.py::test_replay_waiting_for_result_blocks_next_runnable PASSED [ 65%]
+flow_automation\tests\test_job_store.py::test_replay_pause_blocks_runnable_shot PASSED [ 69%]
+flow_automation\tests\test_job_store.py::test_replay_stop_blocks_runnable_shot PASSED [ 73%]
+flow_automation\tests\test_job_store.py::test_replay_failed_shot_exhaustion_skips_to_next_shot PASSED [ 78%]
+flow_automation\tests\test_job_store.py::test_generate_all_requires_new_job_id_after_progress PASSED [ 82%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_mismatched_job_id PASSED [ 86%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_malformed_complete_line PASSED [ 91%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_malformed_eof_without_newline PASSED [ 95%]
+flow_automation\tests\test_job_store.py::test_replay_rejects_mismatched_job_id_even_for_duplicate_event_id PASSED [100%]
+
+============================= 23 passed in 1.78s ==============================
+```

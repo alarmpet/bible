@@ -325,3 +325,25 @@ def test_replay_rejects_malformed_complete_line(
     path.write_text(valid_event_line() + "\n{bad}\n", encoding="utf-8")
     with pytest.raises(ValueError, match="Malformed event"):
         replay_job(valid_job, path)
+
+def test_replay_rejects_malformed_eof_without_newline(
+    valid_job: dict[str, object], tmp_path: Path
+) -> None:
+    path = tmp_path / "events.jsonl"
+    path.write_text(valid_event_line() + "\nnot-json", encoding="utf-8")
+    with pytest.raises(ValueError, match="Malformed event"):
+        replay_job(valid_job, path)
+
+
+def test_replay_rejects_mismatched_job_id_even_for_duplicate_event_id(
+    valid_job: dict[str, object], tmp_path: Path
+) -> None:
+    write_jsonl(
+        tmp_path / "events.jsonl",
+        [
+            accepted_event("e1", "SHOT_001"),
+            accepted_event("e1", "SHOT_001", job_id="OTHER"),
+        ],
+    )
+    with pytest.raises(ValueError, match="job_id"):
+        replay_job(valid_job, tmp_path / "events.jsonl")

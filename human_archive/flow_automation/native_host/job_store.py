@@ -159,17 +159,18 @@ def replay_job(job: Mapping[str, Any], events_path: Path) -> JobSnapshot:
         except json.JSONDecodeError as exc:
             is_last_line = index == len(lines)
             if is_last_line and not raw_line.endswith(("\n", "\r")):
-                break
+                if _is_truncated_final_json_record(line, exc):
+                    break
             raise ValueError(f"Malformed event at line {index}") from exc
 
         normalized = _normalize_event(event_obj)
-        event_id = str(normalized["event_id"])
-        if event_id in applied_event_ids:
-            continue
         if normalized["job_id"] != job_id:
             raise ValueError(
                 f"event job_id does not match replay job_id at line {index}"
             )
+        event_id = str(normalized["event_id"])
+        if event_id in applied_event_ids:
+            continue
         applied_event_ids.add(event_id)
 
         event_type = str(normalized["type"])
@@ -265,6 +266,20 @@ def next_runnable_shot(snapshot: JobSnapshot, mode: str) -> ShotState | None:
     return None
 
 
+
+
+def _is_truncated_final_json_record(line: str, exc: json.JSONDecodeError) -> bool:
+    text = line.rstrip()
+    if not text:
+        return False
+    trimmed = text.lstrip()
+    if not trimmed:
+        return False
+    if trimmed in {"n", "nu", "t", "tr", "tru", "f", "fa", "fal", "fals"}:
+        return True
+    if exc.pos < len(text) - 1:
+        return False
+    return trimmed[0] in '{["-0123456789'
 def _normalize_event(event: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(event, Mapping):
         raise ValueError("event must be an object")
@@ -458,3 +473,4 @@ def validate_job(job: Mapping[str, Any], episode_dir: Path) -> None:
         duration_sec = float(shot.get("duration_sec", 0.0))
         if duration_sec <= 0:
             raise ValueError(f"shot {shot_id} must have a positive duration")
+
