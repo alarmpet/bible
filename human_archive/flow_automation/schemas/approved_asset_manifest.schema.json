@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ApprovedAssetManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "project",
+    "output_dir",
+    "approved_by",
+    "approved_at_utc",
+    "assets"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "job_id": { "type": "string" },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_url", "project_id"],
+      "properties": {
+        "expected_url": { "type": "string" },
+        "project_id": { "type": "string" }
+      }
+    },
+    "output_dir": { "type": "string" },
+    "approved_by": { "type": "string" },
+    "approved_at_utc": { "type": "string" },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "shot_id",
+          "order",
+          "card_id",
+          "prompt_sha256",
+          "file_path",
+          "sha256",
+          "bytes",
+          "width",
+          "height",
+          "status"
+        ],
+        "properties": {
+          "shot_id": { "type": "string" },
+          "order": { "type": "integer" },
+          "card_id": { "type": "string" },
+          "prompt_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "file_path": { "type": "string" },
+          "sha256": { "type": "string" },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "width": { "type": "integer", "minimum": 0 },
+          "height": { "type": "integer", "minimum": 0 },
+          "status": {
+            "type": "string",
+            "enum": ["COMPLETED", "TIMEOUT", "FAILED", "BLOCKED"]
+          }
+        }
+      }
+    }
+  }
+}

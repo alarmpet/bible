@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AutomationJob",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "project",
+    "output_dir",
+    "media_type",
+    "aspect_ratio",
+    "retry_limit",
+    "random_delay_seconds",
+    "shots"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "job_id": { "type": "string" },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_url", "project_id"],
+      "properties": {
+        "expected_url": { "type": "string" },
+        "project_id": { "type": "string" }
+      }
+    },
+    "output_dir": { "type": "string" },
+    "media_type": { "type": "string", "const": "image" },
+    "aspect_ratio": { "type": "string", "const": "16:9" },
+    "retry_limit": { "type": "integer", "minimum": 0 },
+    "random_delay_seconds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "shot_id",
+          "prompt",
+          "prompt_sha256",
+          "duration_sec",
+          "expected_filename"
+        ],
+        "properties": {
+          "shot_id": { "type": "string" },
+          "prompt": { "type": "string" },
+          "prompt_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "duration_sec": { "type": "number", "exclusiveMinimum": 0 },
+          "expected_filename": { "type": "string" }
+        }
+      }
+    }
+  }
+}
