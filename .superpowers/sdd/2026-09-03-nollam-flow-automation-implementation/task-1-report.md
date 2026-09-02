@@ -54,3 +54,27 @@
 - The repository had many unrelated dirty changes already present; I preserved them and only touched the Task 1 subtree.
 - I used a local repository git identity because the workspace had no configured author name/email.
 - `approved_asset_manifest.schema.json` is defined for the later pipeline contract, but Task 1 only exercises the job compiler/validator path.
+
+## Round 1 Fix
+
+- Tightened `validate_job` so `expected_filename` must exactly equal the canonical `{shot_id}__{prompt_sha256[:8]}.png` value.
+- Kept a resolved-path check against `output_dir` so filename traversal cannot escape the generation directory.
+- Added a 64-lowercase-hex constraint for `assets[].sha256` in `approved_asset_manifest.schema.json`.
+- Expanded Task 1 coverage for duplicate prompt hashes, duplicate filenames, hash mismatches, filename traversal, invalid asset hashes, and nonpositive durations.
+
+## Verification
+
+- `python -m pytest flow_automation/tests/test_job_store.py -v`
+  - Output: `10 passed in 0.89s`
+- `python -c "from pathlib import Path; from flow_automation.native_host.job_store import compile_job; manifest=Path('runs/nollam_file/2026-09-02/himalaya-glof-water-crisis/source/scene_script_manifest_v2.json'); episode_dir=Path('runs/nollam_file/2026-09-02/himalaya-glof-water-crisis'); job=compile_job(manifest, episode_dir, 'https://labs.google/fx/ko/tools/flow/project/p1', 'HIMALAYA-v1'); print(len(job['shots'])); print(job['shots'][0]['shot_id']); print(job['shots'][-1]['shot_id']); print(len({shot['shot_id'] for shot in job['shots']})); print(len({shot['prompt_sha256'] for shot in job['shots']})); print(len({shot['expected_filename'] for shot in job['shots']}))"`
+  - Output:
+    - `105`
+    - `SHOT_001`
+    - `SHOT_105`
+    - `105`
+    - `105`
+    - `105`
+
+## Round 1 Commit
+
+- Fix commit: `16326cb`
