@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
-from .job_store import append_event, replay_job
+from .job_store import append_event, replay_job, validate_job
 from .protocol import validate_envelope, read_message, write_message, ProtocolError
 
 ALLOWED_EXTENSION_IDS = frozenset()
@@ -63,6 +63,7 @@ def dispatch(message: Mapping[str, Any], context: HostContext) -> list[dict[str,
     return [_envelope("JOB_PAUSED", job_id, {"code": "UNSUPPORTED_COMMAND"})]
 
 def main() -> None:
+    context: HostContext | None = None
     while True:
         try:
             message = read_message(sys.stdin.buffer)
@@ -70,12 +71,29 @@ def main() -> None:
             return
         except ProtocolError as exc:
             write_message(sys.stdout.buffer, _envelope("JOB_PAUSED", "protocol-error", {"code": "PROTOCOL_ERROR", "message": str(exc)})); return
-        for response in dispatch(message, _default_context(message)):
+        if context is None:
+            if message.get("type") != "LOAD_JOB":
+                write_message(sys.stdout.buffer, _envelope("JOB_PAUSED", str(message.get("job_id", "protocol-error")), {"code": "JOB_NOT_LOADED"}))
+                sys.stdout.buffer.flush()
+                continue
+            payload = message.get("payload", {})
+            job = payload.get("job") if isinstance(payload, Mapping) else None
+            if not isinstance(job, Mapping):
+                write_message(sys.stdout.buffer, _envelope("JOB_PAUSED", str(message["job_id"]), {"code": "JOB_PAYLOAD_REQUIRED"}))
+                sys.stdout.buffer.flush()
+                continue
+            try:
+                episode_dir = Path(str(job["output_dir"])).resolve().parent.parent
+                validate_job(job, episode_dir)
+                events_path = Path(str(job["output_dir"])).resolve().parent / "automation_events.jsonl"
+                context = HostContext(job, events_path)
+            except (KeyError, TypeError, ValueError) as exc:
+                write_message(sys.stdout.buffer, _envelope("JOB_PAUSED", str(message["job_id"]), {"code": "INVALID_JOB", "message": str(exc)}))
+                sys.stdout.buffer.flush()
+                continue
+        for response in dispatch(message, context):
             write_message(sys.stdout.buffer, response)
             sys.stdout.buffer.flush()
-
-def _default_context(message: Mapping[str, Any]) -> HostContext:
-    raise RuntimeError("host.py main requires an installed job context")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "job_id": "NOLLAM-20260903-HIMALAYA-GLOF-v1",
+  "project": {
+    "expected_url": "https://labs.google/fx/ko/tools/flow/project/b0aa7ff4-49c0-4841-b333-7f4e52ddcc12",
+    "project_id": "b0aa7ff4-49c0-4841-b333-7f4e52ddcc12"
+  },
+  "output_dir": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-02\\himalaya-glof-water-crisis\\generation\\downloads",
+  "media_type": "image",
+  "aspect_ratio": "16:9",
+  "retry_limit": 2,
+  "random_delay_seconds": {
+    "min": 5,
+    "max": 15
+  },
+  "shots": [
+    {
+      "shot_id": "SHOT_001",
+      "prompt": "A serene tranquil Himalayan village valley bathed in bright morning sunlight, crystal clear blue sky, traditional stone houses, high altitude mountain valley Nepal, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "9831853d1f1a638ac34e069155841c8dba5a4eea5b48c1d924e7773017f765c5",
+      "duration_sec": 3.8,
+      "expected_filename": "SHOT_001__9831853d.png"
+    },
+    {
+      "shot_id": "SHOT_002",
+      "prompt": "A massive catastrophic wall of roaring mud, boulders, and glacial water rushing violently down a narrow mountain river gorge, Himalayan gorge flood disaster, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "1060811b864b3ba783bc6b15b613bb3d3625b3f77fe68c7f04c6a0694f424c11",
+      "duration_sec": 3.7,
+      "expected_filename": "SHOT_002__1060811b.png"
+    },
+    {
+      "shot_id": "SHOT_003",
+      "prompt": "Empty sunny sky above towering snow-capped Himalayan peaks, stark contrast of calm weather with sudden disaster, Himalayan mountain ridge, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "5110932498eda3b3afe702952b2ff201b60d8dbac42082566e9f1d6aaede4c67",
+      "duration_sec": 3.7,
+      "expected_filename": "SHOT_003__51109324.png"
+    },
+    {
+      "shot_id": "SHOT_004",
+      "prompt": "Local Sherpa residents standing on a high cliff edge looking down in utter shock and disbelief at the flooded valley, Nepalese mountain village, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "0085de7a3fb7cfe09370d266cf2fbc3296e91620146092fac70d566954c6d2de",
+      "duration_sec": 3.8,
+      "expected_filename": "SHOT_004__0085de7a.png"
+    },
+    {
+      "shot_id": "SHOT_005",
+      "prompt": "High angle drone view ascending rapidly from mountain valley up to 5000m high altitude glacial basin, vast scale, Himalayas altitude perspective, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "b0ab2e861844e49042056a574363e0d9f72b666aaf276501bb02a1ac60f0993f",
+      "duration_sec": 4.5,
+      "expected_filename": "SHOT_005__b0ab2e86.png"
+    },
+    {
+      "shot_id": "SHOT_006",
+      "prompt": "A colossal turquoise high-altitude glacial lake enclosed by towering ice walls, sudden breach of natural dam wall, glacial lake outburst flood GLOF, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "f048e8acb6b709590a45c7399b343bbc77a2c148c11a9dc45e5929bc9b5f41e8",
+      "duration_sec": 4.5,
+      "expected_filename": "SHOT_006__f048e8ac.png"
+    },
+    {
+      "shot_id": "SHOT_007",
+      "prompt": "Violent hydraulic torrent carrying massive boulders destroying a concrete bridge and riverbanks, hyper-realistic water physics, river valley flood devastation, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "7a705fd9818673fe57b717756b0d6d9cee9c7f74e118124b95c87e1d8d603e4c",
+      "duration_sec": 5.0,
+      "expected_filename": "SHOT_007__7a705fd9.png"
+    },
+    {
+      "shot_id": "SHOT_008",
+      "prompt": "Scientific digital seismograph graph overlay showing sharp seismic spikes caused by glacier collapse, research monitor closeup, geophysical laboratory screen, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "e5bf514f76c6a738fc33709269e3f88cbc17139640f275da0f3458c491520372",
+      "duration_sec": 5.0,
+      "expected_filename": "SHOT_008__e5bf514f.png"
+    },
+    {
+      "shot_id": "SHOT_009",
+      "prompt": "Dramatic aerial panoramic view of dozens of interconnected frozen ridges and glacial tongues in the Himalayas, ominous mood, vast Himalayan mountain range, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "77f46deea9a9b1b4be1c6b520072fa5cb3093b1b76049240d1e83ff43f52cf3a",
+      "duration_sec": 5.5,
+      "expected_filename": "SHOT_009__77f46dee.png"
+    },
+    {
+      "shot_id": "SHOT_010",
+      "prompt": "Satellite topographic 3D map of the Hindu Kush Himalaya region with glowing red hazard dots marking dangerous glacial lakes, satellite data visualization, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "11cfe88f49bb08e80209ffcbd1f779f74a523278f12445a8fb5d5a318894533a",
+      "duration_sec": 5.5,
+      "expected_filename": "SHOT_010__11cfe88f.png"
+    },
+    {
+      "shot_id": "SHOT_011",
+      "prompt": "Epic sunrise over Everest and Kanchenjunga peaks, golden light breaking through deep morning mist, immense grandeur, Himalayan summit panorama, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "008c7744e3b9f89b99c654c85806f7c55787ff1958a6787a453cbe2ceb7fe7d0",
+      "duration_sec": 7.0,
+      "expected_filename": "SHOT_011__008c7744.png"
+    },
+    {
+      "shot_id": "SHOT_012",
+      "prompt": "Meteorologist looking closely at multi-spectral satellite imagery on computer monitors in a mountain observatory, high altitude research station, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "cc99746ea3f964114296f09972a029a445c76749487f4a7be88c1ea0f6cec78b",
+      "duration_sec": 8.0,
+      "expected_filename": "SHOT_012__cc99746e.png"
+    },
+    {
+      "shot_id": "SHOT_013",
+      "prompt": "3D globe animation highlighting Antarctica, Arctic, and the Tibetan Plateau Hindu Kush Himalayas as the Third Pole, global planetary perspective, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "8529a3680f12422b961d5813448f3869cb6c09914e2b3792ab78e37a98bea9e3",
+      "duration_sec": 7.0,
+      "expected_filename": "SHOT_013__8529a368.png"
+    },
+    {
+      "shot_id": "SHOT_014",
+      "prompt": "Topographic river network map branching from Tibetan plateau: Ganges, Indus, Yangtze, Mekong, Yellow River flowing across Asia, continental hydrology map, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "8814444cdb9c5852ab35b192fa3717258ec6fdf7dc01239b461aa86022220e15",
+      "duration_sec": 7.0,
+      "expected_filename": "SHOT_014__8814444c.png"
+    },
+    {
+      "shot_id": "SHOT_015",
+      "prompt": "Massive glacier calving event, towering 50-meter blue ice cliff collapsing into glacial water with massive splash, Himalayan glacial terminal, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "b3e404c16b36ad39b83f1634821378ad17f41e1607f06f0418cc2a32cc4ca503",
+      "duration_sec": 7.0,
+      "expected_filename": "SHOT_015__b3e404c1.png"
+    },
+    {
+      "shot_id": "SHOT_016",
+      "prompt": "High altitude drone photogrammetry capturing multiple milky-blue glacial lakes formed behind rocky ridges, glacial lake cluster Himalaya, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "9fa64455f7a959c9268216d4601ea81d93c065c7c1adebd3547bf362d90350fb",
+      "duration_sec": 7.0,
+      "expected_filename": "SHOT_016__9fa64455.png"
+    },
+    {
+      "shot_id": "SHOT_017",
+      "prompt": "Cross-section macro view of a moraine dam wall showing loose gravel, rocks, and embedded decaying core ice veins melting, geological cross-section, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "39ee41bd0640f1bfbdf78d5c380efe410148cd64c6f7b571558e03f16661f432",
+      "duration_sec": 8.0,
+      "expected_filename": "SHOT_017__39ee41bd.png"
+    },
+    {
+      "shot_id": "SHOT_018",
+      "prompt": "Ominous dark storm clouds gathering over an immense glacial lake at 4800m altitude, tension rising, mountain ridge lake, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "6b21a40e31f93bfe4d0b51829908028951a4725f7e45925ead7740aac7e4dd32",
+      "duration_sec": 8.0,
+      "expected_filename": "SHOT_018__6b21a40e.png"
+    },
+    {
+      "shot_id": "SHOT_019",
+      "prompt": "3D flyover above Everest Khumbu icefall and surrounding glacier lakes with altitude markers, Himalayan flight path 3D, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "7434d68b03b488b4d6580aba61a5047ba2ee339a0f3c90cf2d56cf9f43d2db53",
+      "duration_sec": 8.0,
+      "expected_filename": "SHOT_019__7434d68b.png"
+    },
+    {
+      "shot_id": "SHOT_020",
+      "prompt": "Cinematic pull-back from Himalayan peak to the vast populated plains of India and China, sunset haze, Asian continent satellite panorama, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic",
+      "prompt_sha256": "55056357ee2736cc3a638184a07f8f0547faf3d760c028c722e25dbe747aa02b",
+      "duration_sec": 8.0,
+      "expected_filename": "SHOT_020__55056357.png"
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { DownloadRegistry } from './core/download-registry.js';
 
 let nativePort;
 let activeJobId;
+let activeJob;
 const downloadRegistry = new DownloadRegistry(chrome.storage?.local);
 chrome.runtime.onInstalled.addListener(() => chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }));
 chrome.runtime.onStartup.addListener(() => chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }));
@@ -12,12 +13,18 @@ function connectHost() {
   nativePort = chrome.runtime.connectNative('com.nollam.flow_automation');
   nativePort.onMessage.addListener((message) => chrome.runtime.sendMessage(message));
   nativePort.onDisconnect.addListener(() => { nativePort = undefined; });
-  nativePort.postMessage(makeEnvelope('LOAD_JOB', activeJobId, {}));
+  nativePort.postMessage(makeEnvelope('LOAD_JOB', activeJobId, { job: activeJob }));
 }
 chrome.runtime.onStartup.addListener(connectHost);
 chrome.runtime.onInstalled.addListener(connectHost);
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message?.type === 'SET_ACTIVE_JOB') { activeJobId = String(message.job_id || ''); connectHost(); sendResponse({ ok: true }); return true; }
+  if (message?.type === 'SET_ACTIVE_JOB') {
+    activeJobId = String(message.job_id || '');
+    activeJob = message.job;
+    connectHost();
+    sendResponse({ ok: Boolean(activeJobId && activeJob) });
+    return true;
+  }
   if (!nativePort) connectHost();
   if (nativePort) nativePort.postMessage(message);
   sendResponse({ ok: Boolean(nativePort) });
