@@ -1,7 +1,9 @@
 import { makeEnvelope } from './core/protocol.js';
+import { DownloadRegistry } from './core/download-registry.js';
 
 let nativePort;
 let activeJobId;
+const downloadRegistry = new DownloadRegistry(chrome.storage?.local);
 
 function connectHost() {
   if (!activeJobId) return;
@@ -10,7 +12,6 @@ function connectHost() {
   nativePort.onDisconnect.addListener(() => { nativePort = undefined; });
   nativePort.postMessage(makeEnvelope('LOAD_JOB', activeJobId, {}));
 }
-
 chrome.runtime.onStartup.addListener(connectHost);
 chrome.runtime.onInstalled.addListener(connectHost);
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -19,4 +20,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (nativePort) nativePort.postMessage(message);
   sendResponse({ ok: Boolean(nativePort) });
   return true;
+});
+chrome.downloads?.onChanged?.addListener((delta) => {
+  if (delta.state?.current !== 'complete') return;
+  chrome.downloads.search({ id: delta.id }).then(([item]) => {
+    const result = downloadRegistry.complete(delta.id, item?.filename || '');
+    if (nativePort && result.status === 'complete') nativePort.postMessage(makeEnvelope('DOWNLOAD_COMPLETED', result.jobId, result));
+  }).catch(() => {});
 });
