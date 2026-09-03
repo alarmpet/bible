@@ -13,5 +13,6 @@ if (typeof document !== 'undefined') {
   document.querySelector('#generate-missing')?.addEventListener('click', () => send('JOB_START_REQUESTED', { mode: 'missing', retry_limit: 2, max_attempts: 3 }));
   document.querySelector('#generate-all')?.addEventListener('click', () => send('JOB_START_REQUESTED', { mode: 'all', retry_limit: 2, max_attempts: 3 }));
   document.querySelector('#stop')?.addEventListener('click', () => send('JOB_STOPPED'));
+  document.querySelector('#approve-contact-sheet')?.addEventListener('click', () => send('SEMANTIC_REVIEW_APPROVED'));
 }
 export { renderModel };
