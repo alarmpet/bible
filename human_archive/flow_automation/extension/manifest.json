@@ -5,6 +5,7 @@
   "description": "Fail-closed bulk image generation orchestration for Google Flow.",
   "permissions": ["storage", "downloads", "sidePanel", "nativeMessaging", "scripting", "tabs"],
   "host_permissions": ["https://labs.google/*"],
+  "action": {"default_title": "Open NOLLAM Flow Automation"},
   "background": {"service_worker": "service-worker.js", "type": "module"},
   "side_panel": {"default_path": "sidepanel/index.html"},
   "content_scripts": [{"matches": ["https://labs.google/*/tools/flow/project/*"], "js": ["content/flow-adapter.js"]}]

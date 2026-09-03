@@ -4,6 +4,8 @@ import { DownloadRegistry } from './core/download-registry.js';
 let nativePort;
 let activeJobId;
 const downloadRegistry = new DownloadRegistry(chrome.storage?.local);
+chrome.runtime.onInstalled.addListener(() => chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }));
+chrome.runtime.onStartup.addListener(() => chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }));
 
 function connectHost() {
   if (!activeJobId) return;
