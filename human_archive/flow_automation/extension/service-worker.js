@@ -26,7 +26,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   if (!nativePort) connectHost();
-  if (nativePort) nativePort.postMessage(message);
+  if (nativePort) {
+    const outgoing = message?.protocol_version === 1 ? message : makeEnvelope(message.type, activeJobId, message.payload || {});
+    nativePort.postMessage(outgoing);
+  }
   sendResponse({ ok: Boolean(nativePort) });
   return true;
 });
