@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "NOLLAM Flow Automation",
+  "version": "0.1.0",
+  "description": "Fail-closed bulk image generation orchestration for Google Flow.",
+  "permissions": ["storage", "downloads", "sidePanel", "nativeMessaging", "scripting", "tabs"],
+  "host_permissions": ["https://labs.google/*"],
+  "background": {"service_worker": "service-worker.js", "type": "module"},
+  "side_panel": {"default_path": "sidepanel/index.html"},
+  "content_scripts": [{"matches": ["https://labs.google/*/tools/flow/project/*"], "js": ["content/flow-adapter.js"]}]
+}
