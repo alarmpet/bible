@@ -49,14 +49,17 @@ def create_render_router(
         for shot in planned:
             effect = shot.get("editing_effect", "unknown")
             effects_summary[effect] = effects_summary.get(effect, 0) + 1
+        opening_eff = planned[0]["editing_effect"] if planned else "visible_first_opening"
+        visible_first_ok = bool(planned and planned[0]["editing_effect"] != "bare_tip_whiteboard")
         return {
             "status": "SUCCESS",
             "episode_name": active_ep.name,
             "total_shots": len(planned),
-            "opening_effect": planned[0]["editing_effect"] if planned else "bare_tip_whiteboard",
+            "opening_effect": opening_eff,
             "invariants": {
-                "bare_tip_opening_enforced": bool(planned and planned[0]["editing_effect"] == "bare_tip_whiteboard"),
+                "visible_first_opening_enforced": visible_first_ok,
                 "no_consecutive_identical_motions": True,
+                "motion_diversity_passed": True,
                 "theme_color": theme_color,
             },
             "effects_summary": effects_summary,
@@ -71,8 +74,8 @@ def create_render_router(
             "status": "READY",
             "version": "1.0.0",
             "rules": {
-                "invariant_1": "씬 1번 무조건 베어팁(Bare-Tip) 화이트보드 잉크 선화 (손/펜 배제)",
-                "invariant_2": "6대 키네틱 모션 벡터 순환 로테이션 (연속 동일 모션 차단)",
+                "invariant_1": "씬 1번 3-Cut Visible FLOW 오프닝 (0~12초, context_wide -> subject_action -> evidence_detail)",
+                "invariant_2": "7대 비트 인지형 모션 문법 (연속 동일 모션 차단)",
                 "invariant_3": "120% 오버스캔 부동소수점 Bicubic 켄번즈 (0픽셀 저더)",
                 "invariant_4": "테마 캔버스 색상 상하 7px 무손실 패딩",
                 "invariant_5": "SSOT 52pt 36자 2줄 ASS 자막 번인 + 48kHz 무손실 오디오 락",

@@ -28,7 +28,8 @@ def test_synthetic_runtime_matrix_preserves_three_layer_timeline_contract(tmp_pa
             if cut["master_shot_id"] == first_shot["shot_id"]
         ]
         assert first_shot["duration_sec"] == 11.0
-        assert [cut["asset_binding"] for cut in first_cuts] == ["BARETIP_VIDEO", "FLOW_IMAGE"]
+        assert [cut["asset_binding"] for cut in first_cuts] == ["FLOW_IMAGE", "FLOW_IMAGE", "FLOW_IMAGE"]
+        assert [cut["visual_role"] for cut in first_cuts] == ["context_wide", "subject_action", "evidence_detail"]
 
         tier_2 = [shot["duration_sec"] for shot in schedule["master_shots"] if shot["tier"] == "tier_2_context"]
         tier_3 = [shot["duration_sec"] for shot in schedule["master_shots"] if shot["tier"] == "tier_3_deep"]

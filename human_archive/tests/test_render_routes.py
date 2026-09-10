@@ -36,7 +36,7 @@ class _Director:
         self.theme_color = theme_color
 
     def plan_scene_effects(self, shots, theme_color):
-        return [{"editing_effect": "bare_tip_whiteboard", "shot_id": "SHOT_001"}] if shots else []
+        return [{"editing_effect": "visible_first_opening", "shot_id": "SHOT_001"}] if shots else []
 
 
 def test_render_router_preserves_cinematic_contract(tmp_path: Path) -> None:
@@ -60,5 +60,7 @@ def test_render_router_preserves_cinematic_contract(tmp_path: Path) -> None:
     )
     client = TestClient(app)
     effects = client.get("/api/cinematic/effects_plan").json()
-    assert effects["opening_effect"] == "bare_tip_whiteboard"
+    assert effects["opening_effect"] == "visible_first_opening"
+    assert effects["invariants"]["visible_first_opening_enforced"] is True
     assert client.get("/api/cinematic/status").json()["status"] == "READY"
+

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from lib.aligned_prompt_compiler import compile_nollam_prompt
+from lib.aligned_prompt_compiler import compile_nollam_prompt, compile_opening_flow_prompts
 from generate_video_prompts import compile_nollam_docu_prompts
+
 
 
 def _brief(**overrides: object) -> dict[str, object]:
@@ -70,3 +71,13 @@ def test_nollam_batch_entrypoint_binds_each_scene_to_the_canonical_request() -> 
     assert compiled[0]["asset_type"] == "BARETIP_VIDEO"
     assert compiled[1]["asset_type"] == "FLOW_IMAGE"
     assert all(row["exact_frames"] > 0 for row in compiled)
+
+
+def test_opening_flow_prompts_generates_three_visible_cuts() -> None:
+    cuts = compile_opening_flow_prompts(_brief(shot_id="SHOT_001"))
+    assert len(cuts) == 3
+    assert [c["asset_id"] for c in cuts] == ["SHOT_001_cut01", "SHOT_001_cut02", "SHOT_001_cut03"]
+    assert [c["visual_role"] for c in cuts] == ["context_wide", "subject_action", "evidence_detail"]
+    assert all(c["asset_type"] == "FLOW_IMAGE" for c in cuts)
+    assert sum(c["duration"] for c in cuts) == pytest.approx(11.0, abs=0.01)
+

@@ -13,7 +13,7 @@ from __future__ import annotations
 import math
 import subprocess
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List, Dict, Any, Optional
 from PIL import Image
 
 
@@ -35,6 +35,8 @@ def compute_trajectory(
     
     All coordinates are normalized in [0.0, 1.0], zoom is >= 1.0.
     """
+    if motion in {"tri_phasic", "tri_phasic_ken_burns", "long_take_tri_phasic"}:
+        return compute_tri_phasic_trajectory(frame, total_frames)
     if motion in {"biphasic_ken_burns", "biphasic_push_in"}:
         return compute_biphasic_trajectory(frame, total_frames, "push_in")
     if motion in {"layer3_perceptual_cut", "perceptual_cut"}:
@@ -127,6 +129,64 @@ def compute_perceptual_cut_trajectory(
         local_t = (frame - cut_frame) / float(max(1, rem_frames - 1))
         st = cosine_easing(local_t)
         return 1.18 + 0.05 * st, 0.5, 0.45
+
+
+def compute_tri_phasic_trajectory(
+    frame: int,
+    total_frames: int,
+    focal_position: str = "center",
+    clamped_for_subtitles: bool = True,
+) -> Tuple[float, float, float]:
+    """Return a 3-stage trajectory for Tier 3 long-takes: Ambient Drift -> Dynamic Approach -> Focal Lock.
+
+    Phase 1 (0% to 35%): Ambient Drift (zoom ~1.01-1.04, subtle horizontal exploration).
+    Phase 2 (35% to 70%): Dynamic Approach (zoom 1.05 -> 1.17, Cosine approach to focal center).
+    Phase 3 (70% to 100%): Focal Lock & Breathe (zoom 1.17 -> 1.22 micro-creep, locked on focal subject).
+    """
+    if total_frames <= 1:
+        return 1.0, 0.5, 0.5
+
+    t = max(0.0, min(1.0, frame / float(total_frames - 1)))
+
+    target_y = 0.45
+    if focal_position == "upper":
+        target_y = 0.35
+    elif focal_position == "lower":
+        target_y = 0.65
+
+    if clamped_for_subtitles and target_y > 0.75:
+        target_y = 0.75
+
+    target_x = 0.50
+    if focal_position == "left":
+        target_x = 0.40
+    elif focal_position == "right":
+        target_x = 0.60
+
+    if t <= 0.35:
+        p = t / 0.35
+        sp = 0.8 * p + 0.2 * (0.5 * (1.0 - math.cos(math.pi * p)))
+        zoom = 1.01 + 0.04 * sp
+        center_x = 0.58 - 0.16 * sp
+        center_y = 0.50 + 0.03 * sp
+    elif t <= 0.70:
+        p = (t - 0.35) / 0.35
+        sp = 0.5 * p + 0.5 * (0.5 * (1.0 - math.cos(math.pi * p)))
+        zoom = 1.05 + 0.12 * sp
+        start_x = 0.42
+        center_x = start_x + (target_x - start_x) * sp
+        center_y = 0.53 + (target_y - 0.53) * sp
+    else:
+        p = (t - 0.70) / 0.30
+        sp = 0.8 * p + 0.2 * (0.5 * (1.0 - math.cos(math.pi * p)))
+        zoom = 1.17 + 0.05 * sp
+        center_x = target_x + 0.015 * math.sin(p * math.pi * 3)
+        center_y = target_y + 0.010 * math.cos(p * math.pi * 3)
+
+    if clamped_for_subtitles and center_y > 0.75:
+        center_y = 0.75
+
+    return zoom, center_x, center_y
 
 
 def compute_crop_box(
@@ -243,3 +303,172 @@ def render_smooth_motion_clip(
         raise RuntimeError(f"FFmpeg failed while rendering smooth clip for {image_path}")
 
     return output_path
+
+
+def check_trajectory_static_hold(
+    trajectory_points: List[Tuple[float, float, float]],
+    canvas_w: float = 2304.0,
+    canvas_h: float = 1296.0,
+    target_w: float = 1920.0,
+    target_h: float = 1080.0,
+    window_size: int = 25,
+    min_displacement_px: float = 3.0,
+) -> bool:
+    """Check whether any sliding window of `window_size` frames has displacement < min_displacement_px.
+
+    Returns True if trajectory passes (continuous motion, no static hold).
+    Returns False if a static dead zone is detected.
+    """
+    n = len(trajectory_points)
+    if n <= window_size:
+        return True
+
+    crop_boxes = [
+        compute_crop_box(canvas_w, canvas_h, target_w, target_h, zoom, nx, ny)
+        for zoom, nx, ny in trajectory_points
+    ]
+
+    for i in range(n - window_size):
+        c1 = crop_boxes[i]
+        c2 = crop_boxes[i + window_size]
+        dx = c2[0] - c1[0]
+        dy = c2[1] - c1[1]
+        dw = (c2[2] - c2[0]) - (c1[2] - c1[0])
+        dh = (c2[3] - c2[1]) - (c1[3] - c1[1])
+        disp = math.sqrt(dx * dx + dy * dy + dw * dw + dh * dh)
+        if disp < min_displacement_px:
+            return False
+
+    return True
+
+
+def render_composite_opening_clip(
+    output_path: Path,
+    image_paths: Optional[List[Path]] = None,
+    cuts: Optional[List[Dict[str, Any]]] = None,
+    duration: float = 11.0,
+    fps: int = 25,
+    width: int = 1920,
+    height: int = 1080,
+    dissolve_frames: int = 6,
+) -> Path:
+    """Render a 3-cut visible FLOW opening composite clip into a single MP4 rawvideo pipe.
+
+    Uses PIL in-memory frame switching and 6-frame cross-dissolve with strict monotonic PTS.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if cuts is None:
+        if not image_paths or len(image_paths) != 3:
+            raise ValueError("Must provide either `cuts` or exactly 3 `image_paths` for opening composite.")
+        d1 = duration * (3.0 / 11.0)
+        d2 = duration * (3.5 / 11.0)
+        d3 = duration - d1 - d2
+        cuts = [
+            {"image_path": Path(image_paths[0]), "duration": d1, "motion": "pan_right", "visual_role": "context_wide"},
+            {"image_path": Path(image_paths[1]), "duration": d2, "motion": "push_in", "visual_role": "subject_action"},
+            {"image_path": Path(image_paths[2]), "duration": d3, "motion": "push_in", "visual_role": "evidence_detail"},
+        ]
+
+    canvas_w = int(round(width * 1.2))
+    canvas_h = int(round(height * 1.2))
+
+    canvases = [
+        prepare_overscan_canvas(Path(c["image_path"]), canvas_w=canvas_w, canvas_h=canvas_h)
+        for c in cuts
+    ]
+
+    total_frames = max(1, round(sum(float(c.get("duration", 0.0)) for c in cuts) * fps))
+
+    # Calculate cut frame counts
+    cut_frame_counts = []
+    accum = 0
+    for idx, c in enumerate(cuts):
+        if idx == len(cuts) - 1:
+            cnt = total_frames - accum
+        else:
+            cnt = max(1, round(float(c.get("duration", 0.0)) * fps))
+            accum += cnt
+        cut_frame_counts.append(cnt)
+
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-hide_banner",
+        "-loglevel", "error",
+        "-f", "rawvideo",
+        "-pix_fmt", "rgb24",
+        "-s", f"{width}x{height}",
+        "-r", str(fps),
+        "-i", "-",
+        "-c:v", "libx264",
+        "-preset", "medium",
+        "-crf", "18",
+        "-pix_fmt", "yuv420p",
+        "-color_range", "tv",
+        "-colorspace", "bt709",
+        "-color_primaries", "bt709",
+        "-color_trc", "bt709",
+        str(output_path)
+    ]
+
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    assert proc.stdin is not None
+
+    def _render_frame(cut_idx: int, local_f: int, local_cnt: int) -> Image.Image:
+        c = cuts[cut_idx]
+        motion = c.get("motion", "push_in")
+        zoom, norm_x, norm_y = compute_trajectory(local_f, local_cnt, motion)
+        left, top, right, bottom = compute_crop_box(
+            canvas_w=float(canvas_w),
+            canvas_h=float(canvas_h),
+            target_w=float(width),
+            target_h=float(height),
+            zoom=zoom,
+            norm_x=norm_x,
+            norm_y=norm_y
+        )
+        return canvases[cut_idx].resize(
+            (width, height),
+            resample=Image.Resampling.BICUBIC,
+            box=(left, top, right, bottom)
+        )
+
+    # Frame rendering loop with boundary dissolve
+    cut_starts = []
+    s = 0
+    for cnt in cut_frame_counts:
+        cut_starts.append(s)
+        s += cnt
+
+    for f in range(total_frames):
+        # Determine active cut
+        active_cut = 0
+        for i in range(len(cuts)):
+            if f >= cut_starts[i]:
+                active_cut = i
+        local_f = f - cut_starts[active_cut]
+        local_cnt = cut_frame_counts[active_cut]
+
+        rendered = _render_frame(active_cut, local_f, local_cnt)
+
+        # Check if transitioning to next cut
+        if active_cut < len(cuts) - 1:
+            frames_to_next = cut_starts[active_cut + 1] - f
+            if 0 < frames_to_next <= dissolve_frames:
+                next_cut = active_cut + 1
+                next_local_f = dissolve_frames - frames_to_next
+                next_local_cnt = cut_frame_counts[next_cut]
+                next_rendered = _render_frame(next_cut, next_local_f, next_local_cnt)
+                alpha = (dissolve_frames - frames_to_next + 1) / float(dissolve_frames + 1)
+                rendered = Image.blend(rendered, next_rendered, alpha)
+
+        proc.stdin.write(rendered.tobytes())
+
+    proc.stdin.close()
+    if proc.wait() != 0:
+        raise RuntimeError(f"FFmpeg failed while rendering composite opening clip to {output_path}")
+
+    return output_path
+

@@ -1,0 +1,73 @@
+schema_version: 1
+profiles:
+  quick_3m:
+    publishable: true
+    target_duration_sec: 180
+    min_duration_sec: 170
+    max_duration_sec: 190
+    allow_three_minute_slogan: true
+  standard_docu:
+    publishable: true
+    target_duration_sec: 1200
+    min_duration_sec: 840  # 1200초 - 30% (14분)
+    max_duration_sec: 1560 # 1200초 + 30% (26분)
+    allow_three_minute_slogan: false
+    visible_first_opening: true
+    baretip_in_opening_allowed: false
+    pacing_strategy:
+      phase_1_hook_cut_sec: [2.5, 4.0]      # 초반: 빠른 이미지 회전
+      phase_2_roadmap_cut_sec: [4.0, 6.0]   # 로드맵: 중간 속도
+      phase_3_evidence_cut_sec: [6.0, 9.0]  # 본론/사료: 점진적 슬로우
+      phase_4_insight_cut_sec: [8.0, 12.0]  # 결론/여운: 롱테이크
+  pilot:
+    publishable: false
+    target_duration_sec: 72
+    min_duration_sec: 30
+    max_duration_sec: 180
+    allow_three_minute_slogan: false
+  trend_explainer_8m:
+    publishable: true
+    target_duration_sec: 480
+    min_duration_sec: 360
+    max_duration_sec: 600
+    allow_three_minute_slogan: false
+    aspect_ratio: "16:9"
+    width: 1920
+    height: 1080
+    fps: 25
+  trend_explainer_20m:
+    publishable: true
+    target_duration_sec: 1200
+    min_duration_sec: 840  # 14분
+    max_duration_sec: 1560 # 26분
+    allow_three_minute_slogan: false
+    visible_first_opening: true
+    baretip_in_opening_allowed: false
+    aspect_ratio: "16:9"
+    width: 1920
+    height: 1080
+    fps: 25
+  doodle_docu_12m:
+    publishable: true
+    target_duration_sec: 720
+    min_duration_sec: 600
+    max_duration_sec: 840
+    allow_three_minute_slogan: false
+  trend_short_75s:
+    publishable: false
+    target_duration_sec: 75
+    min_duration_sec: 45
+    max_duration_sec: 90
+    aspect_ratio: "9:16"
+  trend_reaction_5m:
+    publishable: false
+    target_duration_sec: 300
+    min_duration_sec: 240
+    max_duration_sec: 420
+    aspect_ratio: "16:9"
+  trend_factcheck_4m:
+    publishable: false
+    target_duration_sec: 240
+    min_duration_sec: 180
+    max_duration_sec: 360
+    aspect_ratio: "16:9"

@@ -1,0 +1,129 @@
+# 레거시 프로필 (쉽선비 정적 페이싱)
+narration_aligned_hybrid_v1:
+  min_shot_sec: 9.0
+  target_shot_sec: 10.5
+  max_shot_sec: 12.0
+  hard_max_shot_sec: 15.0
+  max_sentences_per_shot: 2
+  host_ratio_min: 0.08
+  host_ratio_max: 0.12
+  host_min_non_host_gap: 7
+  max_same_mode_streak: 2
+  max_evidence_streak: 1
+  motif_window_shots: 10
+  max_motif_occurrences_per_window: 2
+  cold_open_pilot_shots: 12
+  cold_open_pilot_max_sec: 120.0
+  coverage_pilot_shots: 8
+  max_policy_auto_retries: 2
+
+# 놀람파일 20분 시간 감쇠 곡선 — 인류의 서재 벤치마크 기반
+nollam_decay_20m:
+  target_duration_sec: 1200
+  # 호스트 아바타 완전 배제
+  host_ratio_min: 0.0
+  host_ratio_max: 0.0
+
+  # 7개 시간 구간별 컷 목표 (초)
+  zones:
+    - zone_id: cold_open
+      start_sec: 0
+      end_sec: 15
+      target_shot_sec: 4.0
+      min_shot_sec: 3.0
+      hard_max_shot_sec: 5.0
+      unique_ratio: 1.0            # 유니크 이미지 100%
+      max_sentences_per_shot: 1
+      opening_group: true
+      disallow_baretip: true
+      visual_roles: ["context_wide", "subject_action", "evidence_detail"]
+      notes: "상식 파괴 훅 + 숫자 앵커, 3-Cut Visible FLOW 트릴로지"
+
+    - zone_id: hook
+      start_sec: 15
+      end_sec: 60
+      target_shot_sec: 4.5
+      min_shot_sec: 3.5
+      hard_max_shot_sec: 6.0
+      unique_ratio: 0.8
+      max_sentences_per_shot: 2
+      notes: "반전('그런데') 문장 2f 화이트 플래시, 키워드 팝업"
+
+    - zone_id: roadmap
+      start_sec: 60
+      end_sec: 120
+      target_shot_sec: 6.5
+      min_shot_sec: 5.0
+      hard_max_shot_sec: 9.0       # 2문장 9.1초 결합 차단
+      unique_ratio: 0.6
+      max_sentences_per_shot: 2
+      notes: "도식/지도 1장 + 단계별 3단계 reveal"
+
+    - zone_id: early_body
+      start_sec: 120
+      end_sec: 300
+      target_shot_sec: 8.5
+      min_shot_sec: 6.0
+      hard_max_shot_sec: 12.0
+      unique_ratio: 0.65
+      max_sentences_per_shot: 2
+      notes: "2문장 1컷, 4개 스케일 교차 (Wide→Action→Detail→Diagram)"
+
+    - zone_id: body
+      start_sec: 300
+      end_sec: 600
+      target_shot_sec: 10.0
+      min_shot_sec: 7.0
+      hard_max_shot_sec: 14.0
+      unique_ratio: 0.5
+      max_sentences_per_shot: 2
+      notes: "유니크 50% : 파생 50% 결합"
+
+    - zone_id: late_body
+      start_sec: 600
+      end_offset_from_end_sec: 90   # 끝에서 90초 전까지
+      target_shot_sec: 11.5
+      min_shot_sec: 8.0
+      hard_max_shot_sec: 15.0
+      unique_ratio: 0.35
+      max_sentences_per_shot: 2
+      notes: "유니크 35% : 파생 65%, 12초 초과 시 분할"
+
+    - zone_id: outro
+      end_offset_from_end_sec: 90   # 마지막 90초
+      start_sec: -1                 # sentinel: 동적 계산
+      target_shot_sec: 12.5
+      min_shot_sec: 9.0
+      hard_max_shot_sec: 18.0
+      unique_ratio: 0.3
+      max_sentences_per_shot: 2
+      notes: "롱테이크 슬로우 푸시, 현대적 메시지, CTA"
+
+  # 재훅 창 (Re-hook Window): 챕터 경계에서 20초간 리셋
+  rehook_window:
+    duration_sec: 20
+    target_shot_sec: 4.5
+    unique_ratio: 0.8
+
+  # 결합/분할 규칙
+  merge_rule: "다음 문장 추가 시 duration ≤ target(t) OR (duration < min(t) AND duration ≤ hard_max(t))"
+  clause_split_rule: "단일 문장이 hard_max(t) 초과 시 silencedetect(-35dB, ≥0.18s) → 절 마커(고/며/는데/지만) → 균등 분할"
+
+  # 예산 산출
+  budget:
+    total_perceptual_cuts: [130, 150]   # 지각 컷 130~150개
+    unique_images: [70, 80]             # 유니크 이미지 70~80장
+    derived_variants: [60, 70]          # 파생 변주 60~70장
+    overlays: 30                        # 텍스트/그래픽 오버레이 약 30건
+
+  # 파생 컷 품질 게이트
+  derived_quality_gate:
+    min_zoom_ratio: 1.30
+    min_center_shift_pct: 25            # 중심 이동 최소 25% 폭
+    max_consecutive_derived: 2          # 연속 파생 최대 2컷
+
+  # 모드 반복 제어
+  max_same_mode_streak: 2
+  motif_window_shots: 10
+  max_motif_occurrences_per_window: 2
+  max_policy_auto_retries: 2

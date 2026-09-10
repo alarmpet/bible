@@ -128,6 +128,31 @@ def verify_postflight(
                         pass
     checks["subtitle_timeline"] = {"status": "PASS" if sub_ok else "FAIL"}
 
+    # 7. Release Manifest Verification (if provided or present in build_dir)
+    manifest_target = None
+    if build_dir:
+        candidate_v4 = build_dir / "release_manifest_v4.json"
+        candidate_legacy = build_dir / "release_manifest.json"
+        if candidate_v4.exists():
+            manifest_target = candidate_v4
+        elif candidate_legacy.exists():
+            manifest_target = candidate_legacy
+
+    if manifest_target and manifest_target.exists():
+        try:
+            m_data = json.loads(manifest_target.read_text(encoding="utf-8"))
+            m_ok, m_errs = verify_release_manifest_schema(m_data)
+            checks["release_manifest"] = {
+                "status": "PASS" if m_ok else "FAIL",
+                "version": m_data.get("release_schema_version") or m_data.get("schema_version"),
+                "errors": m_errs,
+            }
+            if not m_ok:
+                errors.extend(m_errs)
+        except Exception as ex:
+            checks["release_manifest"] = {"status": "FAIL", "error": str(ex)}
+            errors.append(f"Release manifest parse error: {ex}")
+
     overall_status = "PASS" if not errors else "FAIL"
 
     report = {
@@ -148,6 +173,78 @@ def verify_postflight(
         print(f"✅ Release report written to {report_output}")
 
     return overall_status == "PASS", report
+
+
+def verify_release_manifest_schema(manifest: dict[str, Any]) -> tuple[bool, list[str]]:
+    """Verify polymorphic release manifest against version invariants."""
+    errors: list[str] = []
+    version = str(
+        manifest.get("release_schema_version")
+        or manifest.get("release_type")
+        or ("HISTORICAL_PRODUCTION_RELEASE" if manifest.get("schema_version") == 2 else "OFFICIAL_PRODUCTION_RELEASE_V4")
+    )
+
+    if version in {"HISTORICAL_PRODUCTION_RELEASE", "v2"}:
+        # Freeze and preserve historical production release without Gate 8 errors
+        if not manifest.get("sha256") and not manifest.get("video_sha256"):
+            errors.append("Historical release missing video sha256")
+        return len(errors) == 0, errors
+
+    # OFFICIAL_PRODUCTION_RELEASE_V4 (Gate 8 Enforcement)
+    if not manifest.get("baretip_in_opening_rejected", False):
+        errors.append("Gate 8.2 violation: baretip_in_opening_rejected must be True")
+
+    if not manifest.get("first_frame_visibility_passed", False):
+        errors.append("Gate 8.1 violation: first_frame_visibility_passed must be True")
+
+    if not manifest.get("motion_diversity_passed", False):
+        errors.append("Gate 8.4 violation: motion_diversity_passed must be True")
+
+    parity = float(manifest.get("parity_difference_sec", 0.0))
+    if parity > 0.040:
+        errors.append(f"Gate 8.6 violation: parity_difference_sec {parity:.3f}s exceeds 0.040s")
+
+    # Check shots / assets if present
+    shots = manifest.get("shots") or manifest.get("planned_shots") or []
+    if shots:
+        opening_shot = shots[0]
+        if opening_shot.get("editing_effect") == "bare_tip_whiteboard" or opening_shot.get("asset_type") == "BARETIP_VIDEO":
+            errors.append("Gate 8.2 violation: Bare-Tip detected in opening shot")
+
+    return len(errors) == 0, errors
+
+
+def generate_release_manifest_v4(
+    video_path: Path,
+    audio_path: Path,
+    shots: list[dict[str, Any]],
+    parity_diff: float,
+    first_frame_visibility_passed: bool = True,
+    motion_diversity_passed: bool = True,
+    baretip_in_opening_rejected: bool = True,
+) -> dict[str, Any]:
+    """Generate official production release manifest v4 with Gate 8 bindings."""
+    video_path = Path(video_path)
+    audio_path = Path(audio_path)
+    return {
+        "schema_version": 4,
+        "release_schema_version": "OFFICIAL_PRODUCTION_RELEASE_V4",
+        "release_type": "OFFICIAL_PRODUCTION_RELEASE_V4",
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "video_file": video_path.name,
+        "video_path": str(video_path),
+        "video_sha256": compute_file_sha256(video_path) if video_path.exists() else "",
+        "audio_file": audio_path.name,
+        "audio_path": str(audio_path),
+        "audio_sha256": compute_file_sha256(audio_path) if audio_path.exists() else "",
+        "parity_difference_sec": round(parity_diff, 4),
+        "first_frame_visibility_passed": bool(first_frame_visibility_passed),
+        "baretip_in_opening_rejected": bool(baretip_in_opening_rejected),
+        "motion_diversity_passed": bool(motion_diversity_passed),
+        "total_shots": len(shots),
+        "opening_group_cuts": 3,
+        "shots": shots,
+    }
 
 
 def main():

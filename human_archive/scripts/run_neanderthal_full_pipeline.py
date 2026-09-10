@@ -711,7 +711,7 @@ async def generate_cinematic_assets_async(shots: List[Dict[str, Any]]) -> List[P
         if not out_jpg.exists() or out_jpg.stat().st_size < 10000:
             if shot_id == "SHOT_001":
                 raise RuntimeError(
-                    "SHOT_001 Bare-Tip source unavailable; refusing to reuse a placeholder asset."
+                    "SHOT_001 Visible-First Flow source unavailable; refusing to reuse a placeholder asset."
                 )
             missing_assets.append(shot_id)
 
@@ -821,12 +821,19 @@ def render_cinematic_master_video(master_audio: Path, shots: List[Dict[str, Any]
         plan = planned_effects[idx]
         effect = plan.get("editing_effect", "subpixel_push_in")
 
-        bare_tip_required = idx == 0 or effect == "bare_tip_whiteboard"
+        # Invariant 1: Opening (idx == 0) is Visible-First FLOW Opening. Bare-Tip is strictly disallowed in opening.
+        if idx == 0 and effect == "bare_tip_whiteboard":
+            raise ValueError("BARETIP_VIDEO is strictly disallowed in opening (Gate 8 invariant).")
+
+        bare_tip_required = (effect == "bare_tip_whiteboard") and (idx > 0)
         bare_tip_marker = clip_file.with_suffix(".renderer.json")
 
-        # Check if clip already rendered with correct duration.  A Bare-Tip
-        # opening is only cacheable when its renderer provenance is present;
-        # an old smooth-motion clip must never satisfy the opening invariant.
+        if idx == 0 and bare_tip_marker.is_file():
+            # Legacy Bare-Tip opening cache must never satisfy Gate 8 visible-first invariant
+            bare_tip_marker.unlink(missing_ok=True)
+            clip_file.unlink(missing_ok=True)
+
+        # Check if clip already rendered with correct duration.
         if clip_file.exists() and clip_file.stat().st_size > 100000:
             probe_cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", str(clip_file)]
             res = subprocess.run(probe_cmd, capture_output=True, text=True)
@@ -853,7 +860,43 @@ def render_cinematic_master_video(master_audio: Path, shots: List[Dict[str, Any]
         if motion_type not in ["push_in", "pull_out", "pan_left", "pan_right", "tilt_up", "tilt_down"]:
             motion_type = "push_in"
 
-        if bare_tip_required:
+        if idx == 0:
+            # 3-Cut Visible FLOW Opening
+            cut01 = APPROVED_IMG_DIR / "SHOT_001_cut01.jpg"
+            cut02 = APPROVED_IMG_DIR / "SHOT_001_cut02.jpg"
+            cut03 = APPROVED_IMG_DIR / "SHOT_001_cut03.jpg"
+            if cut01.exists() and cut02.exists() and cut03.exists():
+                try:
+                    from smooth_subpixel_motion_engine import render_composite_opening_clip
+                    render_composite_opening_clip(
+                        image_paths=[cut01, cut02, cut03],
+                        output_path=clip_file,
+                        duration=dur,
+                        fps=25,
+                        width=1920,
+                        height=1080
+                    )
+                except ImportError:
+                    render_smooth_motion_clip(
+                        image_path=img_file,
+                        output_path=clip_file,
+                        duration=dur,
+                        motion="pan_right",
+                        fps=25,
+                        width=1920,
+                        height=1080
+                    )
+            else:
+                render_smooth_motion_clip(
+                    image_path=img_file,
+                    output_path=clip_file,
+                    duration=dur,
+                    motion="pan_right",
+                    fps=25,
+                    width=1920,
+                    height=1080
+                )
+        elif bare_tip_required:
             render_bare_tip_ink_stream_clip(img_file, clip_file, dur, fps=25)
             # Normalize 1080x600 whiteboard canvas to 1920x1080 with 0xF5EBD7 padding
             temp_clip = clip_file.with_suffix(".raw_stream.mp4")
@@ -902,7 +945,7 @@ def render_cinematic_master_video(master_audio: Path, shots: List[Dict[str, Any]
     concat_list = CLIPS_DIR / "concat_list.txt"
     with open(concat_list, "w", encoding="utf-8") as f:
         for c in clip_paths:
-            f.write(f"file '{c.resolve()}'\n")
+            f.write(f"file '{c.resolve().as_posix()}'\n")
 
     video_only = EP_DIR / "generation" / "neanderthal_video_concat.mp4"
     cmd_concat = [

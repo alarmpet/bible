@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NollamPolymorphicAssetContractV1",
+  "type": "object",
+  "required": ["asset_id", "shot_id", "asset_type", "file_path", "sha256", "bytes", "status"],
+  "properties": {
+    "asset_id": {"type": "string", "minLength": 1},
+    "shot_id": {"type": "string", "minLength": 1},
+    "asset_type": {"enum": ["FLOW_IMAGE", "BARETIP_VIDEO", "HYPERFRAMES_VIDEO"]},
+    "scene_role": {"type": "string"},
+    "order": {"type": "integer", "minimum": 1},
+    "visual_role": {"enum": ["context_wide", "subject_action", "evidence_detail", "standard", "diagram", "hud"]},
+    "file_path": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"},
+    "bytes": {"type": "integer", "exclusiveMinimum": 0},
+    "status": {"enum": ["COMPLETED", "TIMEOUT", "FAILED", "BLOCKED"]},
+    "width": {"type": "integer", "exclusiveMinimum": 0},
+    "height": {"type": "integer", "exclusiveMinimum": 0},
+    "duration_sec": {"type": "number", "exclusiveMinimum": 0},
+    "fps": {"type": "number", "exclusiveMinimum": 0}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"asset_type": {"const": "FLOW_IMAGE"}}},
+      "then": {"required": ["width", "height"]}
+    },
+    {
+      "if": {"properties": {"asset_type": {"enum": ["BARETIP_VIDEO", "HYPERFRAMES_VIDEO"]}}},
+      "then": {"required": ["duration_sec", "fps"]}
+    },
+    {
+      "if": {"properties": {"scene_role": {"const": "opening_group"}}},
+      "then": {
+        "properties": {
+          "asset_type": {"const": "FLOW_IMAGE"},
+          "visual_role": {"enum": ["context_wide", "subject_action", "evidence_detail"]}
+        },
+        "required": ["visual_role"]
+      }
+    },
+    {
+      "if": {"properties": {"order": {"const": 1}}},
+      "then": {
+        "not": {
+          "properties": {
+            "asset_type": {"const": "BARETIP_VIDEO"}
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}

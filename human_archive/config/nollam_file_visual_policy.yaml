@@ -1,0 +1,27 @@
+policy_id: nollam_file_visual_v1
+schema_version: 1
+format_id: nollam_file_long
+aspect_ratio: "16:9"
+width: 1920
+height: 1080
+fps: 25
+base_image_text_policy: no_glyph
+overlay_manifest: overlay_event_manifest_v1
+accessibility:
+  max_lines: 2
+  max_chars_per_line: 14
+  require_non_color_indicator: true
+opening_policy:
+  enforce_visible_first: true
+  opening_scene_role: "opening_group"
+  disallowed_asset_types_in_opening:
+    - "BARETIP_VIDEO"
+  allowed_visual_roles:
+    - "context_wide"
+    - "subject_action"
+    - "evidence_detail"
+  gate_8_visibility_thresholds:
+    min_edge_density: 0.035
+    min_non_bg_coverage: 0.15
+    min_focal_bbox_ratio: 0.08
+    min_local_variance: 6.0

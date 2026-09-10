@@ -31,6 +31,14 @@ try:
 except ImportError:
     render_smooth_motion_clip = None
 
+try:
+    from lib.cinematic_effect_planner import CinematicEffectPlanner
+except ImportError:
+    try:
+        from cinematic_effect_planner import CinematicEffectPlanner
+    except ImportError:
+        CinematicEffectPlanner = None
+
 DEFAULT_THEME_COLOR = "0xF5EBD7"
 DEFAULT_DARK_THEME_COLOR = "0x070A12"
 
@@ -164,9 +172,15 @@ class CinematicEditingDirector:
 
     calculate_shot_budget = staticmethod(calculate_variable_shot_budget)
 
-    def __init__(self, theme_color: str = DEFAULT_THEME_COLOR, default_fps: int = 30):
+    def __init__(
+        self,
+        theme_color: str = DEFAULT_THEME_COLOR,
+        default_fps: int = 30,
+        planner: Optional[Any] = None,
+    ):
         self.theme_color = theme_color
         self.default_fps = default_fps
+        self.planner = planner or (CinematicEffectPlanner() if CinematicEffectPlanner else None)
 
     def plan_scene_effects(
         self,
@@ -175,85 +189,125 @@ class CinematicEditingDirector:
     ) -> List[Dict[str, Any]]:
         """Assign editing effects across shots strictly enforcing constitutional invariants.
         
-        - Invariant 1: Shot 0 (SCN_001 / Hook) is ALWAYS 'bare_tip_whiteboard'.
-        - Invariant 2: No consecutive identical motions (shot[i] != shot[i-1]).
+        - Invariant 1: Shot 0 (SCN_001 / Hook) is ALWAYS Visible-First 3-Cut FLOW Opening.
+        - Invariant 2: 7-Beat deterministic motion grammar with Anti-Monotony diversity.
         """
         if not shots:
             return []
 
         active_theme = theme_color or self.theme_color
         planned = []
-        cycle_idx = 0
+        planned_profiles = []
 
         for i, s in enumerate(shots):
             shot_copy = dict(s)
-            shot_id = shot_copy.get("shot_id", f"SHOT_{i+1:03d}")
+            order = int(shot_copy.get("order", i + 1))
+            shot_copy["order"] = order
+            shot_id = shot_copy.get("shot_id", f"SHOT_{order:03d}")
+            shot_copy["shot_id"] = shot_id
             text = (shot_copy.get("display_text") or shot_copy.get("narration") or "").strip()
-
-            # Invariant 1: First scene is MANDATORY Bare-Tip Whiteboard
-            if i == 0:
-                effect = "bare_tip_whiteboard"
-                sub_type = "ink_stream_blueprint"
-            elif i == len(shots) - 1 and len(shots) >= 4 and ("계속됩니다" in text or "진실" in text or "구독" in text):
-                effect = "hyperframes_typo"
-                sub_type = "kinetic_outro"
-            elif any(k in text for k in ["조 원", "캐럿", "3,100m", "수심", "좌표", "톤", "억", "km"]) and len(shots) >= 5:
-                # If prior was hyperframes_hud, rotate to motion to avoid consecutive identical effects
-                if planned and planned[-1].get("editing_effect") == "hyperframes_hud":
-                    effect = MOTION_CYCLE[cycle_idx % len(MOTION_CYCLE)]
-                    cycle_idx += 1
-                else:
-                    effect = "hyperframes_hud"
-                sub_type = "data_card_3d"
-            else:
-                # Rotate through motion cycle
-                candidate = MOTION_CYCLE[cycle_idx % len(MOTION_CYCLE)]
-                # Invariant 2: Prevent consecutive identical motions
-                if planned and planned[-1].get("editing_effect") == candidate:
-                    cycle_idx += 1
-                    candidate = MOTION_CYCLE[cycle_idx % len(MOTION_CYCLE)]
-                effect = candidate
-                sub_type = "subpixel_ken_burns"
-                cycle_idx += 1
-
-            # 3-Tier Pacing Tier Identification based on timeline position
             shot_dur = float(shot_copy.get("scene_duration", shot_copy.get("duration_sec", 10.0)))
             cur_t = float(shot_copy.get("scene_start", i * 10.0))
             tot_est = max(1.0, float(shots[-1].get("scene_end", len(shots) * 10.0)))
             timeline_ratio = (cur_t + shot_dur / 2.0) / tot_est
 
-            if "pacing_tier" in shot_copy:
-                tier = shot_copy["pacing_tier"]
-                tempo = shot_copy.get("editing_tempo", "context_mid")
-            else:
-                if timeline_ratio <= 0.10 or i == 0:
-                    tier = "tier_1_hook"
-                    tempo = "rapid_montage"
-                    if i > 0 and sub_type == "subpixel_ken_burns":
-                        sub_type = "subpixel_rapid_cut"
-                elif timeline_ratio <= 0.30:
+            # Invariant 1: First scene is MANDATORY 3-Cut Visible FLOW Opening
+            if i == 0:
+                if self.planner:
+                    opening_profiles = self.planner.plan_opening_group(shot_copy)
+                    shot_copy["scene_role"] = "opening_group"
+                    shot_copy["opening_cuts"] = [p.as_dict() for p in opening_profiles]
+                    shot_copy["motion_family"] = opening_profiles[0].motion_family
+                    shot_copy["axis"] = opening_profiles[0].axis
+                    planned_profiles.append(opening_profiles[0])
+                else:
+                    shot_copy["scene_role"] = "opening_group"
+                    shot_copy["motion_family"] = "ambient_drift"
+                    shot_copy["axis"] = "pan_right"
+
+                shot_copy["editing_effect"] = "visible_first_opening"
+                shot_copy["editing_subtype"] = "3_cut_visible_flow_trilogy"
+                shot_copy["pacing_tier"] = "tier_1_hook"
+                shot_copy["editing_tempo"] = "rapid_montage"
+                shot_copy["camera_motion"] = shot_copy.get("axis", "pan_right")
+                shot_copy["theme_color"] = active_theme
+                planned.append(shot_copy)
+                continue
+
+            # Special Outro check
+            if i == len(shots) - 1 and len(shots) >= 4 and ("계속됩니다" in text or "진실" in text or "구독" in text):
+                effect = "hyperframes_typo"
+                sub_type = "kinetic_outro"
+                tier = "tier_3_deep"
+                tempo = "deep_contemplative"
+                shot_copy["editing_effect"] = effect
+                shot_copy["editing_subtype"] = sub_type
+                shot_copy["motion_family"] = "hyperframes"
+                shot_copy["axis"] = "kinetic"
+                shot_copy["pacing_tier"] = tier
+                shot_copy["editing_tempo"] = tempo
+                shot_copy["theme_color"] = active_theme
+                planned.append(shot_copy)
+                continue
+
+            # Special HUD check
+            if any(k in text for k in ["조 원", "캐럿", "3,100m", "수심", "좌표", "톤", "억", "km"]) and len(shots) >= 5:
+                if not planned or planned[-1].get("editing_effect") != "hyperframes_hud":
+                    effect = "hyperframes_hud"
+                    sub_type = "data_card_3d"
                     tier = "tier_2_context"
                     tempo = "context_mid"
-                else:
-                    tier = "tier_3_deep"
-                    tempo = "deep_contemplative"
+                    shot_copy["editing_effect"] = effect
+                    shot_copy["editing_subtype"] = sub_type
+                    shot_copy["motion_family"] = "hud"
+                    shot_copy["axis"] = "3d_depth"
+                    shot_copy["pacing_tier"] = tier
+                    shot_copy["editing_tempo"] = tempo
+                    shot_copy["theme_color"] = active_theme
+                    planned.append(shot_copy)
+                    continue
 
-            if tier == "tier_3_deep" and sub_type == "subpixel_ken_burns":
-                sub_type = "biphasic_ken_burns"
-                shot_copy["biphasic_motion"] = {
-                    "stage_1": "ambient_pan_wide",
-                    "stage_2": "focal_push_in",
-                    "easing": "cosine_s_curve"
-                }
+            # General shot: Delegate to CinematicEffectPlanner
+            if self.planner:
+                profile = self.planner.plan_shot_effect(
+                    shot_copy,
+                    planned_profiles,
+                    next_scene=shots[i + 1] if i + 1 < len(shots) else None
+                )
+                planned_profiles.append(profile)
 
-            shot_copy["pacing_tier"] = tier
-            shot_copy["editing_tempo"] = tempo
-            shot_copy["editing_effect"] = effect
-            shot_copy["editing_subtype"] = sub_type
-            shot_copy["theme_color"] = active_theme
+                shot_copy["editing_effect"] = profile.effect_id
+                shot_copy["editing_subtype"] = profile.sub_type
+                shot_copy["motion_family"] = profile.motion_family
+                shot_copy["axis"] = profile.axis
+                shot_copy["pacing_tier"] = profile.pacing_tier
+                shot_copy["editing_tempo"] = profile.editing_tempo
+                shot_copy["planned_profile"] = profile.as_dict()
+                shot_copy["camera_motion"] = profile.axis
+                shot_copy["theme_color"] = active_theme
+
+                if profile.sub_type == "tri_phasic_ken_burns":
+                    shot_copy["tri_phasic_motion"] = profile.as_dict()
+                elif profile.sub_type == "biphasic_ken_burns":
+                    shot_copy["biphasic_motion"] = {
+                        "stage_1": "ambient_pan_wide",
+                        "stage_2": "focal_push_in",
+                        "easing": "cosine_s_curve"
+                    }
+            else:
+                # Fallback if planner not loaded
+                tier = "tier_3_deep" if timeline_ratio > 0.30 else "tier_2_context"
+                tempo = "deep_contemplative" if tier == "tier_3_deep" else "context_mid"
+                shot_copy["editing_effect"] = f"{shot_id.lower()}_reframe_zoom_in"
+                shot_copy["editing_subtype"] = "subpixel_ken_burns"
+                shot_copy["pacing_tier"] = tier
+                shot_copy["editing_tempo"] = tempo
+                shot_copy["theme_color"] = active_theme
+
             planned.append(shot_copy)
 
         return planned
+
 
     def plan_variable_pacing_effects(
         self,
