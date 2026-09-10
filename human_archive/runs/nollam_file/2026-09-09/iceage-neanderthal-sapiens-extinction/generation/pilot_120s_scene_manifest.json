@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "channel": "역사이다 (History-Ida)",
+    "theme": "Historical Parallel & Investigative Fact-Check",
+    "modern_issue": "초지능 AI(AGI)의 등장과 호모 사피엔스의 지구상 유일한 지적 생명체 독점 지위 상실 위기",
+    "historical_parallel": "4만 년 전 유라시아 빙하기 호모 사피엔스와 네안데르탈인의 생존 경쟁 및 네안데르탈인의 최종 멸종",
+    "core_hook": "현대인보다 뇌가 크고 근력이 압도적이었던 또 다른 인류, 30만 년간 유라시아를 지배했던 네안데르탈인은 왜 하필 사피엔스가 도래한 직후 지구상에서 완전히 지워졌을까요?",
+    "protagonist": "1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스",
+    "primary_sources": [
+      "《Science / Nature》 막스플랑크 진화인류학연구소 스반테 페보(Svante Pääbo) 연구팀 네안데르탈인 전장 게놈 해독 논문 (2010)",
+      "《Science / Antiquity》 랄프 솔레키 & 캠브리지대 에마 폼로이 연구팀 샤니다르 동굴 4호 및 Z호 매장 유골 발굴 보고서",
+      "《Nature》 클라이브 핀레이슨 연구팀 지브롤터 고럼 동굴(Gorham's Cave) 네안데르탈인 최후 거처 및 해시태그 암각화 실측 보고서",
+      "《Journal of Human Evolution》 처칠 연구팀 샤니다르 3호 갈비뼈 투창기(Atlatl) 발사체 충격 흔적 법의인류학적 분석서",
+      "《Science》 페델레 연구팀 캄파니아 화산 대분화(Campanian Ignimbrite) 및 하인리히 이벤트 4(HE4) 급격 냉각 데이터"
+    ],
+    "generated_at": "2026-09-09 02:21:34"
+  },
+  "pilot_duration_sec": 151.84,
+  "total_scenes": 8,
+  "scenes": [
+    {
+      "scene_index": 1,
+      "shot_id": "SHOT_001",
+      "narration": "4만 년 전 혹한의 칼바람이 몰아치던 유라시아 빙하기 툰드라의 어느 깎아지른 절벽 동굴 앞.",
+      "duration_sec": 15.48,
+      "start_sec": 0.0,
+      "end_sec": 15.48,
+      "camera_motion": "push_in",
+      "visual_prompt": "Extreme wide panoramic aerial view, vast atmospheric landscape, epic establishing vista. Subject: Authentic historical documentary for 1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스, 4만 년 전 혹한의 칼바람이 몰아치던 유라시아 빙하기 툰드라의 어느 깎아. 25fps optical cadence, push_in camera movement, no subtitles, no text overlays, keep bottom 18% clear.",
+      "fact_grade": "A"
+    },
+    {
+      "scene_index": 2,
+      "shot_id": "SHOT_002",
+      "narration": "그곳에는 현대 인류보다 뇌 용적이 200cc나 더 컸고, 거대한 맹수를 맨손으로 제압하던 강인한 인류가 살고 있었습니다.",
+      "duration_sec": 19.96,
+      "start_sec": 15.48,
+      "end_sec": 35.44,
+      "camera_motion": "slow_pan_left",
+      "visual_prompt": "Extreme macro close-up shot, shallow depth of field, razor-sharp texture focus. Subject: Authentic historical documentary for 1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스, 그곳에는 현대 인류보다 뇌 용적이 200cc나 더 컸고, 거대한 맹수를 . 25fps optical cadence, slow_pan_left camera movement, no subtitles, no text overlays, keep bottom 18% clear.",
+      "fact_grade": "A"
+    },
+    {
+      "scene_index": 3,
+      "shot_id": "SHOT_003",
+      "narration": "바로 30만 년 동안 유럽과 아시아의 혹한을 지배했던 빙하기의 진정한 주인, 네안데르탈인이었습니다.",
+      "duration_sec": 16.6,
+      "start_sec": 35.44,
+      "end_sec": 52.04,
+      "camera_motion": "orbit_slow",
+      "visual_prompt": "Extreme macro close-up shot, shallow depth of field, razor-sharp texture focus. Subject: Authentic historical documentary for 1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스, 바로 30만 년 동안 유럽과 아시아의 혹한을 지배했던 빙하기의 진정한 주. 25fps optical cadence, orbit_slow camera movement, no subtitles, no text overlays, keep bottom 18% clear.",
+      "fact_grade": "A"
+    },
+    {
+      "scene_index": 4,
+      "shot_id": "SHOT_004",
+      "narration": "1960년 이라크 샤니다르 동굴 깊은 곳에서 발굴된 4호 인골의 주변에서는 봄날의 야생화 꽃가루 군집이 발견되었습니다.",
+      "duration_sec": 19.68,
+      "start_sec": 52.04,
+      "end_sec": 71.72,
+      "camera_motion": "pull_out",
+      "visual_prompt": "Top-down bird's-eye archival insert shot, historic artifact focus, dramatic lighting. Subject: Authentic historical documentary for 1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스, 1960년 이라크 샤니다르 동굴 깊은 곳에서 발굴된 4호 인골의 주변에서. 25fps optical cadence, pull_out camera movement, no subtitles, no text overlays, keep bottom 18% clear.",
+      "fact_grade": "A"
+    },
+    {
+      "scene_index": 5,
+      "shot_id": "SHOT_005",
+      "narration": "그들은 단순한 짐승 같은 원시인이 아니라, 동료의 죽음 앞에 슬퍼하며 정성스레 장례를 치렀던 고귀한 인간이었습니다.",
+      "duration_sec": 19.12,
+      "start_sec": 71.72,
+      "end_sec": 90.84,
+      "camera_motion": "tilt_up",
+      "visual_prompt": "Top-down bird's-eye archival insert shot, historic artifact focus, dramatic lighting. Subject: Authentic historical documentary for 1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스, 그들은 단순한 짐승 같은 원시인이 아니라, 동료의 죽음 앞에 슬퍼하며 정. 25fps optical cadence, tilt_up camera movement, no subtitles, no text overlays, keep bottom 18% clear.",
+      "fact_grade": "A"
+    },
+    {
+      "scene_index": 6,
+      "shot_id": "SHOT_006",
+      "narration": "하지만 4만 5천 년 전, 아프리카에서 또 다른 지적 생명체인 우리 조상, 호모 사피엔스가 유라시아에 발을 디뎠습니다.",
+      "duration_sec": 19.68,
+      "start_sec": 90.84,
+      "end_sec": 110.52,
+      "camera_motion": "glide_forward",
+      "visual_prompt": "Extreme macro close-up shot, shallow depth of field, razor-sharp texture focus. Subject: Authentic historical documentary for 1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스, 하지만 4만 5천 년 전, 아프리카에서 또 다른 지적 생명체인 우리 조상. 25fps optical cadence, glide_forward camera movement, no subtitles, no text overlays, keep bottom 18% clear.",
+      "fact_grade": "A"
+    },
+    {
+      "scene_index": 7,
+      "shot_id": "SHOT_007",
+      "narration": "그리고 불과 수천 년 만에, 그 강인했던 네안데르탈인은 지구상에서 단 한 명도 남지 않고 완벽하게 자취를 감추었습니다.",
+      "duration_sec": 19.68,
+      "start_sec": 110.52,
+      "end_sec": 130.2,
+      "camera_motion": "push_in",
+      "visual_prompt": "Extreme wide panoramic aerial view, vast atmospheric landscape, epic establishing vista. Subject: Authentic historical documentary for 1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스, 그리고 불과 수천 년 만에, 그 강인했던 네안데르탈인은 지구상에서 단 한. 25fps optical cadence, push_in camera movement, no subtitles, no text overlays, keep bottom 18% clear.",
+      "fact_grade": "A"
+    },
+    {
+      "scene_index": 8,
+      "shot_id": "SHOT_008",
+      "narration": "우리는 왜 그들을 멸종시켰을까요? 그리고 이 잔혹한 승리의 기억은 오늘날 AI 시대를 맞이한 우리에게 어떤 질문을 던지고 있을까요?",
+      "duration_sec": 21.64,
+      "start_sec": 130.2,
+      "end_sec": 151.84,
+      "camera_motion": "slow_pan_left",
+      "visual_prompt": "Cinematic medium eye-level action shot, dynamic documentary character framing. Subject: Authentic historical documentary for 1,600cc의 대형 뇌와 막강한 근력을 지닌 네안데르탈인 사냥꾼들과 새로운 지적 생명체 호모 사피엔스, 우리는 왜 그들을 멸종시켰을까요? 그리고 이 잔혹한 승리의 기억은 오늘날. 25fps optical cadence, slow_pan_left camera movement, no subtitles, no text overlays, keep bottom 18% clear.",
+      "fact_grade": "A"
+    }
+  ]
+}

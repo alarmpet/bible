@@ -1,0 +1,408 @@
+{
+  "project": "우리는 왜 그들을 멸종시켰는가 — 4만 년 전 빙하기 호모 사피엔스와 네안데르탈인",
+  "total_assets": 39,
+  "assets": [
+    {
+      "shot_id": "SHOT_001",
+      "filename": "SHOT_001.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_001.jpg",
+      "size": 571275,
+      "sha256": "cddae9a694b1a3e0ce674d543fb3fced865858184ef5fcb99f8441839681b945",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_016",
+      "filename": "SHOT_016.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_016.jpg",
+      "size": 650408,
+      "sha256": "1db83ced05a2f0fd661d2add6bd73a7241592e8ad1f760b91f7935718e464820",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_017",
+      "filename": "SHOT_017.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_017.jpg",
+      "size": 618021,
+      "sha256": "e57d53f7b58e426b0c18f7d7a65e8497377ca3cb4d72474cffdf6db74e87e223",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_018",
+      "filename": "SHOT_018.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_018.jpg",
+      "size": 495785,
+      "sha256": "7025cb4064531c71ab2711381c1132ce9505ba9b9ad2909033ab46c2f761ae2a",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_019",
+      "filename": "SHOT_019.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_019.jpg",
+      "size": 485596,
+      "sha256": "848ceaa5a21a86113f9ba177998e9d775738bd571044aef28256e0816d7eeb55",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_020",
+      "filename": "SHOT_020.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_020.jpg",
+      "size": 493291,
+      "sha256": "177c1f0ca79126fc081ce0e93e4a6e20dbe16f55d933f34d7f59a8e1911649e5",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_021",
+      "filename": "SHOT_021.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_021.jpg",
+      "size": 506866,
+      "sha256": "ae2eb87c90951ac6ddcdde3cb0e0c4f4bf5c65d4b38be2b6beb9c238f8bca524",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_022",
+      "filename": "SHOT_022.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_022.jpg",
+      "size": 461937,
+      "sha256": "0e365a7f970c136779b6d7e26f271925d1177402567f706f0f03a900d6718f89",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_023",
+      "filename": "SHOT_023.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_023.jpg",
+      "size": 592715,
+      "sha256": "2e48acfdec6ea3f11189b89ac67a32d9a614b6b1ae63fe6d4400c43e11079640",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_024",
+      "filename": "SHOT_024.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_024.jpg",
+      "size": 638546,
+      "sha256": "7eec12d818ffc5f08c783e866f2a10d38edbc8823fb58ab0e811f26eb9d6a22a",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_025",
+      "filename": "SHOT_025.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_025.jpg",
+      "size": 404985,
+      "sha256": "8637d8ae3b16f7765d6a58b2079c7e94b15af481ce14c7299d0acd43c7fa06be",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_026",
+      "filename": "SHOT_026.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_026.jpg",
+      "size": 465875,
+      "sha256": "daa13dba6d653786d82eb4df7bb7c948994446da54ab2ba3e1cec0d6971b0fc1",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_027",
+      "filename": "SHOT_027.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_027.jpg",
+      "size": 526273,
+      "sha256": "1f19172a8caf412e801431f3f07d85a2db8d7bb1ba35bb40fd59be1ad477d0b4",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_028",
+      "filename": "SHOT_028.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_028.jpg",
+      "size": 512823,
+      "sha256": "c8bdae7e1be46f233bb34801ffe2916e4b495e473292c308db539f3386f0455d",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_029",
+      "filename": "SHOT_029.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_029.jpg",
+      "size": 495118,
+      "sha256": "a9dbe848a0d43c9dc4e50eb121ac27b9a4861299af06bc8723713070d6d57593",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_030",
+      "filename": "SHOT_030.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_030.jpg",
+      "size": 535099,
+      "sha256": "b2913f7830adb02f14b6cb1ff8f750f9c151d495987da97f683ef3f0c62f90ec",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_031",
+      "filename": "SHOT_031.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_031.jpg",
+      "size": 473810,
+      "sha256": "7fd3d8fb7ca6cab3a4cfe0d4f8aeb08b0eb9bf7aa6b33ebb3da9c4e1048307dc",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_032",
+      "filename": "SHOT_032.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_032.jpg",
+      "size": 551124,
+      "sha256": "321f6ed0a7bc1d70be403adb2500895f422a9e488ae92e9f3210be41c0313589",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_033",
+      "filename": "SHOT_033.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_033.jpg",
+      "size": 747591,
+      "sha256": "53c7d28903c5ebc304be86f7a3469a3e2bb2593a138b7765a1387afeade4a868",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_034",
+      "filename": "SHOT_034.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_034.jpg",
+      "size": 408685,
+      "sha256": "07b14698ad0fc135dcfd28ce7149d971fd87f80f35d09cb53cd2eb114fd8b81d",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_035",
+      "filename": "SHOT_035.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_035.jpg",
+      "size": 598255,
+      "sha256": "6008f61930cd707ffdbfcfb11e738459ec89a48ee771cfa2ff7859a2b9e007a7",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_036",
+      "filename": "SHOT_036.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_036.jpg",
+      "size": 529678,
+      "sha256": "7e95f09668f3d0adcb88566e99b9d670d0c250c9900c6ca139286c1b0117140e",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_037",
+      "filename": "SHOT_037.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_037.jpg",
+      "size": 726465,
+      "sha256": "dd9ef9c913873f7a31d013407030909595e32bf023820298c805d7a045faa7c1",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_038",
+      "filename": "SHOT_038.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_038.jpg",
+      "size": 712034,
+      "sha256": "9e6f88893b4dda1ecbc91d9383c000a578ad6c6c50494dd4812833a8023f41e8",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_039",
+      "filename": "SHOT_039.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_039.jpg",
+      "size": 582290,
+      "sha256": "53f6a4a042cfa2d7378b9602947d98fd01b19f66eb941d2517e0e772d34c3d27",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_002",
+      "filename": "SHOT_002.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_002.jpg",
+      "size": 494343,
+      "sha256": "0e0ade6c45818bcb74c254cc03d20a35a06266915ab35cce688573aec04a98fe",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:40:59"
+    },
+    {
+      "shot_id": "SHOT_003",
+      "filename": "SHOT_003.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_003.jpg",
+      "size": 551539,
+      "sha256": "adbdcc3de3b2334c5af66b82b3b87f4448b8e241f8360a17ce719f21660d56b2",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:41:58"
+    },
+    {
+      "shot_id": "SHOT_004",
+      "filename": "SHOT_004.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_004.jpg",
+      "size": 669354,
+      "sha256": "894c9943d264488655e26ee04d6c618289238c31638aa040953a690d4284b13e",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:42:57"
+    },
+    {
+      "shot_id": "SHOT_005",
+      "filename": "SHOT_005.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_005.jpg",
+      "size": 406071,
+      "sha256": "7843d9c6b357e34fa5753b92860b2e45e5a237dd66686749b872540db30e1905",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:44:08"
+    },
+    {
+      "shot_id": "SHOT_006",
+      "filename": "SHOT_006.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_006.jpg",
+      "size": 552543,
+      "sha256": "d4d1e9f51024a7faa3516f414305d2f8994c074c3612a694270c8dc6b725e103",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:45:09"
+    },
+    {
+      "shot_id": "SHOT_007",
+      "filename": "SHOT_007.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_007.jpg",
+      "size": 513402,
+      "sha256": "33864eed66112bf74094a5718663feffb21e853fdd0f82f23e49a4af80892a00",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:46:11"
+    },
+    {
+      "shot_id": "SHOT_008",
+      "filename": "SHOT_008.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_008.jpg",
+      "size": 483728,
+      "sha256": "01c6984991460702ff8aec72392e00cbdb02640ee02283f6580500c1fa750a39",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:47:12"
+    },
+    {
+      "shot_id": "SHOT_009",
+      "filename": "SHOT_009.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_009.jpg",
+      "size": 490218,
+      "sha256": "97f4a46822c16ff3376ae3ca6919257a943eb7539356f8c3a630e46cf333d279",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:48:19"
+    },
+    {
+      "shot_id": "SHOT_010",
+      "filename": "SHOT_010.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_010.jpg",
+      "size": 451909,
+      "sha256": "3b4e333761854a03b3da14aa61759a3f8bce78a02c0de1abf70e7515b4c4ce81",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:49:23"
+    },
+    {
+      "shot_id": "SHOT_011",
+      "filename": "SHOT_011.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_011.jpg",
+      "size": 529079,
+      "sha256": "8ff01ccc2864975c26432326775db2b13acace6573f12c081dead08e5e93411e",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:50:58"
+    },
+    {
+      "shot_id": "SHOT_012",
+      "filename": "SHOT_012.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_012.jpg",
+      "size": 484837,
+      "sha256": "0dc667ef14459d97f5a9fe8a709794ad76b731703b0c877d6518c517b756b41f",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:52:15"
+    },
+    {
+      "shot_id": "SHOT_013",
+      "filename": "SHOT_013.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_013.jpg",
+      "size": 601932,
+      "sha256": "184893900d9a4c120747dce8419cd8b58c8879ce844ef2e02f3bfc850a2a8cd3",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9",
+      "created_at": "2026-09-09 17:53:30"
+    },
+    {
+      "shot_id": "SHOT_014",
+      "filename": "SHOT_014.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_014.jpg",
+      "size": 108320,
+      "sha256": "951788512abfd4cef600e5121478fca23bb6b8d3a2affda03fb245f78b8ea6cd",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    },
+    {
+      "shot_id": "SHOT_015",
+      "filename": "SHOT_015.jpg",
+      "path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\downloads\\approved\\SHOT_015.jpg",
+      "size": 103549,
+      "sha256": "806c6692720ff6fb766d67162c8177d6bfa1cde505bcc381d69c7e693c57434c",
+      "width": 1920,
+      "height": 1080,
+      "aspect_ratio": "16:9"
+    }
+  ]
+}

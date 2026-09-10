@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-08-21",
+  "target": {
+    "path": "human_archive/runs/ep01_pompeii_18hours/final_pompeii_ep01.mp4",
+    "sha256": "DA91A7F62549B24434D9EDE94E55EEEE9E3287D871815E3618A7DDD649455BC9",
+    "bytes": 180143618,
+    "duration_sec": 677.761451
+  },
+  "evidence_artifacts": [
+    {
+      "path": ".audit_semantic/contact_label_ch1.jpg",
+      "sha256": "E41E85FEED4A17460035EDFDDCA677A4D8B3A9510965B8D11D7DF23801EDC11B",
+      "purpose": "chapter 1 source-image contact sheet"
+    },
+    {
+      "path": ".audit_semantic/contact_label_ch2.jpg",
+      "sha256": "41D1A7B2EC2C418E6550F57A638DC0C4F036E74944247F2165BB05CCF4E7FAC3",
+      "purpose": "chapter 2 source-image contact sheet"
+    },
+    {
+      "path": ".audit_semantic/contact_label_ch3.jpg",
+      "sha256": "50CCAC7F65F47EAD7D050F307318D1DBC65AF8EED4B59C020F4F66711E2B54BC",
+      "purpose": "chapter 3 source-image contact sheet"
+    },
+    {
+      "path": ".audit_semantic/contact_label_ch4.jpg",
+      "sha256": "933AE139012D234AB362A8EDC0997BE604741B8EA96D63E4316F78F1B79B624F",
+      "purpose": "chapter 4 source-image contact sheet"
+    },
+    {
+      "path": ".audit_root/final_every20s.jpg",
+      "sha256": "4473DAC72030D803BB3998362C33A973DD37437C80E8ED51979AA6B06646B0F7",
+      "purpose": "final-video 20-second interval contact sheet"
+    },
+    {
+      "path": ".audit_root/final_at_0000040.png",
+      "sha256": "DEA9B5F83A440FF23C520E6E6C58A9D91F734477BDE520F2B0F8DB2DF31C9437",
+      "purpose": "fresh extraction at 0.040 seconds from the target hash"
+    },
+    {
+      "path": ".audit_av/scene_meta.txt",
+      "sha256": "D56C879CD5A0EA39414996AD1EA39892CBFD82B1F8A9D5DF3BAD11FD0D75A854",
+      "purpose": "scene detector output; valid only with the audit run's filter conditions"
+    },
+    {
+      "path": ".audit_av/subtitle_crop.txt",
+      "sha256": "59D5E68FA6CDE3F2182EB9F1C2B762C7376D339E3F8414CFFA8555160C49D02B",
+      "purpose": "rendered subtitle sampling evidence"
+    }
+  ],
+  "manual_tallies": {
+    "source_image_review": {
+      "total": 68,
+      "exact_match": 0,
+      "partial_or_medium": 5,
+      "high_mismatch": 18,
+      "fatal_mismatch": 45,
+      "formal_release_metric": false,
+      "limitation": "The reviewer did not persist a per-shot structured scoring file during this audit. Preserve this tally as an indicative finding, not a machine-reproducible acceptance metric. The rebuild decision is independently supported by observed shift groups, missing/duplicated scenes, provider marks, missing lineage, and the changed fact contract."
+    },
+    "final_video_30_second_sample": {
+      "sample_points": 23,
+      "direct_mismatches_at_least": 17,
+      "formal_release_metric": false,
+      "limitation": "Representative frames were persisted, but a reviewer-signed row-per-sample report was not. The v2 workflow requires such a report."
+    }
+  },
+  "representative_mismatches": [
+    {
+      "pts_sec": 0.04,
+      "narration": "AD 79 Vesuvius eruption opening",
+      "observed_visual": "modern city seen through an ancient arch",
+      "severity": "fatal"
+    },
+    {
+      "pts_sec": 80.84,
+      "narration": "bronze wine cup on the floor",
+      "observed_visual": "gladiator or soldier street scene",
+      "severity": "high"
+    },
+    {
+      "pts_sec": 202.72,
+      "narration": "tile roof collapse",
+      "observed_visual": "smiling aristocrat conversation",
+      "severity": "fatal"
+    },
+    {
+      "pts_sec": 301.4,
+      "narration": "mother holding a child",
+      "observed_visual": "volcanic lightning",
+      "severity": "high"
+    },
+    {
+      "pts_sec": 551.92,
+      "narration": "human casts and Fiorelli",
+      "observed_visual": "imperial audience",
+      "severity": "fatal"
+    },
+    {
+      "pts_sec": 615.64,
+      "narration": "modern reflective question",
+      "observed_visual": "excavation scene",
+      "severity": "high"
+    }
+  ],
+  "required_v2_evidence": {
+    "per_shot_visual_report": true,
+    "reviewer_id_and_timestamp": true,
+    "contract_and_asset_hashes": true,
+    "binary_required_axis_results": [
+      "subject",
+      "place",
+      "era",
+      "action",
+      "result"
+    ],
+    "reason_and_waiver_fields": true
+  }
+}

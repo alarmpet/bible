@@ -1,0 +1,6 @@
+{
+  "renderer": "srt-whiteboard-animation",
+  "renderer_path": "D:\\module\\srt-whiteboard-animation\\scripts\\stream_render.py",
+  "bare_tip": true,
+  "duration_sec": 11.0
+}

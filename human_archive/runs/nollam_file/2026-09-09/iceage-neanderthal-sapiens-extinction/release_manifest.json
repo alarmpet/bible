@@ -1,0 +1,357 @@
+{
+  "release_id": "NOLLAM-NEANDERTHAL-EXTINCTION-MASTER-v3-HARDENED",
+  "topic": "우리는 왜 그들을 멸종시켰는가 — 4만 년 전 빙하기 호모 사피엔스와 네안데르탈인",
+  "timestamp_utc": "2026-09-10T20:45:00Z",
+  "status": "OFFICIAL_PRODUCTION_RELEASE",
+  "master_video": {
+    "filename": "NOLLAM-NEANDERTHAL-EXTINCTION-FULL-MASTER.mp4",
+    "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\NOLLAM-NEANDERTHAL-EXTINCTION-FULL-MASTER.mp4",
+    "size_bytes": 406995651,
+    "sha256": "d75656395a2d5ca4d0a322c2080945f5bffa011bfc79ab372411f6384f194d3f",
+    "duration_sec": 1008.0,
+    "width": 1920,
+    "height": 1080,
+    "fps": "25/1",
+    "pix_fmt": "yuv420p",
+    "audio_codec": "aac",
+    "audio_rate": 48000,
+    "audio_channels": 2,
+    "loudness_integrated_lufs": -14.51,
+    "loudness_true_peak_db": -1.26
+  },
+  "audio_manifest": {
+    "total_shots": 39,
+    "sample_rate": 48000,
+    "channels": 2,
+    "total_duration_sec": 1007.971,
+    "shots": [
+      {
+        "shot_id": "SHOT_001",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_001.wav",
+        "sha256": "ac216319a5a91c939a5a61840713bae550259beac962c73e4cb29f645b3867a8",
+        "duration_sec": 11.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_002",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_002.wav",
+        "sha256": "992269fe2c06d1b7b0d899ef24a512b7b8e1e3a6868ff321b53d79371f9b26d6",
+        "duration_sec": 10.431020833333333,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_003",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_003.wav",
+        "sha256": "1879b3df3743eaf8e9793bff3532af709a7b7d60395251da8435cb733347ab7e",
+        "duration_sec": 9.247,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_004",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_004.wav",
+        "sha256": "d1639603c564fd6296790ece2a565eeb139f1b4167a9759ae7b40a210dfc1030",
+        "duration_sec": 12.3815,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_005",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_005.wav",
+        "sha256": "ad85070054058e0dc7f09a57d4614c56ff2ae31c8735efce3da6363cbfb052b9",
+        "duration_sec": 10.64,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_006",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_006.wav",
+        "sha256": "ba20f3a2c39cf328a520c218262e6750ad3d76a953d5823dac79affd1ad586ff",
+        "duration_sec": 10.779333333333334,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_007",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_007.wav",
+        "sha256": "e7c0cbb156c2b95d1ba20c8b6bfe4ea846f62005caef9250a55db633baeb1c29",
+        "duration_sec": 10.919,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_008",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_008.wav",
+        "sha256": "69ba2fab2987a6266844956a206681e81010758c77cf291dcdfa40df7dbcbfda",
+        "duration_sec": 11.755,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_009",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_009.wav",
+        "sha256": "85dbfd9b51b8638566c528ca9214784194e903eacbea0be408a7f686f7491aa2",
+        "duration_sec": 5.416,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_010",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_010.wav",
+        "sha256": "487ef2ceb216d918971a3cb7458609cd9f78cb3b93287a82290cf78acc189deb",
+        "duration_sec": 6.391,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_011",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_011.wav",
+        "sha256": "12945d8bf326bdecf62f441af145a4d9d8b8d827eb8deffd38eccb6b45bd07fa",
+        "duration_sec": 5.4851875,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_012",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_012.wav",
+        "sha256": "25d6f39b223f46b20495ede2c0a69fba60c0f7d07ec2d48389efbbfff3973efa",
+        "duration_sec": 16.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_013",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_013.wav",
+        "sha256": "cba5389a6001b4ae53e1d54a67370fd70807ad62c86ecbfb6e740a3000e67486",
+        "duration_sec": 16.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_014",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_014.wav",
+        "sha256": "abbea214fa0098042ef489ea42da2996d449197c33c0c343756ed7724bc17b4b",
+        "duration_sec": 16.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_015",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_015.wav",
+        "sha256": "bf63bf050adcb9c3f4eb6ae61a831175513e3b77d0cb712347f9855a250a91fe",
+        "duration_sec": 14.1,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_016",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_016.wav",
+        "sha256": "d08e59dc57388314ceb5b7c3c7737f46b3ecb931e4d8cac477b67ff4654c1846",
+        "duration_sec": 16.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_017",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_017.wav",
+        "sha256": "6ae2eb68335aa9d4f98d6ca8bd4ef0c5264b6882ded378e83ee72ba7f7d116fd",
+        "duration_sec": 16.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_018",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_018.wav",
+        "sha256": "62eff4e08b3a680add4c889dbdd9615785e9e425503c92f116d856ed35ba2a7f",
+        "duration_sec": 19.626125,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_019",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_019.wav",
+        "sha256": "a6c3c1d4b431b70466c287e41f7d9d0173c5884bcf5d9e646f3f4314de94ad79",
+        "duration_sec": 16.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_020",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_020.wav",
+        "sha256": "a85ecb1a706cf783919799b42e92af2631f1f93e824a577345af16fed014bf80",
+        "duration_sec": 16.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_021",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_021.wav",
+        "sha256": "640a669466f6f7225e67497ecc0db6d600d3557af0829ed9db9fabf3d28c0546",
+        "duration_sec": 16.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_022",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_022.wav",
+        "sha256": "ee9abf582adc36035ff46874cca2785616c7d30a5d29b5225c3a3161a4a4f00d",
+        "duration_sec": 51.2,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_023",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_023.wav",
+        "sha256": "8c217b0e6b98e14132d4a94adddc5b15e9eabfbc34312105bca561f78ebcd9ff",
+        "duration_sec": 44.76,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_024",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_024.wav",
+        "sha256": "e769df036ef07b1fa473c769aa5be696b322417bcea25c83339c9301003c0739",
+        "duration_sec": 39.64,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_025",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_025.wav",
+        "sha256": "7f9488edb4f10863c4dadc93003b7fa19a2ccc78a715ecfcc463798c5d9ffdab",
+        "duration_sec": 43.0,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_026",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_026.wav",
+        "sha256": "94e6284adbbc2e2cdb60004260a308b6d66168d7f27b0d50bbb264100d9a67c5",
+        "duration_sec": 36.56,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_027",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_027.wav",
+        "sha256": "8b264b724664c73b934985bbb8e94cd95bb085329d6e07357f32253dd06abaaf",
+        "duration_sec": 48.68,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_028",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_028.wav",
+        "sha256": "81ec323793e9b359a5a7d185bb849d709be9778d5137c67fbaf343cdc5f9e8b9",
+        "duration_sec": 39.36,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_029",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_029.wav",
+        "sha256": "082c1d81e9b2f532249607609ffcdf95a71dd7b5acb186e5c3905290c3063f7b",
+        "duration_sec": 42.16,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_030",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_030.wav",
+        "sha256": "62fd79eeac14a70f78bd1c9e66a084647e693133645b7c1ef65749ddc52639e7",
+        "duration_sec": 48.4,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_031",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_031.wav",
+        "sha256": "efa85e96e484145baea14b500f13ba0498032514146b81cae22ca1eb511a72df",
+        "duration_sec": 37.12,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_032",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_032.wav",
+        "sha256": "5d6d997e902cd3d5cd3cbfd05b3263c472c7e43ac31b39d8b93d6939b696456a",
+        "duration_sec": 49.24,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_033",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_033.wav",
+        "sha256": "645d401cfa3ccf3c9e41f626d7decc15fad0c39efc2b2e005ff2509c78d2d02a",
+        "duration_sec": 38.24,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_034",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_034.wav",
+        "sha256": "1e378849e79d61b19af3178f41e86c5d71062f509781676db69bb7474e41affe",
+        "duration_sec": 39.36,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_035",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_035.wav",
+        "sha256": "82ac8befffc1361246cbfafd379b00dcf74fbc0d0494429c006d955d4784870c",
+        "duration_sec": 36.84,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_036",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_036.wav",
+        "sha256": "c90d85ff911ef0c64877c11865078007d72759702b79f059b638e3cf9eeeeb05",
+        "duration_sec": 35.16,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_037",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_037.wav",
+        "sha256": "f489a25ada641dc7011d0f90da364be067d5d7801ca1424ab0a153d9f5e8c405",
+        "duration_sec": 41.32,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_038",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_038.wav",
+        "sha256": "3fe31548b98995c612588b66b544645135fd8b241a59b0c0aa52b8dd46ee8915",
+        "duration_sec": 40.76,
+        "framerate": 48000,
+        "channels": 2
+      },
+      {
+        "shot_id": "SHOT_039",
+        "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\padded\\SHOT_039.wav",
+        "sha256": "8980eae3d0c6fe1f9841ec266caf890d47ae6a785c136f13832ecd62b776b97a",
+        "duration_sec": 30.0,
+        "framerate": 48000,
+        "channels": 2
+      }
+    ]
+  },
+  "subtitles_manifest": {
+    "path": "bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\generation\\pilot_subtitles_1200s.ass",
+    "sha256": "a2618f5c74752a7f4ffe9687cb0ac1247439ef5bdc5871c6a82954a85500a951",
+    "max_line_chars_observed": 36,
+    "max_lines_observed": 2
+  },
+  "invariants_passed": {
+    "pre_mux_av_parity_le_0_040s": true,
+    "zero_freeze_frames": true,
+    "zero_audio_truncation": true,
+    "baretip_opening_verified": true,
+    "layer3_perceptual_cuts_verified": true,
+    "semantic_subtitles_verified": true,
+    "pcm_48k_stereo_inputs_verified": true
+  }
+}
