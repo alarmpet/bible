@@ -177,8 +177,9 @@ def render_subcut_montage_stream(
     fallback_images_dir: Path,
     out_video_path: Path,
     fps: int = 30,
+    allow_parent_fallback: bool = False,
 ) -> Path:
-    """Render the full 550~600 cuts video stream via FFmpeg rawvideo pipe at 1920x1080 30fps CFR."""
+    """Render the full 550~600 cuts stream; missing plates fail closed by default."""
     out_video_path = Path(out_video_path).resolve()
     out_video_path.parent.mkdir(parents=True, exist_ok=True)
     plates_dir = Path(plates_dir)
@@ -218,24 +219,23 @@ def render_subcut_montage_stream(
         def get_plate_image(plate_id: str, parent_shot_id: str) -> Image.Image:
             if plate_id in image_cache:
                 return image_cache[plate_id]
-            # Search plates_dir
+            # Search for the exact A/B plate first.
             for ext in [".jpg", ".png", ".jpeg"]:
                 p = plates_dir / f"{plate_id}{ext}"
                 if p.exists():
                     img = Image.open(p).convert("RGB")
                     image_cache[plate_id] = img
                     return img
-            # Fallback to parent shot image
-            for ext in [".jpg", ".png", ".jpeg"]:
-                p = fallback_images_dir / f"{parent_shot_id}{ext}"
-                if p.exists():
-                    img = Image.open(p).convert("RGB")
-                    image_cache[plate_id] = img
-                    return img
-            # Synthesize 1080p fallback card if missing
-            img = Image.new("RGB", (w, h), (40, 42, 54))
-            image_cache[plate_id] = img
-            return img
+            if allow_parent_fallback:
+                for ext in [".jpg", ".png", ".jpeg"]:
+                    p = fallback_images_dir / f"{parent_shot_id}{ext}"
+                    if p.exists():
+                        img = Image.open(p).convert("RGB")
+                        image_cache[plate_id] = img
+                        return img
+            raise FileNotFoundError(
+                f"Missing required plate {plate_id}; parent fallback is disabled"
+            )
 
         try:
             for c in cuts:

@@ -243,3 +243,26 @@ python -m py_compile                                 PASS
 ```
 
 검수 결론은 “파일이 손상되지 않았고 일부 컨테이너 수치가 정합하다”는 수준에서는 긍정적이다. 그러나 현재 산출물은 2D 스타일, 1줄 자막, 실제 80개 plate, 406-cue SSOT, 3-track WAV, Gate 0~5 감사 체인을 충족하지 않으므로 **조건부 기술 검증본**으로 보관하고, “1:1 완전 복제 최종 릴리스” 명칭과 `PROMOTED_MASTER` 상태는 수정 후 재검수까지 보류한다.
+
+## 13. P0 보정 진행 결과
+
+이번 후속 작업에서 코드 레벨의 재발 방지 장치를 반영했다.
+
+- `scripts/lib/exact_release_verifier.py` 추가: ASS strict audit, RIFF PCM sample count, plate path/hash/dimensions/중복 검사, exact video probe, ordered SHA chain root 검사
+- `run_human_library_exact_clone_pipeline.py`의 기존 plate fallback을 기본 hard fail로 변경
+- WAV 생성 command를 `-frames:a 46711584`로 고정해 시간 반올림에 의한 25 sample drift 방지
+- clean-scope 기본 profile 추가: BGM·채널 로고·HUD 제외 범위에서 branding input/filter를 추가하지 않음
+- postflight를 정확히 29,195프레임, 30/1 CFR, 전체 video/audio decode, ASS strict, plate binding, WAV sample boundary까지 검사하도록 강화
+- release manifest를 temp 파일 + `os.replace()`로 기록하고 source/intermediate/release artifact ordered SHA chain root를 포함하도록 변경
+- 신규/회귀 exact 테스트 26개 및 기존 timeline/replica/subtitle 회귀 9개, py_compile 통과
+
+현재 실물 media는 의도적으로 재생성하지 않았다. 실제 2D A/B plate와 strict one-line ASS가 준비되지 않은 상태에서 기존 `PROMOTED_MASTER` 파일을 덮어쓰지 않기 위한 조치다. 다음 단계는 Flow에서 실제 2D plate를 확보하고, cue SSOT를 346 또는 406 중 하나로 확정한 뒤, 자막·WAV·montage·clean-scope MP4를 새 후보 경로에 렌더링하는 것이다.
+
+후속 fail-closed 적용 결과, 현재 파일에 대한 재검증은 다음과 같이 동작한다.
+
+- video probe: PASS (`30/1`, `29,195 frames`)
+- ASS strict: FAIL (`\\N` 85건)
+- master plate binding: FAIL (`SHOT_001_A/B` 등 80개 path 미기록)
+- WAV boundary: FAIL (`46,711,609` frames vs required `46,711,584`)
+- cached raw montage reuse: FAIL-CLOSED (plate 검증 전 재사용 차단)
+- clean-scope filtergraph: PASS (branding input/filter 미포함)

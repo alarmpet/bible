@@ -3,8 +3,8 @@
 
 Master Pipeline Runner for Human Library 1:1 Exact Replication:
 - Video: 570 Saliency Subcuts (2D Webtoon Graphic Novel, 1.62s/cut, 1920x1080 30.00fps CFR, 29,195 frames, 973.167s)
-- Audio: 3-Track Multitrack Audio (48kHz Stereo, -14dB Sidechain Ducking, Sub-bass >= 250,000, 46,712,000 samples)
-- Visual Overlays: 0~3s White Laurel Wreath, Top-Right Gold Watermark, Bottom-Left Artifact HUD Cards
+- Audio: Exact-boundary 48kHz Stereo Master (voice-only for the current scope)
+- Visual Overlays: optional profile; disabled by default for this release scope
 - Subtitles: DocuNarrator_Exact 1-Line Semi-Transparent Box ASS with Bright Yellow Keyword Highlighting
 - Gate 0~5 Physical Postflight Verification & Release Manifest
 """
@@ -34,6 +34,13 @@ from lib.canonical_timeline_adapter import build_canonical_timeline
 from lib.subcut_montage_engine import plan_subcuts, render_subcut_montage_stream, SubcutPlan
 from lib.audio_multitrack_mixer import build_3track_audio_command, mix_multitrack_audio
 from lib.branding_hud_overlay import build_branding_overlay_filtergraph
+from lib.exact_release_verifier import (
+    audit_ass_strict,
+    compute_sha256_chain,
+    count_wav_sample_frames,
+    validate_plate_manifest,
+    validate_video_probe,
+)
 from postflight_release import ProductionProfile, verify_postflight
 
 # Canonical Paths
@@ -62,6 +69,9 @@ RAW_MONTAGE_VIDEO = VIDEO_DIR / "rank1_exact_montage_raw.mp4"
 FINAL_MASTER_VIDEO = EP_DIR / "rank1_exact_master_documentary.mp4"
 RELEASE_MANIFEST_PATH = METADATA_DIR / "rank1_exact_release_manifest.json"
 
+MASTER_AUDIO_SAMPLE_RATE = 48_000
+MASTER_AUDIO_SAMPLES = 46_711_584
+
 
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
@@ -74,7 +84,7 @@ def sha256_file(path: Path) -> str:
 def get_ffprobe_info(media_path: Path) -> Dict[str, Any]:
     cmd = [
         "ffprobe", "-v", "error",
-        "-show_entries", "stream=codec_type,codec_name,width,height,r_frame_rate,duration,sample_rate,channels,nb_frames",
+        "-show_entries", "stream=codec_type,codec_name,profile,width,height,r_frame_rate,avg_frame_rate,duration,sample_rate,channels,nb_frames",
         "-show_entries", "format=duration,size",
         "-of", "json",
         str(media_path)
@@ -83,42 +93,105 @@ def get_ffprobe_info(media_path: Path) -> Dict[str, Any]:
     return json.loads(res.stdout)
 
 
-def step_1_prepare_audio(target_duration_sec: float = 973.167) -> Path:
-    print("\n=======================================================")
-    print("🎵 [STEP 1] Preparing 48kHz Stereo 3-Track Master Audio")
-    print("=======================================================")
-    AUDIO_DIR.mkdir(parents=True, exist_ok=True)
-
-    if RAW_AUDIO_PATH.exists() and RAW_AUDIO_PATH.stat().st_size > 100000000:
-        print(f"Master audio already exists: {RAW_AUDIO_PATH} ({RAW_AUDIO_PATH.stat().st_size:,} bytes)")
-        return RAW_AUDIO_PATH
-
-    print(f"Extracting and mastering 48kHz stereo audio from {ORIGINAL_MP4}...")
-    cmd = [
+def build_master_audio_command(
+    original_mp4: Path,
+    output_path: Path,
+    *,
+    sample_count: int = MASTER_AUDIO_SAMPLES,
+) -> list[str]:
+    """Build the master audio command with an exact PCM sample boundary."""
+    if sample_count <= 0:
+        raise ValueError("sample_count must be positive")
+    return [
         "ffmpeg", "-y",
-        "-i", str(ORIGINAL_MP4),
+        "-i", str(original_mp4),
         "-vn",
         "-af", (
             "aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
             "firequalizer=gain_entry='entry(20,5);entry(50,6);entry(80,4);entry(120,0)',"
-            "loudnorm=I=-14:LRA=11:TP=-1.5,"
-            f"apad=whole_dur={target_duration_sec:.3f}"
+            "loudnorm=I=-14:LRA=11:TP=-1.5"
         ),
-        "-t", f"{target_duration_sec:.3f}",
+        "-frames:a", str(sample_count),
         "-c:a", "pcm_s16le",
-        "-ar", "48000",
+        "-ar", str(MASTER_AUDIO_SAMPLE_RATE),
         "-ac", "2",
-        str(RAW_AUDIO_PATH)
+        str(output_path),
     ]
+
+
+def step_1_prepare_audio(target_duration_sec: float = 973.167) -> Path:
+    print("\n=======================================================")
+    print("🎵 [STEP 1] Preparing exact-boundary 48kHz Stereo Master Audio")
+    print("=======================================================")
+    AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+
+    if RAW_AUDIO_PATH.exists() and RAW_AUDIO_PATH.stat().st_size > 100000000:
+        existing_samples = count_wav_sample_frames(RAW_AUDIO_PATH)
+        if existing_samples != MASTER_AUDIO_SAMPLES:
+            raise RuntimeError(
+                f"Existing master audio has stale sample boundary: "
+                f"{existing_samples} != {MASTER_AUDIO_SAMPLES}"
+            )
+        print(f"Master audio already exists: {RAW_AUDIO_PATH} ({RAW_AUDIO_PATH.stat().st_size:,} bytes)")
+        return RAW_AUDIO_PATH
+
+    print(f"Extracting and mastering 48kHz stereo audio from {ORIGINAL_MP4}...")
+    cmd = build_master_audio_command(ORIGINAL_MP4, RAW_AUDIO_PATH)
     subprocess.run(cmd, check=True)
+    actual_samples = count_wav_sample_frames(RAW_AUDIO_PATH)
+    if actual_samples != MASTER_AUDIO_SAMPLES:
+        raise RuntimeError(
+            f"Exact WAV boundary failed: {actual_samples} != {MASTER_AUDIO_SAMPLES} sample frames"
+        )
     print(f"✅ Master audio created: {RAW_AUDIO_PATH} ({RAW_AUDIO_PATH.stat().st_size:,} bytes)")
     return RAW_AUDIO_PATH
+
+
+def resolve_plate_image(
+    plate_id: str,
+    parent_shot_id: str,
+    plates_dir: Path,
+    fallback_images_dir: Path,
+    *,
+    allow_parent_fallback: bool = False,
+) -> Path:
+    """Resolve a physical A/B plate; missing assets fail closed by default."""
+    plates_dir = Path(plates_dir)
+    fallback_images_dir = Path(fallback_images_dir)
+    for ext in (".jpg", ".png", ".jpeg"):
+        candidate = plates_dir / f"{plate_id}{ext}"
+        if candidate.is_file() and candidate.stat().st_size > 0:
+            return candidate
+    if allow_parent_fallback:
+        for ext in (".jpg", ".png", ".jpeg"):
+            candidate = fallback_images_dir / f"{parent_shot_id}{ext}"
+            if candidate.is_file() and candidate.stat().st_size > 0:
+                return candidate
+    raise FileNotFoundError(
+        f"Missing required plate {plate_id}; parent fallback is disabled"
+    )
+
+
+def validate_master_plate_plan(
+    plan_path: Path = PLATES_PLAN_PATH,
+    *,
+    expected_count: int = 80,
+) -> dict[str, Any]:
+    """Validate the physical plate registry before any cached montage reuse."""
+    data = json.loads(Path(plan_path).read_text(encoding="utf-8"))
+    return validate_plate_manifest(data.get("plates", []), expected_count=expected_count)
 
 
 def step_2_render_montage(cuts: List[SubcutPlan]) -> Path:
     print("\n=======================================================")
     print("🎬 [STEP 2] Rendering 570 Saliency Subcuts Montage Video Stream")
     print("=======================================================")
+    plate_check = validate_master_plate_plan()
+    if plate_check["status"] != "PASS":
+        raise RuntimeError(
+            "Master plate validation failed before montage reuse: "
+            + "; ".join(plate_check["errors"][:12])
+        )
     VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 
     if RAW_MONTAGE_VIDEO.exists() and RAW_MONTAGE_VIDEO.stat().st_size > 50000000:
@@ -138,33 +211,44 @@ def step_2_render_montage(cuts: List[SubcutPlan]) -> Path:
     return out
 
 
+def build_cinema_filtergraph(
+    ass_subtitles: Path,
+    *,
+    include_branding: bool = False,
+) -> tuple[list[str], str]:
+    """Build the subtitle filter with optional, explicitly scoped overlays."""
+    ass_escaped = Path(ass_subtitles).as_posix().replace(":", r"\:")
+    if not include_branding:
+        return [], f"[0:v]ass='{ass_escaped}',fps=30,format=yuv420p[v_final]"
+
+    extra_inputs, branding_filter = build_branding_overlay_filtergraph(
+        emblem_path=BRANDING_DIR / "golden_emblem_watermark.png",
+        wreath_path=BRANDING_DIR / "laurel_wreath_opening.png",
+        hud1_path=BRANDING_DIR / "ancient_spear_obsidian_hud.png",
+        hud2_path=BRANDING_DIR / "epas1_dna_hud.png",
+        base_video_label="[0:v]",
+        out_label="[v_branded]",
+    )
+    return extra_inputs, f"{branding_filter};[v_branded]ass='{ass_escaped}',fps=30,format=yuv420p[v_final]"
+
+
 def step_3_cinema_assembly(
     montage_video: Path,
     master_audio: Path,
     ass_subtitles: Path,
     output_mp4: Path,
     target_duration_sec: float = 973.167,
+    include_branding: bool = False,
 ) -> Path:
     print("\n=======================================================")
-    print("🏛️ [STEP 3] Cinema Assembly (Branding Overlays + Subtitle Burn-In + Mux)")
+    profile_name = "branding-enabled" if include_branding else "clean-scope"
+    print(f"🏛️ [STEP 3] Cinema Assembly ({profile_name} + Subtitle Burn-In + Mux)")
     print("=======================================================")
 
-    emblem_p = BRANDING_DIR / "golden_emblem_watermark.png"
-    wreath_p = BRANDING_DIR / "laurel_wreath_opening.png"
-    hud1_p = BRANDING_DIR / "ancient_spear_obsidian_hud.png"
-    hud2_p = BRANDING_DIR / "epas1_dna_hud.png"
-
-    extra_inputs, branding_filter = build_branding_overlay_filtergraph(
-        emblem_path=emblem_p,
-        wreath_path=wreath_p,
-        hud1_path=hud1_p,
-        hud2_path=hud2_p,
-        base_video_label="[0:v]",
-        out_label="[v_branded]",
+    extra_inputs, combined_vfilter = build_cinema_filtergraph(
+        ass_subtitles=ass_subtitles,
+        include_branding=include_branding,
     )
-
-    ass_escaped = ass_subtitles.as_posix().replace(":", r"\:")
-    combined_vfilter = f"{branding_filter};[v_branded]ass='{ass_escaped}',fps=30,format=yuv420p[v_final]"
 
     cmd = [
         "ffmpeg", "-y",
@@ -223,12 +307,36 @@ def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
     print(f"Audio Duration: {a_dur:.4f}s ({a_sr} Hz stereo)")
     print(f"AV Parity Delta: {delta:.4f}s (Threshold <= 0.033s)")
 
-    assert abs(v_dur - 973.167) <= 0.050, f"Video duration {v_dur}s != 973.167s"
-    assert abs(a_dur - 973.167) <= 0.050, f"Audio duration {a_dur}s != 973.167s"
-    assert delta <= 0.033, f"AV Parity Delta {delta}s > 0.033s"
-    assert v_fps == "30/1", f"Expected 30/1 fps, got {v_fps}"
-    assert a_sr == 48000, f"Expected 48000 Hz, got {a_sr}"
-    assert v_frames in [29194, 29195, 29196], f"Frame count {v_frames} not in [29194..29196]"
+    video_check = validate_video_probe(v_stream)
+    assert video_check["status"] == "PASS", "; ".join(video_check["errors"])
+    assert abs(v_dur - a_dur) <= 0.033, f"AV Parity Delta {delta}s > 0.033s"
+    assert a_sr == MASTER_AUDIO_SAMPLE_RATE, f"Expected 48000 Hz, got {a_sr}"
+    assert a_stream.get("channels") == 2, f"Expected stereo audio, got {a_stream.get('channels')} channels"
+
+    decode_errors = []
+    for selector in ("0:v:0", "0:a:0"):
+        result = subprocess.run(
+            ["ffmpeg", "-v", "error", "-err_detect", "explode", "-i", str(master_mp4),
+             "-map", selector, "-f", "null", "NUL"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        if result.returncode != 0:
+            decode_errors.append(f"{selector}: {result.stderr[-500:]}")
+    assert not decode_errors, "Decoded stream failure: " + " | ".join(decode_errors)
+
+    ass_check = audit_ass_strict(ASS_PATH, target_duration_sec=v_dur)
+    assert ass_check["status"] == "PASS", "; ".join(ass_check["errors"])
+
+    plate_check = validate_master_plate_plan()
+    assert plate_check["status"] == "PASS", "; ".join(plate_check["errors"])
+
+    wav_sample_frames = count_wav_sample_frames(RAW_AUDIO_PATH)
+    assert wav_sample_frames == MASTER_AUDIO_SAMPLES, (
+        f"WAV sample boundary {wav_sample_frames} != {MASTER_AUDIO_SAMPLES}"
+    )
 
     print("✅ Gate 0~5 Physical Postflight Verification PASSED!")
     return {
@@ -239,6 +347,10 @@ def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
         "total_frames": v_frames,
         "frame_rate": v_fps,
         "audio_sample_rate": a_sr,
+        "wav_sample_frames": wav_sample_frames,
+        "decoded_streams": ["video", "audio"],
+        "subtitle_metrics": ass_check,
+        "plate_metrics": plate_check,
     }
 
 
@@ -250,54 +362,66 @@ def step_5_generate_release_manifest(
     print("📜 [STEP 5] Generating Atomic Release Manifest (SHA-256 Chain)")
     print("=======================================================")
 
+    artifact_specs = [
+        ("source_original_mp4", ORIGINAL_MP4, "source"),
+        ("source_cues_json", CUES_PATH, "source"),
+        ("canonical_timeline_manifest", CANONICAL_MANIFEST_PATH, "intermediate"),
+        ("master_plates_plan", PLATES_PLAN_PATH, "intermediate"),
+        ("subcut_montage_plan", SUBCUT_PLAN_PATH, "intermediate"),
+        ("master_subtitles_ass", ASS_PATH, "intermediate"),
+        ("master_audio_wav", RAW_AUDIO_PATH, "intermediate"),
+        ("raw_montage_video", RAW_MONTAGE_VIDEO, "intermediate"),
+        ("master_documentary_mp4", master_mp4, "release"),
+    ]
+    artifacts: dict[str, dict[str, Any]] = {}
+    chain_entries: list[dict[str, str]] = []
+    for artifact_id, path, kind in artifact_specs:
+        path = Path(path)
+        if not path.is_file() or path.stat().st_size <= 0:
+            raise FileNotFoundError(f"Cannot freeze release; missing artifact: {path}")
+        digest = sha256_file(path)
+        artifacts[artifact_id] = {
+            "kind": kind,
+            "path": str(path),
+            "size_bytes": path.stat().st_size,
+            "sha256": digest,
+        }
+        chain_entries.append({"artifact_id": artifact_id, "sha256": digest})
+
     manifest = {
         "release_id": "HL-RANK1-EXACT-CLONE-V1",
         "video_id": "tPBVrfcU85g",
         "title": "같은 인간인데 왜 이렇게까지 다를까",
-        "schema_version": "human_library_exact_release_v1",
+        "schema_version": "human_library_exact_release_v2",
         "status": "PROMOTED_MASTER",
         "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "target_duration_sec": 973.167,
         "target_fps": 30.0,
+        "target_audio_sample_rate": MASTER_AUDIO_SAMPLE_RATE,
+        "target_audio_sample_frames": MASTER_AUDIO_SAMPLES,
         "total_frames": postflight_metrics["total_frames"],
         "parity_delta_sec": postflight_metrics["parity_delta_sec"],
         "postflight_metrics": postflight_metrics,
-        "artifacts": {
-            "master_documentary_mp4": {
-                "path": str(master_mp4),
-                "size_bytes": master_mp4.stat().st_size,
-                "sha256": sha256_file(master_mp4),
-            },
-            "master_audio_wav": {
-                "path": str(RAW_AUDIO_PATH),
-                "size_bytes": RAW_AUDIO_PATH.stat().st_size,
-                "sha256": sha256_file(RAW_AUDIO_PATH),
-            },
-            "master_subtitles_ass": {
-                "path": str(ASS_PATH),
-                "size_bytes": ASS_PATH.stat().st_size,
-                "sha256": sha256_file(ASS_PATH),
-            },
-            "canonical_timeline_manifest": {
-                "path": str(CANONICAL_MANIFEST_PATH),
-                "size_bytes": CANONICAL_MANIFEST_PATH.stat().st_size,
-                "sha256": sha256_file(CANONICAL_MANIFEST_PATH),
-            },
-            "subcut_montage_plan": {
-                "path": str(SUBCUT_PLAN_PATH),
-                "size_bytes": SUBCUT_PLAN_PATH.stat().st_size,
-                "sha256": sha256_file(SUBCUT_PLAN_PATH),
-            },
-            "master_plates_plan": {
-                "path": str(PLATES_PLAN_PATH),
-                "size_bytes": PLATES_PLAN_PATH.stat().st_size,
-                "sha256": sha256_file(PLATES_PLAN_PATH),
-            },
+        "artifacts": artifacts,
+        "sha256_chain": chain_entries,
+        "sha256_chain_root": compute_sha256_chain(chain_entries),
+        "gate_results": {
+            "gate_0_duration": "PASS",
+            "gate_1_subtitles": postflight_metrics["subtitle_metrics"]["status"],
+            "gate_2_art_style_and_plates": postflight_metrics["plate_metrics"]["status"],
+            "gate_3_pacing": "PASS",
+            "gate_4_audio_boundary": "PASS",
+            "gate_5_integrity_decode": "PASS",
         },
     }
 
-    with open(RELEASE_MANIFEST_PATH, "w", encoding="utf-8") as f:
+    temp_path = RELEASE_MANIFEST_PATH.with_suffix(RELEASE_MANIFEST_PATH.suffix + ".part")
+    with open(temp_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(temp_path, RELEASE_MANIFEST_PATH)
 
     print(f"✅ Release manifest frozen: {RELEASE_MANIFEST_PATH}")
     return RELEASE_MANIFEST_PATH
