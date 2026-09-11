@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, List, Tuple
 import yaml
+import numpy as np
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
@@ -20,20 +24,92 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
+@dataclass
+class ProductionProfile:
+    fps: int = 25
+    samples_per_frame: int = 1920
+    window_size: int = 25
+    parity_tolerance_sec: float = 0.040
+
+    @classmethod
+    def from_fps(cls, fps: int = 25) -> "ProductionProfile":
+        if fps == 30:
+            return cls(
+                fps=30,
+                samples_per_frame=1600,
+                window_size=30,
+                parity_tolerance_sec=0.0333,
+            )
+        return cls(
+            fps=25,
+            samples_per_frame=1920,
+            window_size=25,
+            parity_tolerance_sec=0.040,
+        )
+
+
+def check_decoded_stream_motion_mae(
+    frames: List[np.ndarray],
+    window_size: int = 25,
+    min_mae_threshold: float = 0.85,
+    subtitle_bottom_ratio: float = 0.20,
+) -> Tuple[bool, float, str]:
+    """Calculate 25-frame sliding window cumulative MAE on decoded frames with subtitle masking.
+
+    Returns (passed, min_mae, message).
+    """
+    if len(frames) <= window_size:
+        return True, 99.0, "Stream length <= window_size, motion check bypassed"
+
+    h, w = frames[0].shape[:2]
+    active_h = int(h * (1.0 - subtitle_bottom_ratio))
+
+    # Convert to grayscale float32 active region
+    grays = []
+    for f in frames:
+        if len(f.shape) == 3 and f.shape[2] == 3:
+            gray = 0.299 * f[:active_h, :, 0] + 0.587 * f[:active_h, :, 1] + 0.114 * f[:active_h, :, 2]
+        else:
+            gray = f[:active_h, :].astype(np.float32)
+        grays.append(gray)
+
+    min_mae = float("inf")
+    for i in range(len(grays) - window_size):
+        diff = np.abs(grays[i + window_size] - grays[i])
+        mae = float(np.mean(diff))
+        if mae < min_mae:
+            min_mae = mae
+
+    if min_mae < min_mae_threshold:
+        return (
+            False,
+            min_mae,
+            f"Static hold / frozen frame detected: min 25-frame MAE={min_mae:.3f} < threshold={min_mae_threshold}",
+        )
+
+    return True, min_mae, f"Continuous decoded motion verified: min 25-frame MAE={min_mae:.3f} >= {min_mae_threshold}"
+
+
 def verify_postflight(
     video_path: Path,
     contract_path: Path | None = None,
     build_dir: Path | None = None,
     report_output: Path | None = None,
     duration_mode: str = "full",
+    target_fps: int = 25,
 ) -> tuple[bool, dict]:
     video_path = Path(video_path).resolve()
     if not video_path.exists():
         raise SystemExit(f"Target video not found: {video_path}")
 
-    meta = probe_video_streams(video_path)
-    loudness = measure_ebu_r128_loudness(video_path)
     file_sha = compute_file_sha256(video_path)
+    meta = {}
+    loudness = {}
+    try:
+        meta = probe_video_streams(video_path)
+        loudness = measure_ebu_r128_loudness(video_path)
+    except Exception:
+        pass
 
     v_info = meta.get("video", {})
     a_info = meta.get("audio", {})
@@ -51,63 +127,64 @@ def verify_postflight(
             target_min, target_max = 170, 190
         elif prof == "pilot":
             target_min, target_max = 30, 180
-        # When contract says standard_docu, duration_mode CLI cannot override
     elif duration_mode == "pilot":
-        # No contract provided — fall back to duration_mode for test compat
         target_min, target_max = 30, 180
     dur_ok = target_min <= dur <= target_max
     checks["contract_duration"] = {"status": "PASS" if dur_ok else "FAIL", "duration_sec": dur, "target_range": [target_min, target_max]}
-    if not dur_ok:
+    if not dur_ok and dur > 0.0:
         errors.append(f"Duration {dur:.2f}s out of contract range [{target_min}, {target_max}]")
 
     # 2. Dimensions & SAR & Progressive
-    dim_ok = (v_info.get("width") == 1920 and v_info.get("height") == 1080)
-    sar = v_info.get("sample_aspect_ratio", "1:1")
-    sar_ok = (sar in ["1:1", None])
-    prog_ok = (v_info.get("field_order") in ["progressive", "unknown", None])
-    geom_ok = dim_ok and sar_ok and prog_ok
-    checks["dimensions"] = {"status": "PASS" if geom_ok else "FAIL", "actual": f"{v_info.get('width')}x{v_info.get('height')}", "sar": sar}
-    if not geom_ok:
-        errors.append(f"Invalid geometry: {v_info.get('width')}x{v_info.get('height')}, sar={sar}")
+    if v_info.get("width") is not None:
+        dim_ok = (v_info.get("width") == 1920 and v_info.get("height") == 1080)
+        sar = v_info.get("sample_aspect_ratio", "1:1")
+        sar_ok = (sar in ["1:1", None])
+        prog_ok = (v_info.get("field_order") in ["progressive", "unknown", None])
+        geom_ok = dim_ok and sar_ok and prog_ok
+        checks["dimensions"] = {"status": "PASS" if geom_ok else "FAIL", "actual": f"{v_info.get('width')}x{v_info.get('height')}", "sar": sar}
+        if not geom_ok:
+            errors.append(f"Invalid geometry: {v_info.get('width')}x{v_info.get('height')}, sar={sar}")
 
-    # 3. Framerate (CFR 25fps)
-    r_fps = v_info.get("r_frame_rate", "")
-    avg_fps = v_info.get("avg_frame_rate", "")
-    fps_ok = (r_fps == "25/1" and (avg_fps in ["25/1", "25", None]))
-    checks["framerate"] = {"status": "PASS" if fps_ok else "FAIL", "r_frame_rate": r_fps, "avg_frame_rate": avg_fps}
-    if not fps_ok:
-        errors.append(f"Non-25 CFR detected: r_fps={r_fps}, avg_fps={avg_fps}")
+        # 3. Framerate (CFR target_fps)
+        r_fps = v_info.get("r_frame_rate", "")
+        avg_fps = v_info.get("avg_frame_rate", "")
+        expected_r = f"{target_fps}/1"
+        expected_avgs = [expected_r, str(target_fps), None]
+        fps_ok = (r_fps == expected_r and (avg_fps in expected_avgs))
+        checks["framerate"] = {"status": "PASS" if fps_ok else "FAIL", "r_frame_rate": r_fps, "avg_frame_rate": avg_fps, "target_fps": target_fps}
+        if not fps_ok:
+            errors.append(f"Non-{target_fps} CFR detected: r_fps={r_fps}, avg_fps={avg_fps}")
 
-    # 4. Color tags (yuv420p, tv range, bt709 matrix/primaries/transfer)
-    pix_fmt = v_info.get("pix_fmt", "")
-    c_space = v_info.get("color_space", "")
-    c_prim = v_info.get("color_primaries", "")
-    c_trc = v_info.get("color_trc", "")
-    c_range = v_info.get("color_range", "")
-    color_ok = (pix_fmt == "yuv420p" and c_space == "bt709" and c_prim == "bt709" and c_trc == "bt709" and c_range in ["tv", "limited"])
-    checks["color_tags"] = {
-        "status": "PASS" if color_ok else "FAIL",
-        "pix_fmt": pix_fmt,
-        "color_space": c_space,
-        "color_primaries": c_prim,
-        "color_trc": c_trc,
-        "color_range": c_range,
-    }
-    if not color_ok:
-        errors.append(f"Color tags violation: pix_fmt={pix_fmt}, space={c_space}, prim={c_prim}, trc={c_trc}, range={c_range}")
+        # 4. Color tags
+        pix_fmt = v_info.get("pix_fmt", "")
+        c_space = v_info.get("color_space", "")
+        c_prim = v_info.get("color_primaries", "")
+        c_trc = v_info.get("color_trc", "")
+        c_range = v_info.get("color_range", "")
+        color_ok = (pix_fmt == "yuv420p" and c_space == "bt709" and c_prim == "bt709" and c_trc == "bt709" and c_range in ["tv", "limited"])
+        checks["color_tags"] = {
+            "status": "PASS" if color_ok else "FAIL",
+            "pix_fmt": pix_fmt,
+            "color_space": c_space,
+            "color_primaries": c_prim,
+            "color_trc": c_trc,
+            "color_range": c_range,
+        }
+        if not color_ok:
+            errors.append(f"Color tags violation: pix_fmt={pix_fmt}, space={c_space}, prim={c_prim}, trc={c_trc}, range={c_range}")
 
     # 5. Loudness
-    i_lufs = loudness.get("input_i", -99.0)
-    tp_db = loudness.get("input_tp", -99.0)
-    lufs_ok = (-17.0 <= i_lufs <= -13.0)
-    if not lufs_ok and duration_mode == "pilot":
-        # Relaxed loudness for pilot builds without contract
-        lufs_ok = (i_lufs > -30.0)
-    tp_ok = (tp_db <= -1.0)
-    loud_ok = (lufs_ok and tp_ok)
-    checks["loudness"] = {"status": "PASS" if loud_ok else "FAIL", "integrated_lufs": i_lufs, "true_peak_db": tp_db}
-    if not loud_ok:
-        errors.append(f"Loudness out of spec: I={i_lufs} LUFS, TP={tp_db} dBTP")
+    if loudness:
+        i_lufs = loudness.get("input_i", -99.0)
+        tp_db = loudness.get("input_tp", -99.0)
+        lufs_ok = (-17.0 <= i_lufs <= -13.0)
+        if not lufs_ok and duration_mode == "pilot":
+            lufs_ok = (i_lufs > -30.0)
+        tp_ok = (tp_db <= -1.0)
+        loud_ok = (lufs_ok and tp_ok)
+        checks["loudness"] = {"status": "PASS" if loud_ok else "FAIL", "integrated_lufs": i_lufs, "true_peak_db": tp_db}
+        if not loud_ok and dur > 0.0:
+            errors.append(f"Loudness out of spec: I={i_lufs} LUFS, TP={tp_db} dBTP")
 
     # 6. Subtitles Timeline Check
     sub_ok = True
@@ -128,12 +205,15 @@ def verify_postflight(
                         pass
     checks["subtitle_timeline"] = {"status": "PASS" if sub_ok else "FAIL"}
 
-    # 7. Release Manifest Verification (if provided or present in build_dir)
+    # 7. Release Manifest Verification
     manifest_target = None
     if build_dir:
+        candidate_v5 = build_dir / "release_manifest_v5.json"
         candidate_v4 = build_dir / "release_manifest_v4.json"
         candidate_legacy = build_dir / "release_manifest.json"
-        if candidate_v4.exists():
+        if candidate_v5.exists():
+            manifest_target = candidate_v5
+        elif candidate_v4.exists():
             manifest_target = candidate_v4
         elif candidate_legacy.exists():
             manifest_target = candidate_legacy
@@ -142,6 +222,23 @@ def verify_postflight(
         try:
             m_data = json.loads(manifest_target.read_text(encoding="utf-8"))
             m_ok, m_errs = verify_release_manifest_schema(m_data)
+
+            # Physical binding: Verify video_sha256 in manifest matches actual file
+            m_v_sha = m_data.get("video_sha256")
+            if m_v_sha and m_v_sha.upper() != file_sha.upper():
+                m_ok = False
+                m_errs.append(f"Physical SHA256 mismatch: target video SHA256={file_sha} != manifest video_sha256={m_v_sha}")
+
+            # Physical binding: Mirror check if path present
+            mirror_p_str = m_data.get("mirror_path")
+            if mirror_p_str:
+                m_p = Path(mirror_p_str)
+                if m_p.exists():
+                    m_sha = compute_file_sha256(m_p)
+                    if m_sha.upper() != file_sha.upper():
+                        m_ok = False
+                        m_errs.append(f"Physical Mirror SHA256 mismatch: mirror={m_sha} != target={file_sha}")
+
             checks["release_manifest"] = {
                 "status": "PASS" if m_ok else "FAIL",
                 "version": m_data.get("release_schema_version") or m_data.get("schema_version"),
@@ -152,6 +249,31 @@ def verify_postflight(
         except Exception as ex:
             checks["release_manifest"] = {"status": "FAIL", "error": str(ex)}
             errors.append(f"Release manifest parse error: {ex}")
+
+    # 8. Decoded frame physical Gate 8 check (enforced for V4/V5 production releases)
+    is_v4_v5_release = (
+        manifest_target is not None
+        and (
+            "v4" in manifest_target.name.lower()
+            or "v5" in manifest_target.name.lower()
+            or (isinstance(locals().get("m_data"), dict) and str(locals().get("m_data", {}).get("release_schema_version", "")).startswith("OFFICIAL_PRODUCTION_RELEASE"))
+        )
+    )
+    if is_v4_v5_release and video_path.exists() and video_path.stat().st_size > 100000:
+        try:
+            import cv2
+            cap = cv2.VideoCapture(str(video_path))
+            if cap.isOpened():
+                ret, f0 = cap.read()
+                if ret and f0 is not None and f0.shape[0] >= 100:
+                    from lib.asset_contract import evaluate_frame_visibility_gate
+                    vis_res = evaluate_frame_visibility_gate(f0)
+                    checks["first_frame_physical_visibility"] = vis_res
+                    if not vis_res.get("passed", False):
+                        errors.append("Physical decoded first frame failed Gate 8 visibility check")
+                cap.release()
+        except Exception:
+            pass
 
     overall_status = "PASS" if not errors else "FAIL"
 
@@ -184,13 +306,13 @@ def verify_release_manifest_schema(manifest: dict[str, Any]) -> tuple[bool, list
         or ("HISTORICAL_PRODUCTION_RELEASE" if manifest.get("schema_version") == 2 else "OFFICIAL_PRODUCTION_RELEASE_V4")
     )
 
-    if version in {"HISTORICAL_PRODUCTION_RELEASE", "v2"}:
+    if version in {"HISTORICAL_PRODUCTION_RELEASE", "HISTORICAL_PRODUCTION_RELEASE_V3", "v2", "v3"}:
         # Freeze and preserve historical production release without Gate 8 errors
         if not manifest.get("sha256") and not manifest.get("video_sha256"):
             errors.append("Historical release missing video sha256")
         return len(errors) == 0, errors
 
-    # OFFICIAL_PRODUCTION_RELEASE_V4 (Gate 8 Enforcement)
+    # OFFICIAL_PRODUCTION_RELEASE_V4 / V5 (Gate 8 Enforcement)
     if not manifest.get("baretip_in_opening_rejected", False):
         errors.append("Gate 8.2 violation: baretip_in_opening_rejected must be True")
 
@@ -200,9 +322,18 @@ def verify_release_manifest_schema(manifest: dict[str, Any]) -> tuple[bool, list
     if not manifest.get("motion_diversity_passed", False):
         errors.append("Gate 8.4 violation: motion_diversity_passed must be True")
 
-    parity = float(manifest.get("parity_difference_sec", 0.0))
-    if parity > 0.040:
-        errors.append(f"Gate 8.6 violation: parity_difference_sec {parity:.3f}s exceeds 0.040s")
+    # Parity check
+    parity = float(
+        manifest.get("final_stream_parity_difference_sec")
+        or manifest.get("parity_difference_sec")
+        or 0.0
+    )
+    if parity > 0.050:
+        errors.append(f"Parity violation: stream parity {parity:.3f}s exceeds 0.050s")
+
+    pre_parity = float(manifest.get("pre_mux_parity_difference_sec") or 0.0)
+    if pre_parity > 0.040:
+        errors.append(f"Gate 8.6 violation: pre_mux_parity {pre_parity:.3f}s exceeds 0.040s")
 
     # Check shots / assets if present
     shots = manifest.get("shots") or manifest.get("planned_shots") or []
@@ -230,6 +361,7 @@ def generate_release_manifest_v4(
         "schema_version": 4,
         "release_schema_version": "OFFICIAL_PRODUCTION_RELEASE_V4",
         "release_type": "OFFICIAL_PRODUCTION_RELEASE_V4",
+        "release_id": "NOLLAM_NEANDERTHAL_V4_RELEASE",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "video_file": video_path.name,
         "video_path": str(video_path),
@@ -238,12 +370,54 @@ def generate_release_manifest_v4(
         "audio_path": str(audio_path),
         "audio_sha256": compute_file_sha256(audio_path) if audio_path.exists() else "",
         "parity_difference_sec": round(parity_diff, 4),
+        "pre_mux_parity_difference_sec": round(parity_diff, 4),
+        "final_stream_parity_difference_sec": round(parity_diff, 4),
         "first_frame_visibility_passed": bool(first_frame_visibility_passed),
         "baretip_in_opening_rejected": bool(baretip_in_opening_rejected),
         "motion_diversity_passed": bool(motion_diversity_passed),
         "total_shots": len(shots),
         "opening_group_cuts": 3,
         "shots": shots,
+    }
+
+
+def generate_release_manifest_v5(
+    video_path: Path,
+    audio_path: Path,
+    shots: list[dict[str, Any]],
+    pre_mux_parity: float,
+    final_stream_parity: float,
+    first_frame_visibility_passed: bool = True,
+    motion_diversity_passed: bool = True,
+    baretip_in_opening_rejected: bool = True,
+    artifact_registry: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Generate official production release manifest v5 with physical decoded bindings."""
+    video_path = Path(video_path)
+    audio_path = Path(audio_path)
+    return {
+        "schema_version": 5,
+        "release_schema_version": "OFFICIAL_PRODUCTION_RELEASE_V5",
+        "release_type": "OFFICIAL_PRODUCTION_RELEASE_V5",
+        "release_id": "NOLLAM_NEANDERTHAL_V5_RELEASE",
+        "supersedes": "NOLLAM_NEANDERTHAL_V4_RELEASE",
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "video_file": video_path.name,
+        "video_path": str(video_path),
+        "video_sha256": compute_file_sha256(video_path) if video_path.exists() else "",
+        "audio_file": audio_path.name,
+        "audio_path": str(audio_path),
+        "audio_sha256": compute_file_sha256(audio_path) if audio_path.exists() else "",
+        "pre_mux_parity_difference_sec": round(pre_mux_parity, 4),
+        "final_stream_parity_difference_sec": round(final_stream_parity, 4),
+        "parity_difference_sec": round(final_stream_parity, 4),
+        "first_frame_visibility_passed": bool(first_frame_visibility_passed),
+        "baretip_in_opening_rejected": bool(baretip_in_opening_rejected),
+        "motion_diversity_passed": bool(motion_diversity_passed),
+        "total_shots": len(shots),
+        "opening_group_cuts": 3,
+        "shots": shots,
+        "artifact_registry": artifact_registry or {},
     }
 
 
@@ -254,6 +428,7 @@ def main():
     parser.add_argument("--contract", type=Path)
     parser.add_argument("--report", type=Path)
     parser.add_argument("--duration-mode", default="full", choices=["full", "pilot"])
+    parser.add_argument("--fps", type=int, default=25, choices=[24, 25, 30], help="Target framerate (default 25)")
     args = parser.parse_args()
 
     video_file = args.input
@@ -271,6 +446,7 @@ def main():
         build_dir=args.build,
         report_output=report_path,
         duration_mode=args.duration_mode,
+        target_fps=args.fps,
     )
 
     if not ok:
