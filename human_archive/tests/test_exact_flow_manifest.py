@@ -30,4 +30,6 @@ def test_exact_flow_manifest_contains_one_request_per_ab_plate(tmp_path: Path) -
     assert result == output
     assert [row["scene_id"] for row in data["requests"]] == ["SHOT_001_A", "SHOT_001_B"]
     assert all(row["submission_prompt"].startswith("2D graphic novel illustration") for row in data["requests"])
+    assert all(len(row["submission_prompt"]) <= 441 for row in data["requests"])
+    assert data["project_id"] == "8550306b-a63c-450f-beda-5ed1d72a760e"
     assert all(len(row["request_sha256"]) == 64 for row in data["requests"])

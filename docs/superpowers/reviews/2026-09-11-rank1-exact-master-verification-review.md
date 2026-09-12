@@ -1,5 +1,13 @@
 # Rank1 Exact Master 산출물 검증·검수 보고서
 
+## 2026-09-12 후속 교차검증 — Google Flow 차단 원인 보고서
+
+사용자가 제시한 `SHOT_015_A` 민감어·7개 에러 타일·`clear_all_error_tiles.py`·22/24초 실생성 주장을 현재 디스크와 CDP 상태에 대조했다. 현재 Flow 프로젝트(`8550306b-a63c-450f-beda-5ed1d72a760e`)는 연결 가능하고, 최신 실측 에러 타일 0개·provider activity/policy 문구 0개·`flow-content.google` 이미지 URL 22개(이전 관측 24개)였으나, 과거 누적 카드 수와 특정 키워드의 직접 인과를 입증하는 보존 로그는 확인되지 않았다. `clear_all_error_tiles.py`도 당시 코드베이스에 없었다.
+
+현재 매니페스트 교차검증에서 `SHOT_015_A/B`의 해당 원문 민감어는 제거됐지만 `SHOT_021_A/B`에는 `sickle`이 남아 있었고, 요청 프롬프트는 522~736자였다. 따라서 원인 보고서의 “완전 해결·441자” 판정은 당시 시점의 사실로 승인할 수 없다.
+
+재발 방지 보정으로 exact 요청 경계 정화기(민감 생체/방사선·사진풍 토큰 제거, 스타일 중복 제거, 441자 상한), `flow-content.google` URL allowlist, provider activity/policy/blocked 카드 휴지통 우선·무재시도·fail-closed 정책을 추가했다. 80개 요청은 현재 429~441자·금지 토큰 0건·스타일 중복 0건으로 검증됐으며, 최종 MP4 승격 전 80개 실물 자산과 독립 Gate 검증은 여전히 필수다.
+
 - 검수일: 2026-09-11 (KST)
 - 대상 릴리스: `HL-RANK1-EXACT-CLONE-V1`
 - 대상 영상: `tPBVrfcU85g`

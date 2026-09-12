@@ -69,26 +69,31 @@ _CLEAR_ERROR_CARDS_JS = r"""
         const text = (tile.innerText || '').trim();
         const looksLikeError = text.includes('오류') || text.includes('실패') ||
             text.includes('로드할 수 없습니다') || text.includes('안전') ||
-            text.includes('정책') || text.toLowerCase().includes('error') ||
-            text.toLowerCase().includes('failed') || text.toLowerCase().includes('violation');
+            text.includes('정책') || text.includes('활동') || text.includes('감지') ||
+            text.toLowerCase().includes('error') || text.toLowerCase().includes('failed') ||
+            text.toLowerCase().includes('violation') || text.toLowerCase().includes('blocked') ||
+            text.toLowerCase().includes('unusual');
         if (!looksLikeError) continue;
 
         const buttons = Array.from(tile.querySelectorAll('button'));
-        const retry = buttons.find((button) => {
-            const label = ((button.getAttribute('aria-label') || '') + ' ' +
-                (button.innerText || '')).toLowerCase();
-            return label.includes('다시 시도') || label.includes('retry') ||
-                label.includes('refresh') || label.includes('redo') ||
-                button.classList.contains('flow-icon-button-primary');
-        });
         const trash = buttons.find((button) => {
             const label = ((button.getAttribute('aria-label') || '') + ' ' +
                 (button.innerText || '')).toLowerCase();
             return label.includes('삭제') || label.includes('휴지통') ||
-                label.includes('delete');
+                label.includes('delete') || label.includes('delete_forever');
         });
-        (retry || trash)?.click();
-        if (retry || trash) cleared++;
+        const retry = buttons.find((button) => {
+            const label = ((button.getAttribute('aria-label') || '') + ' ' +
+                (button.innerText || '')).toLowerCase();
+            return label.includes('다시 시도') || label.includes('retry') ||
+                label.includes('refresh') || label.includes('redo');
+        });
+        const providerBlock = text.includes('활동') || text.includes('감지') ||
+            text.includes('정책') || text.includes('안전') ||
+            text.toLowerCase().includes('blocked') || text.toLowerCase().includes('unusual');
+        const target = trash || (providerBlock ? null : retry);
+        target?.click();
+        if (target) cleared++;
     }
     return cleared;
 }
@@ -139,22 +144,28 @@ async def clear_first_error_card(page: Any) -> str | None:
         const text = (card.innerText || '').trim();
         if (!text) continue;
         const lower = text.toLowerCase();
-        if (!(text.includes('오류') || text.includes('실패') || text.includes('정책') ||
-              lower.includes('error') || lower.includes('failed') || lower.includes('violation'))) continue;
+        const looksLikeError = text.includes('오류') || text.includes('실패') ||
+            text.includes('안전') || text.includes('정책') || text.includes('활동') ||
+            text.includes('감지') || lower.includes('error') || lower.includes('failed') ||
+            lower.includes('violation') || lower.includes('blocked') || lower.includes('unusual');
+        if (!looksLikeError) continue;
         const buttons = Array.from(card.querySelectorAll('button'));
+        const trash = buttons.find((candidate) => {
+            const label = ((candidate.getAttribute('aria-label') || '') + ' ' +
+                (candidate.innerText || '')).toLowerCase();
+            return label.includes('삭제') || label.includes('휴지통') ||
+                label.includes('delete') || label.includes('delete_forever');
+        });
         const retry = buttons.find((candidate) => {
             const label = ((candidate.getAttribute('aria-label') || '') + ' ' +
                 (candidate.innerText || '')).toLowerCase();
             return label.includes('다시 시도') || label.includes('retry') ||
-                label.includes('refresh') || label.includes('redo') ||
-                candidate.classList.contains('flow-icon-button-primary');
+                label.includes('refresh') || label.includes('redo');
         });
-        const trash = buttons.find((candidate) => {
-            const label = ((candidate.getAttribute('aria-label') || '') + ' ' +
-                (candidate.innerText || '')).toLowerCase();
-            return label.includes('삭제') || label.includes('휴지통') || label.includes('delete');
-        });
-        const button = retry || trash;
+        const providerBlock = text.includes('활동') || text.includes('감지') ||
+            text.includes('정책') || text.includes('안전') ||
+            lower.includes('blocked') || lower.includes('unusual');
+        const button = trash || (providerBlock ? null : retry);
         if (button) button.click();
         return {text: text.slice(0, 100), acted: Boolean(button)};
     }
