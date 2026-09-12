@@ -38,6 +38,7 @@ from lib.exact_release_verifier import (
     audit_ass_strict,
     compute_sha256_chain,
     count_wav_sample_frames,
+    validate_audio_probe,
     validate_plate_manifest,
     validate_video_probe,
 )
@@ -49,7 +50,8 @@ EP_DIR = SCRIPTS_DIR.parent / "runs" / "human_library_replica" / "rank1_race_ada
 METADATA_DIR = EP_DIR / "metadata"
 SUBTITLES_DIR = EP_DIR / "subtitles"
 AUDIO_DIR = EP_DIR / "audio"
-IMAGES_DIR = EP_DIR / "images"
+# Keep the exact release isolated from the legacy photorealistic 1920x1080 set.
+IMAGES_DIR = EP_DIR / "images_2d_master"
 VIDEO_DIR = EP_DIR / "video"
 BRANDING_DIR = SCRIPTS_DIR.parent / "assets" / "branding"
 TOP3_DIR = REPO_ROOT / "scratch" / "human_library_top3"
@@ -84,7 +86,7 @@ def sha256_file(path: Path) -> str:
 def get_ffprobe_info(media_path: Path) -> Dict[str, Any]:
     cmd = [
         "ffprobe", "-v", "error",
-        "-show_entries", "stream=codec_type,codec_name,profile,width,height,r_frame_rate,avg_frame_rate,duration,sample_rate,channels,nb_frames",
+        "-show_entries", "stream=codec_type,codec_name,profile,width,height,r_frame_rate,avg_frame_rate,duration,sample_rate,channels,nb_frames,bit_rate",
         "-show_entries", "format=duration,size",
         "-of", "json",
         str(media_path)
@@ -272,16 +274,21 @@ def step_3_cinema_assembly(
         "-c:a", "aac",
         "-b:a", "320k",
         "-ar", "48000",
-        "-t", f"{target_duration_sec:.3f}",
-        str(output_mp4),
+        "-frames:v", "29195",
+        "-frames:a", str(MASTER_AUDIO_SAMPLES),
+        str(output_mp4.with_suffix(output_mp4.suffix + ".part")),
     ]
 
     print("Executing final multiplex command...")
     t0 = time.time()
+    temporary_output = output_mp4.with_suffix(output_mp4.suffix + ".part")
     res = subprocess.run(cmd, capture_output=True, text=True)
     t1 = time.time()
     if res.returncode != 0:
+        temporary_output.unlink(missing_ok=True)
         raise RuntimeError(f"FFmpeg assembly failed (code {res.returncode}):\n{res.stderr[-800:]}")
+
+    os.replace(temporary_output, output_mp4)
 
     print(f"✅ Final Master Documentary rendered in {t1-t0:.1f}s: {output_mp4} ({output_mp4.stat().st_size:,} bytes)")
     return output_mp4
@@ -310,8 +317,8 @@ def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
     video_check = validate_video_probe(v_stream)
     assert video_check["status"] == "PASS", "; ".join(video_check["errors"])
     assert abs(v_dur - a_dur) <= 0.033, f"AV Parity Delta {delta}s > 0.033s"
-    assert a_sr == MASTER_AUDIO_SAMPLE_RATE, f"Expected 48000 Hz, got {a_sr}"
-    assert a_stream.get("channels") == 2, f"Expected stereo audio, got {a_stream.get('channels')} channels"
+    audio_check = validate_audio_probe(a_stream)
+    assert audio_check["status"] == "PASS", "; ".join(audio_check["errors"])
 
     decode_errors = []
     for selector in ("0:v:0", "0:a:0"):
@@ -347,6 +354,10 @@ def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
         "total_frames": v_frames,
         "frame_rate": v_fps,
         "audio_sample_rate": a_sr,
+        "audio_codec": a_stream.get("codec_name"),
+        "audio_bitrate": a_stream.get("bit_rate"),
+        "video_codec": v_stream.get("codec_name"),
+        "video_profile": v_stream.get("profile"),
         "wav_sample_frames": wav_sample_frames,
         "decoded_streams": ["video", "audio"],
         "subtitle_metrics": ass_check,

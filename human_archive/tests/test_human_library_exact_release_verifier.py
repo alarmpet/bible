@@ -19,6 +19,7 @@ from lib.exact_release_verifier import (  # noqa: E402
     compute_sha256_chain,
     count_wav_sample_frames,
     validate_manifest_chain,
+    validate_audio_probe,
     validate_plate_manifest,
     validate_video_probe,
 )
@@ -99,6 +100,8 @@ def test_plate_manifest_requires_distinct_bound_2304x1296_assets(tmp_path):
 def test_video_probe_requires_exact_frame_count_and_cfr():
     valid = validate_video_probe(
         {
+            "codec_name": "h264",
+            "profile": "High",
             "width": 1920,
             "height": 1080,
             "r_frame_rate": "30/1",
@@ -121,6 +124,19 @@ def test_video_probe_requires_exact_frame_count_and_cfr():
     )
     assert invalid["status"] == "FAIL"
     assert any("frame" in error for error in invalid["errors"])
+
+
+def test_audio_probe_requires_aac_48k_stereo():
+    valid = validate_audio_probe(
+        {"codec_name": "aac", "sample_rate": "48000", "channels": 2}
+    )
+    assert valid["status"] == "PASS"
+
+    invalid = validate_audio_probe(
+        {"codec_name": "pcm_s16le", "sample_rate": "44100", "channels": 1}
+    )
+    assert invalid["status"] == "FAIL"
+    assert any("AAC" in error or "48000" in error or "stereo" in error for error in invalid["errors"])
 
 
 def test_manifest_chain_requires_order_and_root_digest(tmp_path):

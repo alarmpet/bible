@@ -198,6 +198,10 @@ def validate_video_probe(
 ) -> dict[str, Any]:
     """Validate exact video geometry, CFR metadata, frame count, and duration."""
     errors: list[str] = []
+    if str(probe.get("codec_name", "")).lower() != "h264":
+        errors.append("video codec must be H.264")
+    if not str(probe.get("profile", "")).lower().startswith("high"):
+        errors.append("video profile must be H.264 High")
     if int(probe.get("width", 0)) != 1920 or int(probe.get("height", 0)) != 1080:
         errors.append("video geometry must be 1920x1080")
     if probe.get("r_frame_rate") != target_fps or probe.get("avg_frame_rate") != target_fps:
@@ -211,6 +215,18 @@ def validate_video_probe(
     else:
         if abs(duration - target_duration_sec) > duration_tolerance_sec:
             errors.append("video duration exceeds tolerance")
+    return {"status": "PASS" if not errors else "FAIL", "errors": errors}
+
+
+def validate_audio_probe(probe: dict[str, Any]) -> dict[str, Any]:
+    """Validate the clean-scope release audio stream contract."""
+    errors: list[str] = []
+    if str(probe.get("codec_name", "")).lower() != "aac":
+        errors.append("audio codec must be AAC")
+    if int(probe.get("sample_rate", 0)) != 48_000:
+        errors.append("audio sample rate must be 48000 Hz")
+    if int(probe.get("channels", 0)) != 2:
+        errors.append("audio must be stereo")
     return {"status": "PASS" if not errors else "FAIL", "errors": errors}
 
 

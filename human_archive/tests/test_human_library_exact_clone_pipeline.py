@@ -11,6 +11,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from run_human_library_exact_clone_pipeline import (
     EP_DIR,
+    IMAGES_DIR,
     METADATA_DIR,
     SUBTITLES_DIR,
     BRANDING_DIR,
@@ -28,6 +29,7 @@ from run_human_library_exact_clone_pipeline import (
 
 
 def test_pipeline_essential_contracts_exist():
+    assert IMAGES_DIR.name == "images_2d_master"
     assert CANONICAL_MANIFEST_PATH.exists(), "Canonical timeline manifest missing"
     assert SUBCUT_PLAN_PATH.exists(), "Subcut montage plan missing"
     assert PLATES_PLAN_PATH.exists(), "Master plates plan missing"
