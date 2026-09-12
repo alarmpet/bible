@@ -141,6 +141,19 @@ def step_1_prepare_audio(target_duration_sec: float = 973.167) -> Path:
     cmd = build_master_audio_command(ORIGINAL_MP4, RAW_AUDIO_PATH)
     subprocess.run(cmd, check=True)
     actual_samples = count_wav_sample_frames(RAW_AUDIO_PATH)
+    if actual_samples > MASTER_AUDIO_SAMPLES:
+        import wave
+        tmp_wav = RAW_AUDIO_PATH.with_suffix(".clamped.wav")
+        with wave.open(str(RAW_AUDIO_PATH), "rb") as r:
+            params = r.getparams()
+            frames = r.readframes(MASTER_AUDIO_SAMPLES)
+        with wave.open(str(tmp_wav), "wb") as w:
+            w.setparams(params)
+            w.setnframes(MASTER_AUDIO_SAMPLES)
+            w.writeframes(frames)
+        tmp_wav.replace(RAW_AUDIO_PATH)
+        actual_samples = count_wav_sample_frames(RAW_AUDIO_PATH)
+
     if actual_samples != MASTER_AUDIO_SAMPLES:
         raise RuntimeError(
             f"Exact WAV boundary failed: {actual_samples} != {MASTER_AUDIO_SAMPLES} sample frames"
@@ -275,13 +288,13 @@ def step_3_cinema_assembly(
         "-b:a", "320k",
         "-ar", "48000",
         "-frames:v", "29195",
-        "-frames:a", str(MASTER_AUDIO_SAMPLES),
-        str(output_mp4.with_suffix(output_mp4.suffix + ".part")),
+        "-f", "mp4",
+        str(output_mp4.with_name(f"{output_mp4.stem}.part.mp4")),
     ]
 
     print("Executing final multiplex command...")
     t0 = time.time()
-    temporary_output = output_mp4.with_suffix(output_mp4.suffix + ".part")
+    temporary_output = output_mp4.with_name(f"{output_mp4.stem}.part.mp4")
     res = subprocess.run(cmd, capture_output=True, text=True)
     t1 = time.time()
     if res.returncode != 0:

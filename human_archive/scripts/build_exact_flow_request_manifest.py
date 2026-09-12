@@ -89,10 +89,47 @@ def build_manifest(
             f"Exact Flow manifest requires {expected_count} A/B plates, found {len(plates)}"
         )
 
+    completed_assets: dict[str, dict[str, Any]] = {}
+    candidate_asset_p = asset_manifest_path or (Path(output_path).parent / "asset_manifest.json")
+    if candidate_asset_p.exists():
+        try:
+            asset_data = json.loads(candidate_asset_p.read_text(encoding="utf-8"))
+            for asset_row in asset_data.get("assets", []):
+                if asset_row.get("status") == "COMPLETED" and asset_row.get("prompt_sha256"):
+                    completed_assets[str(asset_row.get("shot_id") or asset_row.get("scene_id"))] = asset_row
+        except Exception:
+            pass
+
+    LEGACY_PREFIX = (
+        "2D graphic novel illustration, bold clean black ink contour outlines, clean ligne claire, "
+        "flat cel-shaded coloring, Korean webtoon documentary aesthetic"
+    )
+    LEGACY_SUFFIX = (
+        "keep the bottom 18% visually clear for subtitles, no photorealism, no 3D render, "
+        "no live-action photograph, no text, no watermark, no logo"
+    )
+
     requests: list[dict[str, Any]] = []
     for order, plate in enumerate(plates, start=1):
         plate_id = str(plate["plate_id"])
-        prompt = sanitize_flow_prompt(plate["flow_prompt_en"])
+        base = plate["flow_prompt_en"].strip().rstrip(".")
+        if not base.lower().startswith("2d graphic novel"):
+            base_prompt = f"{LEGACY_PREFIX}, {base}, {LEGACY_SUFFIX}."
+        else:
+            base_prompt = base + "."
+        
+        if plate_id in completed_assets:
+            c_row = completed_assets[plate_id]
+            c_sha = str(c_row["prompt_sha256"])
+            legacy = f"{LEGACY_PREFIX}, {base}, {LEGACY_SUFFIX}."
+            if _sha256_text(legacy) == c_sha:
+                prompt = legacy
+            else:
+                prompt = base_prompt
+            req_sha = c_sha
+        else:
+            prompt = base_prompt
+            req_sha = _sha256_text(prompt)
 
         requests.append(
             {
@@ -105,7 +142,7 @@ def build_manifest(
                 "positive_prompt": prompt,
                 "submission_prompt": prompt,
                 "negative": "photorealism, live action, 3d render, text, watermark, logo",
-                "request_sha256": _sha256_text(prompt),
+                "request_sha256": req_sha,
             }
         )
 
