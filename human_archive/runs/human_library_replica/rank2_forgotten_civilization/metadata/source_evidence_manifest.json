@@ -1,0 +1,97 @@
+{
+  "manifest_version": "1.0.0",
+  "gate": "Gate 0 - Evidence & Originality Gate",
+  "status": "PASSED",
+  "timestamp": "2026-09-13T21:58:00+09:00",
+  "target_episode": {
+    "channel_title": "인류의 서재",
+    "channel_handle": "@인류의서재",
+    "source_video_id": "o-x6sIGANPY",
+    "source_title": "잊혀진 문명, 세계 최강이 사라진 이유",
+    "source_views_at_audit": 915219
+  },
+  "provenance_metrics": {
+    "raw_cue_count": 507,
+    "logical_sentence_count": 274,
+    "clean_char_count_no_space": 7202,
+    "scenes_count": 64,
+    "planned_runtime_sec": 1440.0,
+    "true_cps": 5.001,
+    "pacing_distribution": {
+      "opening_cuts": 3,
+      "tier1_cuts": 11,
+      "tier2_cuts": 18,
+      "tier3_cuts": 32
+    }
+  },
+  "originality_boundaries": {
+    "verbatim_replication_permitted": false,
+    "infringing_audio_reuse_permitted": false,
+    "infringing_image_reuse_permitted": false,
+    "mechanisms_to_learn": [
+      "0~30s cognitive dissonance hook (Cleopatra & Pyramid temporal distortion -> 1400 years of hieroglyph death)",
+      "short colloquial narrative cadence (mean 25.4 chars)",
+      "historical parallel causality (ecological drought -> societal collapse -> imperial overreach)",
+      "3-tier dynamic pacing decay curve (1.6s ~ 35s per cut)",
+      "2D Ligne Claire graphic novel visual aesthetic"
+    ],
+    "output_requirements": "All narration text must be newly formulated original Korean sentences with citation provenance; all visuals must be novel AI prompts; all voice audio must be synthesized via licensed SuperTonic3 M2 TTS."
+  },
+  "preflight_contracts": {
+    "google_flow_cdp": {
+      "port": 9222,
+      "mode": "1-shot-1-card-1-completion",
+      "max_in_flight": 1,
+      "cooldown_jitter_sec": [
+        14.0,
+        17.0
+      ],
+      "max_retry": 1
+    },
+    "supertonic3_tts": {
+      "port": 3093,
+      "voice_profile": "M2_warm_narrator",
+      "sample_rate_hz": 48000,
+      "channels": 2,
+      "target_cps": 5.0
+    }
+  },
+  "evidence_file_inventory": {
+    "raw_vtt_ko": {
+      "path": "D:\\module\\scratch\\human_library_top3\\rank2_o-x6sIGANPY_sub.ko.vtt",
+      "exists": true,
+      "size_bytes": 161105,
+      "sha256": "990e3bae76c69e0677d33f1e44ebf0113a397d92d7af2e3d689b0e9415e20ba5"
+    },
+    "raw_vtt_en": {
+      "path": "D:\\module\\scratch\\human_library_top3\\rank2_o-x6sIGANPY_sub.en.vtt",
+      "exists": true,
+      "size_bytes": 182919,
+      "sha256": "7dd207878f115ea14321efc0a7e4469646cbd30e657860da92137253668968ea"
+    },
+    "raw_cues": {
+      "path": "D:\\module\\scratch\\human_library_top3\\rank2_o-x6sIGANPY_cues.json",
+      "exists": true,
+      "size_bytes": 92934,
+      "sha256": "da9e7134a7ee3c0f968f814654d66920fbce42133ddebc027be1bd06faf9a922"
+    },
+    "raw_meta": {
+      "path": "D:\\module\\scratch\\human_library_top3\\rank2_o-x6sIGANPY_meta.json",
+      "exists": true,
+      "size_bytes": 676477,
+      "sha256": "48e0d2b69338469c48e1be976ace9ccffbb3194594a95c1637df776517b3453b"
+    },
+    "raw_transcript": {
+      "path": "D:\\module\\scratch\\human_library_top3\\rank2_o-x6sIGANPY_full_transcript.txt",
+      "exists": true,
+      "size_bytes": 45719,
+      "sha256": "d64594a42f356222dace1411ab6bdeef0bcadfe747a53e3c63cca9b4304f8f6c"
+    },
+    "top3_comparative_stats": {
+      "path": "D:\\module\\scratch\\human_library_top3\\top3_deep_comparative_stats.json",
+      "exists": true,
+      "size_bytes": 14469,
+      "sha256": "fcc268b4b4e41dca9589d4af8b511044de41a7238e0317a07967d83c4fbb5ee3"
+    }
+  }
+}

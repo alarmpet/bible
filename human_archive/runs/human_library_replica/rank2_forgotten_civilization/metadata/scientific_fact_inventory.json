@@ -1,0 +1,159 @@
+{
+  "inventory_version": "1.0.0",
+  "episode_id": "human_library_rank2_forgotten_civilization",
+  "claims": [
+    {
+      "claim_id": "CLAIM_001",
+      "topic": "나일강 범람 생태학과 케메트(검은 땅) 및 시리우스 역법",
+      "statement": "매년 여름 나일강의 에티오피아 고원 기원 몬순 범람으로 비옥한 검은 퇴적토(케메트)가 공급되었으며, 시리우스(소티스) 별의 헬리아칼 라이징을 통해 정확한 범람 시기를 예측했다.",
+      "grade": "Grade A",
+      "citations": [
+        {
+          "authors": "Butzer, K. W.",
+          "year": 1976,
+          "title": "Early Hydraulic Civilization in Egypt: A Study in Cultural Ecology",
+          "journal": "University of Chicago Press",
+          "doi": "10.7208/chicago/9780226086330.001.0001"
+        },
+        {
+          "authors": "Herodotus",
+          "year": "c. 430 BCE",
+          "title": "Histories, Book II (Euterpe)",
+          "journal": "Classical Text"
+        }
+      ],
+      "nuance": "헤로도토스가 '이집트는 나일강의 선물'이라 칭했듯 비옥한 검은 흙 케메트와 죽음의 붉은 사막 데세레트의 극단적 대조가 문명의 요람이 됨."
+    },
+    {
+      "claim_id": "CLAIM_002",
+      "topic": "나르메르 왕의 상·하 이집트 통일과 전기메기 공포 상징",
+      "statement": "기원전 3100년경 상이집트의 나르메르가 하이집트를 통합하여 최초의 통일 왕조를 세웠으며, 치명적 전기를 뿜는 나일강 전기메기의 위력을 왕권의 강력한 상징으로 삼았다.",
+      "grade": "Grade A",
+      "citations": [
+        {
+          "authors": "Wilkinson, T. A. H.",
+          "year": 1999,
+          "title": "Early Dynastic Egypt",
+          "journal": "Routledge",
+          "doi": "10.4324/9780203024386"
+        },
+        {
+          "authors": "Emery, W. B.",
+          "year": 1961,
+          "title": "Archaic Egypt",
+          "journal": "Penguin Books"
+        }
+      ],
+      "nuance": "나르메르 팔레트에 묘사된 프셴트(Pschent, 백관+적관) 이중 왕관은 3천 년 파라오 지배의 정통성 기호로 정립됨."
+    },
+    {
+      "claim_id": "CLAIM_003",
+      "topic": "석조 건축의 진화: 임호텝 계단 피라미드와 스네프루 굴절 피라미드",
+      "statement": "임호텝은 진흙 벽돌 마스타바를 6단으로 올려 최초의 대규모 석조 건축물(조세르 계단 피라미드, 62m)을 창안했고, 스네프루는 구조 붕괴와 지반 침하를 겪으며 54도에서 43도로 경사를 꺾는 공학적 시행착오 끝에 진정 피라미드를 완성했다.",
+      "grade": "Grade A",
+      "citations": [
+        {
+          "authors": "Lehner, M.",
+          "year": 1997,
+          "title": "The Complete Pyramids",
+          "journal": "Thames & Hudson"
+        },
+        {
+          "authors": "Verner, M.",
+          "year": 2001,
+          "title": "The Pyramids: The Mystery, Culture, and Science of Egypt's Great Monuments",
+          "journal": "Grove Press"
+        }
+      ],
+      "nuance": "피라미드는 단순한 왕권 과시가 아니라 석재 채취, 운반, 보급, 노동력 조직 등 국가 관료제와 행정 시스템을 탄생시킨 거대한 토목 프로젝트였음."
+    },
+    {
+      "claim_id": "CLAIM_004",
+      "topic": "쿠푸 대피라미드와 피라미드 노예설 반박 (노동자 마을 발굴 실증)",
+      "statement": "230만 개(600만 톤)의 석회암으로 3,800년간 최고층 자리를 지킨 대피라미드는 노예 강제 노역이 아니라, 매일 맥주와 소고기를 지급받고 교대제로 일하며 '쿠푸의 친구들' 같은 자치 팀 낙서를 남긴 자유민 숙련 노동자들에 의해 건설되었다.",
+      "grade": "Grade A",
+      "citations": [
+        {
+          "authors": "Hawass, Z., & Lehner, M.",
+          "year": 1997,
+          "title": "Builders of the Pyramids",
+          "journal": "Archaeology",
+          "doi": "10.2307/41771142"
+        },
+        {
+          "authors": "Lehner, M.",
+          "year": 2002,
+          "title": "The Lost City of the Pyramids",
+          "journal": "AERA Monograph"
+        }
+      ],
+      "nuance": "기자 피라미드 인근 발굴된 노동자 묘지 유골에서 골절 치료 흔적과 왕실 단지 내 안치된 명예 매장이 확인됨."
+    },
+    {
+      "claim_id": "CLAIM_005",
+      "topic": "기원전 2200년 4.2k 한랭·가뭄 사건과 구왕국 붕괴",
+      "statement": "구왕국의 붕괴는 전쟁이 아닌 에티오피아 몬순 중단에 따른 장기 나일강 가뭄(4.2k kiloyear event)으로 발생했으며, 왕실 창고 고갈로 지방 노마르크(호족)들이 분열하여 제1중간기 내전으로 이어졌다.",
+      "grade": "Grade A",
+      "citations": [
+        {
+          "authors": "Stanley, J. D. et al.",
+          "year": 2003,
+          "title": "Nile flow failure at the end of the Old Kingdom, Egypt: Strontium isotopic and petrologic evidence",
+          "journal": "Geoarchaeology",
+          "doi": "10.1002/gea.10065"
+        },
+        {
+          "authors": "Kaniewski, D. et al.",
+          "year": 2013,
+          "title": "Environmental Roots of the Late Bronze Age Crisis",
+          "journal": "PLOS ONE",
+          "doi": "10.1371/journal.pone.0071004"
+        }
+      ],
+      "nuance": "환경 붕괴는 레반트 힉소스(Hyksos)의 전차 기술 유입이라는 굴욕을 낳았으나, 신왕국 아흐모세 1세가 이를 역이용해 최강의 군사제국으로 반등함."
+    },
+    {
+      "claim_id": "CLAIM_006",
+      "topic": "기원전 1177년 바다민족 나일 하구 수로 매복 해전과 최초의 노동자 파업",
+      "statement": "히타이트와 미케네를 멸망시킨 바다민족(Sea Peoples)을 람세스 3세가 나일 하구 좁은 수로로 유인하여 궁수 매복으로 격퇴했으나, 막대한 전비 지출로 인한 임금 체불로 기원전 1159년 투린 파피루스에 기록된 인류 최초의 노동자 파업이 발생했다.",
+      "grade": "Grade A",
+      "citations": [
+        {
+          "authors": "Cline, E. H.",
+          "year": 2014,
+          "title": "1177 B.C.: The Year Civilization Collapsed",
+          "journal": "Princeton University Press",
+          "doi": "10.1515/9781400849987"
+        },
+        {
+          "authors": "Breasted, J. H.",
+          "year": 1906,
+          "title": "Ancient Records of Egypt, Vol IV: The Twentieth Dynasty (Turin Strike Papyrus)",
+          "journal": "University of Illinois Press"
+        }
+      ],
+      "nuance": "승리 이후 국고 고갈과 파업, 잇따른 외세(리비아, 누비아, 아시리아, 페르시아) 침략으로 파라오의 천년 권위가 해체됨."
+    },
+    {
+      "claim_id": "CLAIM_007",
+      "topic": "서기 394년 마지막 상형문자의 죽음과 1822년 로제타석 샹폴리옹 해독",
+      "statement": "서기 394년 8월 24일 필레 신전의 에스메트-아콤 비문을 끝으로 3천 년 상형문자는 1,400년간 완벽한 망각에 빠졌으며, 1799년 발견된 로제타석의 그리스어 대조를 통해 1822년 장 프랑수아 샹폴리옹이 왕명 카르투슈를 풀어내며 문명이 부활했다.",
+      "grade": "Grade A",
+      "citations": [
+        {
+          "authors": "Parkinson, R.",
+          "year": 1999,
+          "title": "Cracking Codes: The Rosetta Stone and Decipherment",
+          "journal": "British Museum Press"
+        },
+        {
+          "authors": "Robinson, A.",
+          "year": 2012,
+          "title": "Cracking the Egyptian Code: The Revolutionary Life of Jean-François Champollion",
+          "journal": "Oxford University Press"
+        }
+      ],
+      "nuance": "문명을 영구히 죽인 것은 칼이나 외세가 아닌 글자를 잃어버린 '망각'이었으며, 우연히 발견된 작은 돌이 닫혀 있던 인류의 기억을 되살림."
+    }
+  ]
+}
