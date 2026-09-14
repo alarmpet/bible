@@ -473,24 +473,8 @@ def run_pipeline(*, include_branding: bool = False) -> Path:
     # 2. Subcut Montage Plan
     with open(SUBCUT_PLAN_PATH, "r", encoding="utf-8") as f:
         subcut_data = json.load(f)
-    cuts = [
-        SubcutPlan(
-            cut_index=c["cut_index"],
-            plate_id=c["plate_id"],
-            parent_shot_id=c["parent_shot_id"],
-            start_sec=c["start_sec"],
-            end_sec=c["end_sec"],
-            duration_sec=c["duration_sec"],
-            frame_count=c["frame_count"],
-            pan_speed=c["pan_speed"],
-            zoom_type=c["zoom_type"],
-            crop_direction=c["crop_direction"],
-            saliency_center=tuple(c["saliency_center"]),
-            headroom_offset=c["headroom_offset"],
-            motion_desc=c["motion_desc"],
-        )
-        for c in subcut_data["cuts"]
-    ]
+    cuts = [SubcutPlan(**c) for c in subcut_data["cuts"]]
+    print(f"Loaded {len(cuts)} cuts from {SUBCUT_PLAN_PATH} ({sum(c.frame_count for c in cuts)} frames)")
 
     # 3. Video Montage Stream
     montage_video = step_2_render_montage(cuts)

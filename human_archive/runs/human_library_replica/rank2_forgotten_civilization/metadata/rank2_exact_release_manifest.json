@@ -1,0 +1,149 @@
+{
+  "release_id": "HL-RANK2-EXACT-CLONE-V1",
+  "video_id": "o-x6sIGANPY",
+  "title": "잊혀진 문명, 세계 최강이 사라진 이유",
+  "schema_version": "human_library_exact_release_v2",
+  "status": "PROMOTED_MASTER",
+  "timestamp_utc": "2026-09-14T07:37:35Z",
+  "target_duration_sec": 1440.0,
+  "target_fps": 30.0,
+  "target_audio_sample_rate": 48000,
+  "target_audio_sample_frames": 69120000,
+  "total_frames": 43200,
+  "parity_delta_sec": 0.0,
+  "postflight_metrics": {
+    "status": "PASS",
+    "video_duration_sec": 1440.0,
+    "audio_duration_sec": 1440.0,
+    "parity_delta_sec": 0.0,
+    "total_frames": 43200,
+    "frame_rate": "30/1",
+    "audio_sample_rate": 48000,
+    "audio_codec": "aac",
+    "audio_bitrate": "275394",
+    "video_codec": "h264",
+    "video_profile": "High",
+    "wav_sample_frames": 69120000,
+    "decoded_streams": [
+      "video",
+      "audio"
+    ],
+    "subtitle_metrics": {
+      "status": "PASS",
+      "dialogue_events": 958,
+      "zero_start_events": 0,
+      "overlap_events": 0,
+      "multiline_events": 0,
+      "errors": []
+    },
+    "plate_metrics": {
+      "status": "PASS",
+      "plate_count": 128,
+      "unique_content_count": 128,
+      "errors": []
+    }
+  },
+  "artifacts": {
+    "source_original_mp4": {
+      "kind": "source",
+      "path": "D:\\module\\scratch\\human_library_top3\\original_rank2.mp4",
+      "size_bytes": 647330554,
+      "sha256": "58DA7F7FEF17C79030FE6C9CB08FBE2B5C74461DBCC786E0EFECF2288C0AC512"
+    },
+    "source_cues_json": {
+      "kind": "source",
+      "path": "D:\\module\\scratch\\human_library_top3\\rank2_o-x6sIGANPY_cues.json",
+      "size_bytes": 92934,
+      "sha256": "DA9E7134A7EE3C0F968F814654D66920FBCE42133DDEBC027BE1BD06FAF9A922"
+    },
+    "canonical_timeline_manifest": {
+      "kind": "intermediate",
+      "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\metadata\\canonical_timeline_manifest.json",
+      "size_bytes": 225793,
+      "sha256": "44ED0E1E25CD6CCEBB34D7F7E7F45BDB055D6C0A33C9115B70BC5970331D6622"
+    },
+    "master_plates_plan": {
+      "kind": "intermediate",
+      "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\metadata\\master_plates_composition_plan.json",
+      "size_bytes": 160083,
+      "sha256": "0B0B427E9A58BC8DE5ED6AFBAEABCC50BA1526EF7DC3A92EFCD7765A1ED61262"
+    },
+    "subcut_montage_plan": {
+      "kind": "intermediate",
+      "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\metadata\\subcut_montage_plan.json",
+      "size_bytes": 301966,
+      "sha256": "E8757C823E6303307986EEF2764321CE092428434E088351A496BF3D0760DF5C"
+    },
+    "master_subtitles_ass": {
+      "kind": "intermediate",
+      "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\subtitles\\rank2_exact_master_subtitles.ass",
+      "size_bytes": 97654,
+      "sha256": "078DE11CD71F0B77ACE1987184F022FB7EBB8C45475FC0ACE8D559039794CE50"
+    },
+    "master_audio_wav": {
+      "kind": "intermediate",
+      "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\audio\\rank2_exact_master_audio_48k.wav",
+      "size_bytes": 276480044,
+      "sha256": "E842620CF80050CACEDCA98BC7427352AE0CCA1AD91249A68F60238EAA3A3419"
+    },
+    "raw_montage_video": {
+      "kind": "intermediate",
+      "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\video\\rank2_exact_montage_raw.mp4",
+      "size_bytes": 432958076,
+      "sha256": "8021CB0C9BC1DDF4637CDBC889CEDBCE2E95CB445DC5941DB4A5AC3ED4D2EA13"
+    },
+    "master_documentary_mp4": {
+      "kind": "release",
+      "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\rank2_exact_master_documentary.mp4",
+      "size_bytes": 485532409,
+      "sha256": "9A7879C0D68765A1298EC04E2F92667CA1B409BAB2A5A6FB4A645D214A43D52A"
+    }
+  },
+  "sha256_chain": [
+    {
+      "artifact_id": "source_original_mp4",
+      "sha256": "58DA7F7FEF17C79030FE6C9CB08FBE2B5C74461DBCC786E0EFECF2288C0AC512"
+    },
+    {
+      "artifact_id": "source_cues_json",
+      "sha256": "DA9E7134A7EE3C0F968F814654D66920FBCE42133DDEBC027BE1BD06FAF9A922"
+    },
+    {
+      "artifact_id": "canonical_timeline_manifest",
+      "sha256": "44ED0E1E25CD6CCEBB34D7F7E7F45BDB055D6C0A33C9115B70BC5970331D6622"
+    },
+    {
+      "artifact_id": "master_plates_plan",
+      "sha256": "0B0B427E9A58BC8DE5ED6AFBAEABCC50BA1526EF7DC3A92EFCD7765A1ED61262"
+    },
+    {
+      "artifact_id": "subcut_montage_plan",
+      "sha256": "E8757C823E6303307986EEF2764321CE092428434E088351A496BF3D0760DF5C"
+    },
+    {
+      "artifact_id": "master_subtitles_ass",
+      "sha256": "078DE11CD71F0B77ACE1987184F022FB7EBB8C45475FC0ACE8D559039794CE50"
+    },
+    {
+      "artifact_id": "master_audio_wav",
+      "sha256": "E842620CF80050CACEDCA98BC7427352AE0CCA1AD91249A68F60238EAA3A3419"
+    },
+    {
+      "artifact_id": "raw_montage_video",
+      "sha256": "8021CB0C9BC1DDF4637CDBC889CEDBCE2E95CB445DC5941DB4A5AC3ED4D2EA13"
+    },
+    {
+      "artifact_id": "master_documentary_mp4",
+      "sha256": "9A7879C0D68765A1298EC04E2F92667CA1B409BAB2A5A6FB4A645D214A43D52A"
+    }
+  ],
+  "sha256_chain_root": "673FA8CB31B63CC709B83425C3854EA35E6F2E1F1180B26E817B6452F95D6DC5",
+  "gate_results": {
+    "gate_0_duration": "PASS",
+    "gate_1_subtitles": "PASS",
+    "gate_2_art_style_and_plates": "PASS",
+    "gate_3_pacing": "PASS",
+    "gate_4_audio_boundary": "PASS",
+    "gate_5_integrity_decode": "PASS"
+  }
+}
