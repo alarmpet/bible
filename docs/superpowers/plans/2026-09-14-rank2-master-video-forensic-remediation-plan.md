@@ -86,7 +86,7 @@
 - [ ] Render subtitles only after the visual plate layer is clean; ensure the lower 18% safe zone is empty before the subtitle box is added.
 - [ ] Add a frame-level test that distinguishes a per-event rounded box from a persistent full-width bottom bar.
 
-### Task 5: Bind encoded motion to the 837-cut plan
+### Task 5: Bind encoded motion to the 837-cut plan and eliminate A/B toggle loops
 
 **Files:**
 - Inspect/Modify: `D:\module\bible\human_archive\runs\human_library_replica\rank2_forgotten_civilization\metadata\subcut_montage_plan.json`
@@ -99,7 +99,12 @@
 - [ ] Measure frame differences at every expected boundary and at control points inside each cut.
 - [ ] Report actual boundary count separately from scene-detector “scene-like” count; do not use 1,670 as the cut count.
 - [ ] Reject freeze frames or repeated plate spans outside the declared motion profile.
+- [ ] Compute `same_parent_adjacent_transition_count` and `aba_repeat_count` from the ordered `plate_id` sequence before rendering. The current baseline is 773 same-parent transitions and 709 `plate[i] == plate[i-2]` A/B repetitions across 837 planned cuts.
+- [ ] Assign explicit complementary roles to each A/B pair (for example, A=wide/context and B=evidence/detail) and prohibit unconditional alternation. `A-B-A` and `B-A-B` are rejected unless an explicit script beat records why the reversal is intentional.
+- [ ] Require semantic progression for adjacent cuts within one parent shot; a Ken Burns pixel difference alone cannot satisfy this requirement. Add a no-loop window and a per-parent role-order test so the same two plates cannot masquerade as montage diversity.
 - [ ] Verify the first 300 seconds against the declared pacing budget and preserve subtitle-safe crop behavior.
+
+**Task 5 acceptance:** the encoded boundary map matches the plan; every same-parent transition has a declared role progression; `aba_repeat_count=0` by default (or each exception is explicitly justified and independently reviewed); and the first 300 seconds passes both cut pacing and semantic non-loop checks. A zero exact-pixel-repeat result is recorded only as a secondary metric, never as an A/B-loop waiver.
 
 ### Task 6: Audit voice-only audio and semantic pauses
 

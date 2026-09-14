@@ -49,6 +49,12 @@ BorderStyle=1, Outline=3.5, Shadow=2.0, Alignment=2, MarginV=55
 
 계획은 837 cuts를 선언하지만, 0.30 scene threshold의 encoded-frame scan에서는 1,670개의 scene-like transition이 검출됐다. 이 수치는 Ken Burns 내부 변화까지 포함하므로 실제 컷 수와 동일하지 않다. 반대로 1초 샘플에서는 1초 차이 평균 변화량 최솟값이 15.44로, 0.08 threshold의 exactish repeat는 0건이었다. 즉 “정지 영상 반복 0”은 확인되지만 “정확히 837개 컷”은 아직 검증되지 않았다. plan boundary와 encoded frame boundary를 직접 대조하는 별도 검사가 필요하다.
 
+### P0/P1 — A/B 플레이트 토글 루프가 몽타주 다양성으로 오인됨
+
+`subcut_montage_plan.json`의 실제 `plate_id` 순서를 직접 분석한 결과, 837개 컷 중 **773건**이 같은 `parent_shot_id` 내부의 인접 A/B 플레이트 전환이었다. 더 중요한 것은 `plate[i] == plate[i-2]`인 2-back 반복이 **709건**으로, `SHOT_003_A → SHOT_003_B → SHOT_003_A`, `SHOT_005_A → SHOT_005_B → SHOT_005_A`처럼 사용자가 지적한 **A → B → A → B** 패턴이 계획 데이터에 직접 인코딩되어 있다는 점이다. 이는 단순히 비디오 프레임이 픽셀 단위로 반복된다는 뜻은 아니다. Ken Burns 모션 때문에 매 반복의 픽셀은 달라질 수 있지만, 시청자가 인지하는 장면·구도·의미는 같은 두 플레이트 사이에서 왕복한다.
+
+따라서 기존의 “1초 exactish repeat 0건”만으로는 이 결함을 통과시킬 수 없다. A/B를 상호 보완적인 역할(예: A=상황/전경, B=증거/디테일)로 배치하고, 즉시 역전하는 `A-B-A`/`B-A-B`는 명시적인 편집 비트가 아닌 한 거부하는 별도 시맨틱 반복 Gate가 필요하다. 현 상태는 컷 수가 많아 보이지만 실제 정보 진행이 정체되는 **perceptual stutter/semantic stagnation**으로 분류하며, clean candidate 재렌더링 전 해결해야 한다.
+
 ### P1 — 생성 이미지 내부 텍스트 및 시맨틱 drift
 
 대표 프레임에서 `LOWER EGYPT` 등 생성된 영문 지도 텍스트와 의미가 불명확한 표기가 관찰됐다. 프롬프트의 `no text` 문장만으로 시각 QA PASS를 줄 수 없다. 128 plate 각각에 OCR/텍스트 흔적, 하단 안전영역, 역사적 장면·인물·지명 정합 검사를 추가해야 한다.
