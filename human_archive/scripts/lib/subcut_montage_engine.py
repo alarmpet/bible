@@ -31,6 +31,12 @@ class SubcutPlan:
     zoom: float = 1.0
     center_x: float = 0.5
     center_y: float = 0.5
+    start_zoom: float = 1.0
+    end_zoom: float = 1.0
+    start_cx: float = 0.5
+    end_cx: float = 0.5
+    start_cy: float = 0.5
+    end_cy: float = 0.5
 
 
 def compute_saliency_center(img: Image.Image) -> Tuple[float, float]:
@@ -243,18 +249,48 @@ def render_subcut_montage_stream(
                 img = get_plate_image(c.plate_id, c.parent_shot_id)
                 iw, ih = img.size
 
-                # Compute crop box based on zoom and center
-                crop_w = iw / c.zoom
-                crop_h = ih / c.zoom
-                left = max(0, min(iw - crop_w, (c.center_x * iw) - (crop_w / 2.0)))
-                top = max(0, min(ih - crop_h, (c.center_y * ih) - (crop_h / 2.0)))
-                box = (int(left), int(top), int(left + crop_w), int(top + crop_h))
+                sz = getattr(c, "start_zoom", c.zoom)
+                ez = getattr(c, "end_zoom", c.zoom)
+                scx = getattr(c, "start_cx", c.center_x)
+                ecx = getattr(c, "end_cx", c.center_x)
+                scy = getattr(c, "start_cy", c.center_y)
+                ecy = getattr(c, "end_cy", c.center_y)
 
-                cropped = img.crop(box).resize((w, h), Image.Resampling.BICUBIC)
-                raw_bytes = cropped.tobytes()
+                # If static, apply a gentle cinematic 5% drift
+                if abs(sz - ez) < 1e-4 and abs(scx - ecx) < 1e-4 and abs(scy - ecy) < 1e-4:
+                    if c.transformation == "focal_punch_in":
+                        sz, ez = c.zoom, c.zoom * 1.08
+                        scy, ecy = c.center_y, max(0.25, c.center_y - 0.03)
+                    elif c.transformation == "pull_out":
+                        sz, ez = c.zoom * 1.08, c.zoom
+                    elif c.transformation == "pan_left":
+                        sz = ez = c.zoom
+                        scx, ecx = min(0.70, c.center_x + 0.04), max(0.30, c.center_x - 0.04)
+                    elif c.transformation == "pan_right":
+                        sz = ez = c.zoom
+                        scx, ecx = max(0.30, c.center_x - 0.04), min(0.70, c.center_x + 0.04)
+                    elif c.transformation == "macro_detail":
+                        sz, ez = c.zoom, c.zoom * 1.10
+                        scy, ecy = c.center_y, max(0.25, c.center_y - 0.03)
+                    else:
+                        sz, ez = 1.02, 1.08
+                        scy, ecy = 0.48, 0.44
 
-                for _ in range(c.frame_count):
-                    proc.stdin.write(raw_bytes)
+                for f in range(c.frame_count):
+                    linear_t = f / max(1, c.frame_count - 1)
+                    st = 0.5 * (1.0 - math.cos(math.pi * linear_t))
+                    cur_z = sz + (ez - sz) * st
+                    cur_cx = scx + (ecx - scx) * st
+                    cur_cy = scy + (ecy - scy) * st
+
+                    crop_w = iw / cur_z
+                    crop_h = ih / cur_z
+                    left = max(0.0, min(float(iw - crop_w), (cur_cx * iw) - (crop_w / 2.0)))
+                    top = max(0.0, min(float(ih - crop_h), (cur_cy * ih) - (crop_h / 2.0)))
+                    box = (left, top, left + crop_w, top + crop_h)
+
+                    frame = img.resize((w, h), box=box, resample=Image.Resampling.BILINEAR)
+                    proc.stdin.write(frame.tobytes())
 
             proc.stdin.close()
             proc.wait(timeout=1200)
