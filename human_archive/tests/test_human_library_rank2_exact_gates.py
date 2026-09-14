@@ -19,7 +19,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 if str(_LIB_DIR) not in sys.path:
     sys.path.insert(0, str(_LIB_DIR))
 
-from lib.exact_release_verifier import audit_ass_strict, count_wav_sample_frames
+from lib.exact_release_verifier import audit_ass_strict, audit_subcut_montage_plan, count_wav_sample_frames
 
 RUN_DIR = _REPO_ROOT / "runs" / "human_library_replica" / "rank2_forgotten_civilization"
 METADATA_DIR = RUN_DIR / "metadata"
@@ -99,6 +99,13 @@ def test_rank2_gate_3_pacing_and_subcut_count():
     assert len(strobe_cuts) >= 15
     for c in strobe_cuts:
         assert c["duration_sec"] <= 0.40
+
+    # Task 5: Enforce zero A/B toggle loops (aba_repeat_count == 0) and monotonic role progression
+    subcut_audit = audit_subcut_montage_plan(cuts)
+    assert subcut_audit["status"] == "PASS", "; ".join(subcut_audit["errors"])
+    assert subcut_audit["aba_repeats"] == 0, f"Detected {subcut_audit['aba_repeats']} ABA toggle loops"
+    assert subcut_audit["role_reversals"] == 0, f"Detected {subcut_audit['role_reversals']} role reversals"
+    assert subcut_audit["same_parent_adjacent_transitions"] == 773
 
 
 def test_rank2_gate_4_exact_audio_boundary_and_samples():

@@ -263,3 +263,91 @@ def validate_manifest_chain(manifest: dict[str, Any]) -> dict[str, Any]:
     elif normalized and root != compute_sha256_chain(normalized):
         errors.append("sha256_chain_root mismatch")
     return {"status": "PASS" if not errors else "FAIL", "errors": errors}
+
+
+def audit_subcut_montage_plan(
+    cuts: list[dict[str, Any]],
+    *,
+    expected_total_frames: int = 43200,
+    expected_min_cuts: int = 800,
+    expected_max_cuts: int = 900,
+    allow_aba_repeats: bool = False,
+) -> dict[str, Any]:
+    """Audit ordered subcut montage plan for A/B toggle loops and role progression.
+
+    Enforces Task 5 fail-closed invariants:
+    - Total cuts within bounds [expected_min_cuts, expected_max_cuts]
+    - Total frames exactly matches expected_total_frames
+    - aba_repeat_count == 0 (no A-B-A or B-A-B 2-back toggle loops)
+    - Monotonic role progression (no context_wide after detail_evidence within a parent shot)
+    """
+    errors: list[str] = []
+    total_cuts = len(cuts)
+    total_frames = sum(int(c.get("frame_count", 0)) for c in cuts)
+
+    if not (expected_min_cuts <= total_cuts <= expected_max_cuts):
+        errors.append(f"cut count {total_cuts} out of bounds [{expected_min_cuts}, {expected_max_cuts}]")
+
+    if total_frames != expected_total_frames:
+        errors.append(f"total frames {total_frames} != {expected_total_frames}")
+
+    same_parent_adjacent = 0
+    same_parent_plate_changes = 0
+    aba_repeats = 0
+    aba_examples: list[str] = []
+
+    for i in range(1, total_cuts):
+        prev = cuts[i - 1]
+        curr = cuts[i]
+        if curr.get("parent_shot_id") == prev.get("parent_shot_id"):
+            same_parent_adjacent += 1
+            if curr.get("plate_id") != prev.get("plate_id"):
+                same_parent_plate_changes += 1
+
+    for i in range(2, total_cuts):
+        c_curr = cuts[i]
+        c_prev = cuts[i - 1]
+        c_prev2 = cuts[i - 2]
+        curr_p = str(c_curr.get("plate_id", ""))
+        prev_p = str(c_prev.get("plate_id", ""))
+        prev2_p = str(c_prev2.get("plate_id", ""))
+        if curr_p and curr_p == prev2_p and curr_p != prev_p:
+            aba_repeats += 1
+            if len(aba_examples) < 5:
+                aba_examples.append(f"cut {i} ({curr_p}) == cut {i - 2} via {prev_p}")
+
+    if aba_repeats > 0 and not allow_aba_repeats:
+        errors.append(
+            f"detected {aba_repeats} A-B-A / B-A-B toggle loop(s); baseline requires 0. Examples: {'; '.join(aba_examples)}"
+        )
+
+    shots_cuts: dict[str, list[dict[str, Any]]] = {}
+    for c in cuts:
+        shots_cuts.setdefault(str(c.get("parent_shot_id", "")), []).append(c)
+
+    role_reversals = 0
+    for shot_id, s_cuts in shots_cuts.items():
+        seen_detail = False
+        for c in s_cuts:
+            role = str(c.get("role", ""))
+            plate_id = str(c.get("plate_id", ""))
+            if role == "detail_evidence" or plate_id.endswith("_B"):
+                seen_detail = True
+            elif role == "context_wide" or plate_id.endswith("_A"):
+                if seen_detail:
+                    role_reversals += 1
+                    errors.append(
+                        f"shot {shot_id}: role reversal detected (context_wide/Plate A after detail_evidence/Plate B)"
+                    )
+                    break
+
+    return {
+        "status": "PASS" if not errors else "FAIL",
+        "total_cuts": total_cuts,
+        "total_frames": total_frames,
+        "same_parent_adjacent_transitions": same_parent_adjacent,
+        "same_parent_plate_changes": same_parent_plate_changes,
+        "aba_repeats": aba_repeats,
+        "role_reversals": role_reversals,
+        "errors": errors,
+    }

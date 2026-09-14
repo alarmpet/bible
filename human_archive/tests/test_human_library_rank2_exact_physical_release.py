@@ -26,6 +26,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from lib.exact_release_verifier import (
     audit_ass_strict,
+    audit_subcut_montage_plan,
     count_wav_sample_frames,
     validate_manifest_chain,
     validate_plate_manifest,
@@ -42,6 +43,7 @@ MASTER_WAV = EP_DIR / "audio" / "rank2_exact_master_audio_48k.wav"
 ASS_PATH = EP_DIR / "subtitles" / "rank2_exact_master_subtitles.ass"
 PLATES_DIR = EP_DIR / "images_2d_master"
 PLATES_PLAN_PATH = EP_DIR / "metadata" / "master_plates_composition_plan.json"
+SUBCUT_PLAN_PATH = EP_DIR / "metadata" / "subcut_montage_plan.json"
 
 TARGET_DURATION_SEC = 1440.000
 TARGET_FRAMES = 43200
@@ -142,3 +144,15 @@ def test_rank2_subtitles_strict_contract():
     assert ass_check["zero_start_events"] == 0
     assert ass_check["overlap_events"] == 0
     assert ass_check["multiline_events"] == 0
+
+
+def test_rank2_subcut_montage_plan_no_aba_loops():
+    assert SUBCUT_PLAN_PATH.exists(), f"Subcut montage plan missing: {SUBCUT_PLAN_PATH}"
+    subcut_data = json.loads(SUBCUT_PLAN_PATH.read_text(encoding="utf-8"))
+    cuts = subcut_data.get("cuts", [])
+    check = audit_subcut_montage_plan(cuts)
+    assert check["status"] == "PASS", "; ".join(check["errors"])
+    assert check["aba_repeats"] == 0, f"Detected {check['aba_repeats']} ABA loops"
+    assert check["role_reversals"] == 0, f"Detected {check['role_reversals']} role reversals"
+    assert check["total_frames"] == TARGET_FRAMES
+    assert 800 <= check["total_cuts"] <= 900

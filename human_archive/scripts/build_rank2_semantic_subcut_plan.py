@@ -17,6 +17,15 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 EP_DIR = Path(r"D:\module\bible\human_archive\runs\human_library_replica\rank2_forgotten_civilization")
+SCRIPTS_DIR = Path(__file__).resolve().parent
+LIB_DIR = SCRIPTS_DIR / "lib"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+if str(LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(LIB_DIR))
+
+from lib.exact_release_verifier import audit_subcut_montage_plan
+
 SHOTS_PLAN_PATH = EP_DIR / "metadata" / "shot_composition_plan.json"
 OUTPUT_PLAN_PATH = EP_DIR / "metadata" / "subcut_montage_plan.json"
 
@@ -56,23 +65,28 @@ def generate_rank2_subcut_plan() -> Path:
 
         # Special handling for SHOT_008 [36.0 - 43.0] and SHOT_009 [43.0 - 49.5] to create strobe burst in [40.0 - 46.0]
         if shot_id == "SHOT_008":
-            # 36.0~40.0 (4.0s = 120 frames -> 2 cuts of 60 frames)
-            # 40.0~43.0 (3.0s = 90 frames -> 9 strobe cuts of 10 frames)
-            sub_sections = [(120, 2, False), (90, 9, True)]
+            # 36.0~40.0 (4.0s = 120 frames -> 2 cuts of 60 frames) -> Plate A (context_wide)
+            # 40.0~43.0 (3.0s = 90 frames -> 9 strobe cuts of 10 frames) -> Plate B (detail_evidence)
+            sub_sections = [(120, 2, False, ["A", "A"]), (90, 9, True, ["B"] * 9)]
         elif shot_id == "SHOT_009":
-            # 43.0~46.0 (3.0s = 90 frames -> 9 strobe cuts of 10 frames)
-            # 46.0~49.5 (3.5s = 105 frames -> 2 cuts of 52/53 frames)
-            sub_sections = [(90, 9, True), (105, 2, False)]
+            # 43.0~46.0 (3.0s = 90 frames -> 9 strobe cuts of 10 frames) -> Plate A (context_wide)
+            # 46.0~49.5 (3.5s = 105 frames -> 2 cuts of 52/53 frames) -> Plate B (detail_evidence)
+            sub_sections = [(90, 9, True, ["A"] * 9), (105, 2, False, ["B", "B"])]
         else:
             if shot_start < 300.0:
                 num_cuts = max(2, round(shot_dur / 1.62))
             else:
                 extra = 1 if (shot_id in {"SHOT_059", "SHOT_060", "SHOT_061", "SHOT_062", "SHOT_063", "SHOT_064"}) else 0
                 num_cuts = max(2, round(shot_dur / 1.796) + extra)
-            sub_sections = [(shot_frames, num_cuts, False)]
+
+            # Monotonic partition into Plate A (context_wide) then Plate B (detail_evidence)
+            n_a = (num_cuts + 1) // 2
+            n_b = num_cuts - n_a
+            plate_assignments = ["A"] * n_a + ["B"] * n_b
+            sub_sections = [(shot_frames, num_cuts, False, plate_assignments)]
 
         shot_cur_f = cur_frame
-        for sec_frames, sec_cuts, is_strobe in sub_sections:
+        for sec_frames, sec_cuts, is_strobe, plate_letters in sub_sections:
             base_f = sec_frames // sec_cuts
             rem_f = sec_frames % sec_cuts
 
@@ -82,7 +96,8 @@ def generate_rank2_subcut_plan() -> Path:
                 c_end_s = round((shot_cur_f + f_count) / FPS, 4)
                 c_dur_s = round(f_count / FPS, 4)
 
-                plate_letter = "B" if (cut_idx % 2 == 0) else "A"
+                plate_letter = plate_letters[i]
+                role = "context_wide" if plate_letter == "A" else "detail_evidence"
                 plate_id = f"{shot_id}_{plate_letter}"
 
                 prof = MOTION_PROFILES[(cut_idx - 1) % len(MOTION_PROFILES)]
@@ -101,6 +116,7 @@ def generate_rank2_subcut_plan() -> Path:
                     "frame_count": f_count,
                     "parent_shot_id": shot_id,
                     "plate_id": plate_id,
+                    "role": role,
                     "transformation": trans,
                     "zoom": round((sz + ez) / 2.0, 3),
                     "center_x": round((scx + ecx) / 2.0, 3),
@@ -122,17 +138,31 @@ def generate_rank2_subcut_plan() -> Path:
     assert total_f == TARGET_FRAMES, f"Frame count mismatch: {total_f} != {TARGET_FRAMES}"
     print(f"Total cuts planned: {len(cuts)}")
 
+    audit_res = audit_subcut_montage_plan(cuts)
+    if audit_res["status"] != "PASS":
+        raise RuntimeError("Subcut montage plan audit failed: " + "; ".join(audit_res.get("errors", [])))
+
+    print(
+        f"Audit PASS: aba_repeats={audit_res['aba_repeats']}, "
+        f"same_parent_transitions={audit_res['same_parent_adjacent_transitions']}, "
+        f"same_parent_plate_changes={audit_res['same_parent_plate_changes']}"
+    )
+
     plan = {
         "target_duration_sec": TARGET_DURATION_SEC,
         "fps": float(FPS),
         "total_frames": TARGET_FRAMES,
         "total_cuts": len(cuts),
         "total_shots": len(shots),
+        "same_parent_adjacent_transitions": audit_res["same_parent_adjacent_transitions"],
+        "same_parent_plate_changes": audit_res["same_parent_plate_changes"],
+        "aba_repeats": audit_res["aba_repeats"],
+        "role_reversals": audit_res["role_reversals"],
         "cuts": cuts,
     }
 
     OUTPUT_PLAN_PATH.write_text(json.dumps(plan, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"✅ Generated remastered subcut montage plan: {OUTPUT_PLAN_PATH} ({len(cuts)} cuts, {total_f} frames)")
+    print(f"Generated remastered subcut montage plan: {OUTPUT_PLAN_PATH} ({len(cuts)} cuts, {total_f} frames)")
     return OUTPUT_PLAN_PATH
 
 

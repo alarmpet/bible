@@ -32,7 +32,7 @@ from run_human_library_rank2_exact_clone_pipeline import (
     resolve_plate_image,
     validate_master_plate_plan,
 )
-from lib.exact_release_verifier import count_wav_sample_frames, audit_ass_strict
+from lib.exact_release_verifier import audit_ass_strict, audit_subcut_montage_plan, count_wav_sample_frames
 
 
 def test_rank2_pipeline_essential_contracts_exist():
@@ -52,6 +52,17 @@ def test_rank2_subcut_plan_contract_frame_count():
     assert len(cuts) == EXPECTED_SUBCUTS_COUNT, f"Expected {EXPECTED_SUBCUTS_COUNT} cuts, got {len(cuts)}"
     assert sum(c["frame_count"] for c in cuts) == TARGET_FRAMES
     assert TARGET_FRAMES == 43200
+
+
+def test_rank2_subcut_plan_has_zero_aba_loops():
+    with open(SUBCUT_PLAN_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    cuts = data.get("cuts", [])
+    check = audit_subcut_montage_plan(cuts)
+    assert check["status"] == "PASS", "; ".join(check["errors"])
+    assert check["aba_repeats"] == 0
+    assert check["role_reversals"] == 0
+    assert check["same_parent_adjacent_transitions"] == 773
 
 
 def test_rank2_missing_ab_plate_fails_closed_instead_of_parent_fallback(tmp_path):

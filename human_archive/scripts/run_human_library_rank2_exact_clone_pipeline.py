@@ -37,6 +37,7 @@ from lib.audio_multitrack_mixer import build_3track_audio_command, mix_multitrac
 from lib.branding_hud_overlay import build_branding_overlay_filtergraph
 from lib.exact_release_verifier import (
     audit_ass_strict,
+    audit_subcut_montage_plan,
     compute_sha256_chain,
     count_wav_sample_frames,
     validate_audio_probe,
@@ -364,6 +365,12 @@ def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
     plate_check = validate_master_plate_plan()
     assert plate_check["status"] == "PASS", "; ".join(plate_check["errors"])
 
+    subcut_data = json.loads(SUBCUT_PLAN_PATH.read_text(encoding="utf-8"))
+    subcut_check = audit_subcut_montage_plan(subcut_data.get("cuts", []))
+    assert subcut_check["status"] == "PASS", "; ".join(subcut_check["errors"])
+    assert subcut_check["aba_repeats"] == 0, f"Detected {subcut_check['aba_repeats']} ABA toggle loops"
+    assert subcut_check["role_reversals"] == 0, f"Detected {subcut_check['role_reversals']} role reversals"
+
     wav_sample_frames = count_wav_sample_frames(RAW_AUDIO_PATH)
     assert wav_sample_frames == MASTER_AUDIO_SAMPLES, (
         f"WAV sample boundary {wav_sample_frames} != {MASTER_AUDIO_SAMPLES}"
@@ -386,6 +393,7 @@ def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
         "decoded_streams": ["video", "audio"],
         "subtitle_metrics": ass_check,
         "plate_metrics": plate_check,
+        "subcut_montage_metrics": subcut_check,
     }
 
 
@@ -444,7 +452,7 @@ def step_5_generate_release_manifest(
             "gate_0_duration": "PASS",
             "gate_1_subtitles": postflight_metrics["subtitle_metrics"]["status"],
             "gate_2_art_style_and_plates": postflight_metrics["plate_metrics"]["status"],
-            "gate_3_pacing": "PASS",
+            "gate_3_pacing": postflight_metrics["subcut_montage_metrics"]["status"],
             "gate_4_audio_boundary": "PASS",
             "gate_5_integrity_decode": "PASS",
         },

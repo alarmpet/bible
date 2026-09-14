@@ -4,7 +4,7 @@
   "title": "잊혀진 문명, 세계 최강이 사라진 이유",
   "schema_version": "human_library_exact_release_v2",
   "status": "PROMOTED_MASTER",
-  "timestamp_utc": "2026-09-14T08:49:13Z",
+  "timestamp_utc": "2026-09-14T15:37:03Z",
   "target_duration_sec": 1440.0,
   "target_fps": 30.0,
   "target_audio_sample_rate": 48000,
@@ -41,6 +41,16 @@
       "plate_count": 128,
       "unique_content_count": 128,
       "errors": []
+    },
+    "subcut_montage_metrics": {
+      "status": "PASS",
+      "total_cuts": 837,
+      "total_frames": 43200,
+      "same_parent_adjacent_transitions": 773,
+      "same_parent_plate_changes": 64,
+      "aba_repeats": 0,
+      "role_reversals": 0,
+      "errors": []
     }
   },
   "artifacts": {
@@ -71,14 +81,14 @@
     "subcut_montage_plan": {
       "kind": "intermediate",
       "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\metadata\\subcut_montage_plan.json",
-      "size_bytes": 421871,
-      "sha256": "D613125DF48CF3A1F6FE432C877C8E203CFE6045328206A1D1FB11CAB362248F"
+      "size_bytes": 449161,
+      "sha256": "48A26B5355157F4D399668ABDB237572AE2F571AE250C633F915E7FA56693A23"
     },
     "master_subtitles_ass": {
       "kind": "intermediate",
       "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\subtitles\\rank2_exact_master_subtitles.ass",
-      "size_bytes": 60082,
-      "sha256": "376A905B1F3E976C877F17BACA83EE8304FBF367B1985AF9BAA302BCC61F5F1B"
+      "size_bytes": 60080,
+      "sha256": "18A9E59832999122FFD1F8B18679DCD934B7D7AD51B38375C47DFFA582679D3D"
     },
     "master_audio_wav": {
       "kind": "intermediate",
@@ -89,14 +99,14 @@
     "raw_montage_video": {
       "kind": "intermediate",
       "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\video\\rank2_exact_montage_raw.mp4",
-      "size_bytes": 981066001,
-      "sha256": "7BB4EB1C143D03BBE21708A190DBDCCAA69A812F33B5B64568E619C1BF82CAC6"
+      "size_bytes": 921399316,
+      "sha256": "AF96727486A4B2FC00EF64082F9C4675C72AF5D269FD633448CC51D9FB942E42"
     },
     "master_documentary_mp4": {
       "kind": "release",
       "path": "D:\\module\\bible\\human_archive\\runs\\human_library_replica\\rank2_forgotten_civilization\\rank2_exact_master_documentary.mp4",
-      "size_bytes": 1074273648,
-      "sha256": "0C14AEB0ECCB64137C8DF37E0093D2BC066E2DAC2DFF5F40845EEE7D2868060B"
+      "size_bytes": 1007822336,
+      "sha256": "590FFC0CE988F8A43FF822EBDEB5CA6AE306725735B600D8C0836E0846AB00CA"
     }
   },
   "sha256_chain": [
@@ -118,11 +128,11 @@
     },
     {
       "artifact_id": "subcut_montage_plan",
-      "sha256": "D613125DF48CF3A1F6FE432C877C8E203CFE6045328206A1D1FB11CAB362248F"
+      "sha256": "48A26B5355157F4D399668ABDB237572AE2F571AE250C633F915E7FA56693A23"
     },
     {
       "artifact_id": "master_subtitles_ass",
-      "sha256": "376A905B1F3E976C877F17BACA83EE8304FBF367B1985AF9BAA302BCC61F5F1B"
+      "sha256": "18A9E59832999122FFD1F8B18679DCD934B7D7AD51B38375C47DFFA582679D3D"
     },
     {
       "artifact_id": "master_audio_wav",
@@ -130,14 +140,14 @@
     },
     {
       "artifact_id": "raw_montage_video",
-      "sha256": "7BB4EB1C143D03BBE21708A190DBDCCAA69A812F33B5B64568E619C1BF82CAC6"
+      "sha256": "AF96727486A4B2FC00EF64082F9C4675C72AF5D269FD633448CC51D9FB942E42"
     },
     {
       "artifact_id": "master_documentary_mp4",
-      "sha256": "0C14AEB0ECCB64137C8DF37E0093D2BC066E2DAC2DFF5F40845EEE7D2868060B"
+      "sha256": "590FFC0CE988F8A43FF822EBDEB5CA6AE306725735B600D8C0836E0846AB00CA"
     }
   ],
-  "sha256_chain_root": "2EE12C7CD939B72DC9812428A65500C632B6CCFB60992BEC55A56894BABDF1B9",
+  "sha256_chain_root": "67913476C3C73CDDB56E3B651E71763F0AF318D8905744DE955FF86465E3DBC6",
   "gate_results": {
     "gate_0_duration": "PASS",
     "gate_1_subtitles": "PASS",

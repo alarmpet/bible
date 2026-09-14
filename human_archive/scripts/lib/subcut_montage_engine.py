@@ -37,6 +37,7 @@ class SubcutPlan:
     end_cx: float = 0.5
     start_cy: float = 0.5
     end_cy: float = 0.5
+    role: str = ""
 
 
 def compute_saliency_center(img: Image.Image) -> Tuple[float, float]:
