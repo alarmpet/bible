@@ -97,11 +97,12 @@ def plan_subcuts(
     # Segment 3: 46~300s -> ~142 cuts (~1.78s avg) -> total first 300s: 185 cuts!
     # Segment 4: 300~973.167s -> remaining frames to reach 29,195 frames (~380 cuts)
 
+    tail_cuts = max(1, round((target_duration_sec - 300.0) / 1.7484857)) if target_duration_sec > 300.0 else 1
     seg_frames = [
         (0.0, 40.0, 25),       # 40s / 25 = 1.60s avg
         (40.0, 46.0, 18),      # 6s / 18 = 0.333s strobe
         (46.0, 300.0, 142),    # 254s / 142 = 1.788s avg -> total first 300s = 25+18+142 = 185 cuts!
-        (300.0, target_duration_sec, 385),  # 673.167s / 385 = 1.748s avg
+        (300.0, target_duration_sec, tail_cuts),
     ]
 
     for seg_start_s, seg_end_s, target_cuts in seg_frames:

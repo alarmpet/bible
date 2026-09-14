@@ -141,8 +141,9 @@ def main() -> None:
     parser.add_argument("--asset-manifest", type=Path, required=True)
     parser.add_argument("--source-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--expected-count", type=int, default=80)
     args = parser.parse_args()
-    print(json.dumps(finalize_plate_plan(args.plan, args.asset_manifest, args.source_dir, args.output_dir), ensure_ascii=False))
+    print(json.dumps(finalize_plate_plan(args.plan, args.asset_manifest, args.source_dir, args.output_dir, expected_count=args.expected_count), ensure_ascii=False))
 
 
 if __name__ == "__main__":
