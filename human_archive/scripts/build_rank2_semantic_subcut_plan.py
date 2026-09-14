@@ -25,8 +25,17 @@ if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
 from lib.exact_release_verifier import audit_subcut_montage_plan
+from lib.rank2_visual_contract import (
+    annotate_cut_contract,
+    build_rank2_lineage,
+    choose_motion_profile,
+    transition_for_boundary,
+)
 
 SHOTS_PLAN_PATH = EP_DIR / "metadata" / "shot_composition_plan.json"
+NORMALIZED_BUNDLE_PATH = EP_DIR / "metadata" / "normalized_replica_bundle.json"
+NORMALIZED_SCRIPT_PATH = EP_DIR / "script" / "normalized_script.json"
+CANONICAL_MANIFEST_PATH = EP_DIR / "metadata" / "canonical_timeline_manifest.json"
 OUTPUT_PLAN_PATH = EP_DIR / "metadata" / "subcut_montage_plan.json"
 
 FPS = 30
@@ -45,7 +54,7 @@ MOTION_PROFILES = [
 ]
 
 
-def generate_rank2_subcut_plan() -> Path:
+def generate_rank2_subcut_plan(output_plan_path: Path = OUTPUT_PLAN_PATH) -> Path:
     shots_data = json.loads(SHOTS_PLAN_PATH.read_text(encoding="utf-8"))
     shots = shots_data["shots"]
     assert len(shots) == 64, f"Expected 64 shots, got {len(shots)}"
@@ -54,6 +63,12 @@ def generate_rank2_subcut_plan() -> Path:
     cut_idx = 1
     cur_frame = 0
 
+    normalized_bundle = json.loads(NORMALIZED_BUNDLE_PATH.read_text(encoding="utf-8"))
+    normalized_script = json.loads(NORMALIZED_SCRIPT_PATH.read_text(encoding="utf-8"))
+    canonical_manifest = json.loads(CANONICAL_MANIFEST_PATH.read_text(encoding="utf-8"))
+    lineage_index = build_rank2_lineage(normalized_bundle, normalized_script, canonical_manifest)
+
+    previous_shot_id: str | None = None
     for s_idx, shot in enumerate(shots):
         shot_id = shot["shot_id"]
         shot_start = shot["start_sec"]
@@ -63,30 +78,17 @@ def generate_rank2_subcut_plan() -> Path:
         target_end_frame = round(shot_end * FPS)
         shot_frames = target_end_frame - cur_frame
 
-        # Special handling for SHOT_008 [36.0 - 43.0] and SHOT_009 [43.0 - 49.5] to create strobe burst in [40.0 - 46.0]
-        if shot_id == "SHOT_008":
-            # 36.0~40.0 (4.0s = 120 frames -> 2 cuts of 60 frames) -> Plate A (context_wide)
-            # 40.0~43.0 (3.0s = 90 frames -> 9 strobe cuts of 10 frames) -> Plate B (detail_evidence)
-            sub_sections = [(120, 2, False, ["A", "A"]), (90, 9, True, ["B"] * 9)]
-        elif shot_id == "SHOT_009":
-            # 43.0~46.0 (3.0s = 90 frames -> 9 strobe cuts of 10 frames) -> Plate A (context_wide)
-            # 46.0~49.5 (3.5s = 105 frames -> 2 cuts of 52/53 frames) -> Plate B (detail_evidence)
-            sub_sections = [(90, 9, True, ["A"] * 9), (105, 2, False, ["B", "B"])]
-        else:
-            if shot_start < 300.0:
-                num_cuts = max(2, round(shot_dur / 1.62))
-            else:
-                extra = 1 if (shot_id in {"SHOT_059", "SHOT_060", "SHOT_061", "SHOT_062", "SHOT_063", "SHOT_064"}) else 0
-                num_cuts = max(2, round(shot_dur / 1.796) + extra)
-
-            # Monotonic partition into Plate A (context_wide) then Plate B (detail_evidence)
-            n_a = (num_cuts + 1) // 2
-            n_b = num_cuts - n_a
-            plate_assignments = ["A"] * n_a + ["B"] * n_b
-            sub_sections = [(shot_frames, num_cuts, False, plate_assignments)]
+        # The source is a slow documentary, so 2.4s is the upper-level visual
+        # beat cadence.  The first three shots retain two beats each; there is
+        # no ungrounded 40~46s strobe burst.
+        num_cuts = max(2 if s_idx < 3 else 1, round(shot_dur / 2.4))
+        n_a = (num_cuts + 1) // 2
+        n_b = num_cuts - n_a
+        plate_assignments = ["A"] * n_a + ["B"] * n_b
+        sub_sections = [(shot_frames, num_cuts, plate_assignments)]
 
         shot_cur_f = cur_frame
-        for sec_frames, sec_cuts, is_strobe, plate_letters in sub_sections:
+        for sec_frames, sec_cuts, plate_letters in sub_sections:
             base_f = sec_frames // sec_cuts
             rem_f = sec_frames % sec_cuts
 
@@ -100,12 +102,20 @@ def generate_rank2_subcut_plan() -> Path:
                 role = "context_wide" if plate_letter == "A" else "detail_evidence"
                 plate_id = f"{shot_id}_{plate_letter}"
 
-                prof = MOTION_PROFILES[(cut_idx - 1) % len(MOTION_PROFILES)]
-                trans, sz, ez, scx, ecx, scy, ecy = prof
-
-                if is_strobe:
-                    trans = "focal_punch_in" if (i % 2 == 1) else "wide_establishing"
-                    sz, ez = (1.15, 1.25) if (i % 2 == 1) else (1.02, 1.05)
+                profile = choose_motion_profile(
+                    shot_index=s_idx,
+                    cut_index=i,
+                    cut_count=sec_cuts,
+                )
+                trans = profile["transformation"]
+                sz, ez = profile["start_zoom"], profile["end_zoom"]
+                scx, ecx = profile["start_cx"], profile["end_cx"]
+                scy, ecy = profile["start_cy"], profile["end_cy"]
+                transition = transition_for_boundary(
+                    previous_shot=previous_shot_id or shot_id,
+                    next_shot=shot_id,
+                    previous_index=cut_idx - 1,
+                )
 
                 cut = {
                     "cut_index": cut_idx,
@@ -127,10 +137,20 @@ def generate_rank2_subcut_plan() -> Path:
                     "end_cx": ecx,
                     "start_cy": scy,
                     "end_cy": ecy,
+                    "start_rotation": profile["start_rotation"],
+                    "end_rotation": profile["end_rotation"],
                 }
+                cut = annotate_cut_contract(
+                    cut,
+                    lineage_index[shot_id],
+                    visual_beat=profile["visual_beat"],
+                    motion_profile=profile,
+                    transition_in=transition,
+                )
                 cuts.append(cut)
                 shot_cur_f += f_count
                 cut_idx += 1
+                previous_shot_id = shot_id
 
         cur_frame = shot_cur_f
 
@@ -138,7 +158,11 @@ def generate_rank2_subcut_plan() -> Path:
     assert total_f == TARGET_FRAMES, f"Frame count mismatch: {total_f} != {TARGET_FRAMES}"
     print(f"Total cuts planned: {len(cuts)}")
 
-    audit_res = audit_subcut_montage_plan(cuts)
+    audit_res = audit_subcut_montage_plan(
+        cuts,
+        expected_min_cuts=550,
+        expected_max_cuts=600,
+    )
     if audit_res["status"] != "PASS":
         raise RuntimeError("Subcut montage plan audit failed: " + "; ".join(audit_res.get("errors", [])))
 
@@ -153,6 +177,15 @@ def generate_rank2_subcut_plan() -> Path:
         "fps": float(FPS),
         "total_frames": TARGET_FRAMES,
         "total_cuts": len(cuts),
+        "lineage": {
+            "source_bundle": str(NORMALIZED_BUNDLE_PATH),
+            "source_script": str(NORMALIZED_SCRIPT_PATH),
+            "source_cues": str(CANONICAL_MANIFEST_PATH),
+            "shot_count": len(lineage_index),
+            "cut_lineage_complete": all(
+                c.get("sentence_ids") and c.get("cue_ids") and c.get("claim_ids") for c in cuts
+            ),
+        },
         "total_shots": len(shots),
         "same_parent_adjacent_transitions": audit_res["same_parent_adjacent_transitions"],
         "same_parent_plate_changes": audit_res["same_parent_plate_changes"],
@@ -161,10 +194,17 @@ def generate_rank2_subcut_plan() -> Path:
         "cuts": cuts,
     }
 
-    OUTPUT_PLAN_PATH.write_text(json.dumps(plan, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"Generated remastered subcut montage plan: {OUTPUT_PLAN_PATH} ({len(cuts)} cuts, {total_f} frames)")
-    return OUTPUT_PLAN_PATH
+    output_plan_path = Path(output_plan_path)
+    output_plan_path.parent.mkdir(parents=True, exist_ok=True)
+    output_plan_path.write_text(json.dumps(plan, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Generated remastered subcut montage plan: {output_plan_path} ({len(cuts)} cuts, {total_f} frames)")
+    return output_plan_path
 
 
 if __name__ == "__main__":
-    generate_rank2_subcut_plan()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, default=OUTPUT_PLAN_PATH)
+    args = parser.parse_args()
+    generate_rank2_subcut_plan(args.output)

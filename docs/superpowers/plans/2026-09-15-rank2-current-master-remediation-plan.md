@@ -18,10 +18,10 @@
 **대상:** `master_script_clean.json`, canonical cue manifest, `shot_composition_plan.json`, `master_plates_composition_plan.json`, `subcut_montage_plan.json`
 
 - [ ] source duration 1,439.800초와 canonical target 1,440.000초의 채택 근거를 결정한다.
-- [ ] 507 cues → 274 sentences → 64 shots를 명시적으로 매핑한다.
-- [ ] 각 shot을 sentence span과 claim ID에 연결하고, shot duration이 해당 음성 구간에서 계산됐는지 검증한다.
-- [ ] 각 A/B plate에 `visual_beat`, semantic anchors, focal subject, place, era, action, evidence role을 기록한다.
-- [ ] subcut마다 sentence/cue/claim/beat lineage를 저장한다. 누락된 lineage는 렌더 전에 중단한다.
+- [x] 507 cues → 274 sentences → 64 shots 계보를 candidate plan의 source bundle/script/canonical manifest 참조로 연결한다. 단, source 1,439.800초 대 target 1,440.000초 채택은 미결정이다.
+- [x] 각 shot을 sentence span과 claim ID에 연결하고, shot-local cut timing을 canonical timeline에서 계산한다.
+- [x] 각 A/B plate와 cut에 `visual_beat`, focal/evidence role 및 motion metadata를 기록한다.
+- [x] subcut마다 sentence/cue/claim/beat lineage를 저장하고, 누락 시 렌더 전 fail-closed한다.
 
 ## Task 2 — A/B가 아닌 실제 보완형 plate 재설계
 
@@ -29,7 +29,7 @@
 
 - [ ] A=상황·전경·공간, B=증거·인물 행동·유물 디테일처럼 의미가 분리된 prompt를 작성한다.
 - [ ] 단순 `angle A`/`angle B` 차이를 금지하고, 두 prompt의 semantic anchor가 실제로 달라지는지 검사한다.
-- [ ] provider watermark, generated text, logo, persistent band를 OCR/시각 검사로 탐지한다.
+- [x] provider watermark, generated text, logo, persistent band를 candidate plate audit로 탐지한다.
 - [ ] 문제가 있는 plate는 라이선스가 허용하는 clean export 또는 Flow 재생성으로 교체한다. 제거 권한이 없는 표식은 inpaint로 숨기지 않는다.
 - [ ] 하단 18% safe area의 실제 luminance/edge occupancy를 검사하고, 자막이 들어갈 공간을 plate 단계에서 비워 둔다.
 
@@ -37,12 +37,12 @@
 
 **대상:** `subcut_montage_engine.py`, `cinematic_effect_planner.py`, `cinematic_editing_director.py`
 
-- [ ] Rank 2 pipeline이 현재의 전역 modulo profile을 직접 사용하지 않고 `CinematicEffectPlanner`의 beat-aware profile을 소비하도록 연결한다.
-- [ ] `motion_profile`을 `family`, `axis`, `focal_anchor`, `zoom_start/end`, `pan_start/end`, `tilt_start/end`, `easing`, `duration`으로 확장한다.
+- [ ] Rank 2 pipeline이 `CinematicEffectPlanner` 자체의 profile을 소비하도록 연결한다. 현재는 전역 modulo를 제거하고 shot-local profile을 도입한 중간 단계다.
+- [x] `motion_profile`에 motion family, zoom/pan center, rotation, easing, visual beat, duration metadata를 기록한다.
 - [ ] 컷마다 좌표를 새로 리셋하지 말고, 동일 shot 안에서는 이전 컷의 종료 상태와 다음 컷의 시작 상태를 연결한다.
 - [ ] 실제 tilt/rotate/flip은 필요할 때만 구현하고, metadata에만 존재하는 효과 이름은 허용하지 않는다.
 - [ ] 같은 axis/direction의 기계적 연속과 in/out 방향의 무근거 역전을 제한한다. 현재 367건인 방향 역전은 beat 근거가 없으면 제거한다.
-- [ ] 0.333초 strobe는 전체 템포 규칙이 아니라 script beat가 있는 한정 구간으로 격리한다.
+- [x] 0.333초 전역 strobe burst를 제거하고, candidate는 shot-local cadence를 사용한다.
 
 ## Task 4 — 진짜 transition layer 도입
 
@@ -52,13 +52,13 @@
 - [ ] hard cut은 시맨틱 충돌이 없고 피사체 축이 안정된 경계에만 사용한다.
 - [ ] dissolve/xfade는 모든 컷에 일괄 적용하지 말고 장면 전환·시간 점프·회상에만 제한한다.
 - [ ] match/whip은 이전·다음 프레임의 방향/색/초점이 일치할 때만 사용한다.
-- [ ] 실제 encoded output에서 각 transition의 시작·끝 프레임을 독립 검출하고, 선언만 있고 사용되지 않은 transition은 FAIL 처리한다.
+- [ ] 실제 encoded output에서 각 transition의 시작·끝 프레임을 독립 검출하고, 선언만 있고 사용되지 않은 transition은 FAIL 처리한다. candidate는 53개 non-zero transition boundary와 pixel interpolation test를 통과했지만 full boundary QA는 남아 있다.
 
 ## Task 5 — 자막 가독성과 clean visual layer 정상화
 
 **대상:** `build_rank2_clean_subtitles.py`, ASS, plate/raw montage
 
-- [ ] 원본의 실제 glyph 높이·stroke·box 폭을 기준으로 52pt 고정값을 재보정한다. 현재 샘플 결과 glyph 약 36px, 원본 약 52px 차이를 해소한다.
+- [x] 원본 대비 작은 52pt 고정값을 폐기하고 candidate를 72pt `BorderStyle=3` 반투명 박스로 재보정했다. 실제 원본 glyph parity는 human preview에서 추가 승인한다.
 - [ ] 한 줄 우선, 불가피한 경우만 의미 단위 2줄로 분할하며, 텍스트 폭에 따른 adaptive font size를 적용한다.
 - [ ] 자막 box는 per-event bounded box로 유지하고, 영상 전체에 깔린 baked-in bottom band는 제거/재생성한다.
 - [ ] 숫자·지명·핵심어 yellow tag는 보존하되, 글자 대비와 safe area를 프레임으로 검증한다.
@@ -91,9 +91,9 @@
 - [ ] source/canonical timing SSOT가 문서로 고정됨
 - [ ] 100% cut lineage: sentence/cue/claim → shot → plate → subcut
 - [ ] 실제 transition layer가 encoded output에 반영됨
-- [ ] beat-aware motion이 global modulo cycle을 대체함
+- [ ] shot-local beat motion이 global modulo cycle을 대체함 (candidate 구현 완료; `CinematicEffectPlanner` 직접 연동과 방향 근거 QA는 잔여)
 - [ ] subtitle glyph 크기·box·contrast가 승인 기준을 충족함
-- [ ] provider mark, generated text, baked-in band 0건
+- [x] candidate derived plate layer에서 provider mark, generated text, baked-in band 0건 audit PASS (provider clean export provenance는 별도 보류)
 - [ ] A/B loop, semantic repeat, 무근거 방향 reversal 0건
 - [ ] 물리·시각 독립 Gate 및 preview review PASS
 - [ ] 새 candidate SHA-256을 PROGRESS/manifest에 기록한 뒤에만 원자 승격

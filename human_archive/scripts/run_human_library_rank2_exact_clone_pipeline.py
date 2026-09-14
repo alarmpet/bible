@@ -44,6 +44,7 @@ from lib.exact_release_verifier import (
     validate_plate_manifest,
     validate_video_probe,
 )
+from lib.rank2_visual_contract import audit_plate_directory
 
 # Canonical Paths
 REPO_ROOT = SCRIPTS_DIR.parents[2]
@@ -202,7 +203,12 @@ def validate_master_plate_plan(
     return validate_plate_manifest(data.get("plates", []), expected_count=expected_count)
 
 
-def step_2_render_montage(cuts: List[SubcutPlan]) -> Path:
+def step_2_render_montage(
+    cuts: List[SubcutPlan],
+    *,
+    plates_dir: Path = IMAGES_DIR,
+    output_path: Path = RAW_MONTAGE_VIDEO,
+) -> Path:
     print("\n=======================================================")
     print(f"🎬 [STEP 2] Rendering {len(cuts)} Saliency Subcuts Montage Video Stream (Rank 2)")
     print("=======================================================")
@@ -212,18 +218,25 @@ def step_2_render_montage(cuts: List[SubcutPlan]) -> Path:
             "Master plate validation failed before montage reuse: "
             + "; ".join(plate_check["errors"][:12])
         )
-    VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+    visual_plate_check = audit_plate_directory(plates_dir, expected_count=EXPECTED_PLATES_COUNT)
+    if visual_plate_check["status"] != "PASS":
+        raise RuntimeError(
+            "Clean visual plate gate failed before montage render: "
+            + "; ".join(visual_plate_check["errors"])
+        )
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if RAW_MONTAGE_VIDEO.exists() and RAW_MONTAGE_VIDEO.stat().st_size > 50000000:
-        print(f"Raw montage video already exists: {RAW_MONTAGE_VIDEO} ({RAW_MONTAGE_VIDEO.stat().st_size:,} bytes)")
-        return RAW_MONTAGE_VIDEO
+    if output_path.exists() and output_path.stat().st_size > 50000000:
+        print(f"Raw montage video already exists: {output_path} ({output_path.stat().st_size:,} bytes)")
+        return output_path
 
     t0 = time.time()
     out = render_subcut_montage_stream(
         cuts=cuts,
-        plates_dir=IMAGES_DIR,
-        fallback_images_dir=IMAGES_DIR,
-        out_video_path=RAW_MONTAGE_VIDEO,
+        plates_dir=plates_dir,
+        fallback_images_dir=plates_dir,
+        out_video_path=output_path,
         fps=30,
     )
     t1 = time.time()
@@ -313,7 +326,16 @@ def step_3_cinema_assembly(
     return output_mp4
 
 
-def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
+def step_4_verify_postflight(
+    master_mp4: Path,
+    *,
+    ass_path: Path = ASS_PATH,
+    plan_path: Path = SUBCUT_PLAN_PATH,
+    audio_path: Path = RAW_AUDIO_PATH,
+    plates_dir: Path = IMAGES_DIR,
+    expected_min_cuts: int = 800,
+    expected_max_cuts: int = 900,
+) -> Dict[str, Any]:
     print("\n=======================================================")
     print("🔍 [STEP 4] Gate 0~5 Postflight Physical Verification (Rank 2)")
     print("=======================================================")
@@ -359,19 +381,28 @@ def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
             decode_errors.append(f"{selector}: {result.stderr[-500:]}")
     assert not decode_errors, "Decoded stream failure: " + " | ".join(decode_errors)
 
-    ass_check = audit_ass_strict(ASS_PATH, target_duration_sec=v_dur)
+    ass_check = audit_ass_strict(ass_path, target_duration_sec=v_dur)
     assert ass_check["status"] == "PASS", "; ".join(ass_check["errors"])
 
     plate_check = validate_master_plate_plan()
     assert plate_check["status"] == "PASS", "; ".join(plate_check["errors"])
+    visual_plate_check = audit_plate_directory(plates_dir, expected_count=EXPECTED_PLATES_COUNT)
+    assert visual_plate_check["status"] == "PASS", "; ".join(visual_plate_check["errors"])
 
-    subcut_data = json.loads(SUBCUT_PLAN_PATH.read_text(encoding="utf-8"))
-    subcut_check = audit_subcut_montage_plan(subcut_data.get("cuts", []))
+    subcut_data = json.loads(Path(plan_path).read_text(encoding="utf-8"))
+    subcut_check = audit_subcut_montage_plan(
+        subcut_data.get("cuts", []),
+        expected_min_cuts=expected_min_cuts,
+        expected_max_cuts=expected_max_cuts,
+    )
     assert subcut_check["status"] == "PASS", "; ".join(subcut_check["errors"])
     assert subcut_check["aba_repeats"] == 0, f"Detected {subcut_check['aba_repeats']} ABA toggle loops"
     assert subcut_check["role_reversals"] == 0, f"Detected {subcut_check['role_reversals']} role reversals"
+    assert subcut_data.get("lineage", {}).get("cut_lineage_complete") is True, (
+        "Cut lineage is incomplete; refusing visual release"
+    )
 
-    wav_sample_frames = count_wav_sample_frames(RAW_AUDIO_PATH)
+    wav_sample_frames = count_wav_sample_frames(audio_path)
     assert wav_sample_frames == MASTER_AUDIO_SAMPLES, (
         f"WAV sample boundary {wav_sample_frames} != {MASTER_AUDIO_SAMPLES}"
     )
@@ -393,13 +424,23 @@ def step_4_verify_postflight(master_mp4: Path) -> Dict[str, Any]:
         "decoded_streams": ["video", "audio"],
         "subtitle_metrics": ass_check,
         "plate_metrics": plate_check,
+        "visual_plate_metrics": visual_plate_check,
         "subcut_montage_metrics": subcut_check,
+        "lineage_metrics": subcut_data.get("lineage", {}),
     }
 
 
 def step_5_generate_release_manifest(
     master_mp4: Path,
     postflight_metrics: Dict[str, Any],
+    *,
+    plan_path: Path = SUBCUT_PLAN_PATH,
+    ass_path: Path = ASS_PATH,
+    audio_path: Path = RAW_AUDIO_PATH,
+    montage_path: Path = RAW_MONTAGE_VIDEO,
+    manifest_path: Path = RELEASE_MANIFEST_PATH,
+    release_id: str = "HL-RANK2-EXACT-CLONE-V1",
+    release_status: str = "PROMOTED_MASTER",
 ) -> Path:
     print("\n=======================================================")
     print("📜 [STEP 5] Generating Atomic Release Manifest (SHA-256 Chain)")
@@ -410,10 +451,10 @@ def step_5_generate_release_manifest(
         ("source_cues_json", CUES_PATH, "source"),
         ("canonical_timeline_manifest", CANONICAL_MANIFEST_PATH, "intermediate"),
         ("master_plates_plan", PLATES_PLAN_PATH, "intermediate"),
-        ("subcut_montage_plan", SUBCUT_PLAN_PATH, "intermediate"),
-        ("master_subtitles_ass", ASS_PATH, "intermediate"),
-        ("master_audio_wav", RAW_AUDIO_PATH, "intermediate"),
-        ("raw_montage_video", RAW_MONTAGE_VIDEO, "intermediate"),
+        ("subcut_montage_plan", plan_path, "intermediate"),
+        ("master_subtitles_ass", ass_path, "intermediate"),
+        ("master_audio_wav", audio_path, "intermediate"),
+        ("raw_montage_video", montage_path, "intermediate"),
         ("master_documentary_mp4", master_mp4, "release"),
     ]
     artifacts: dict[str, dict[str, Any]] = {}
@@ -432,11 +473,11 @@ def step_5_generate_release_manifest(
         chain_entries.append({"artifact_id": artifact_id, "sha256": digest})
 
     manifest = {
-        "release_id": "HL-RANK2-EXACT-CLONE-V1",
+        "release_id": release_id,
         "video_id": "o-x6sIGANPY",
         "title": "잊혀진 문명, 세계 최강이 사라진 이유",
         "schema_version": "human_library_exact_release_v2",
-        "status": "PROMOTED_MASTER",
+        "status": release_status,
         "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "target_duration_sec": TARGET_DURATION_SEC,
         "target_fps": 30.0,
@@ -451,26 +492,41 @@ def step_5_generate_release_manifest(
         "gate_results": {
             "gate_0_duration": "PASS",
             "gate_1_subtitles": postflight_metrics["subtitle_metrics"]["status"],
-            "gate_2_art_style_and_plates": postflight_metrics["plate_metrics"]["status"],
+            "gate_2_art_style_and_plates": postflight_metrics["visual_plate_metrics"]["status"],
             "gate_3_pacing": postflight_metrics["subcut_montage_metrics"]["status"],
             "gate_4_audio_boundary": "PASS",
             "gate_5_integrity_decode": "PASS",
         },
     }
 
-    temp_path = RELEASE_MANIFEST_PATH.with_suffix(RELEASE_MANIFEST_PATH.suffix + ".part")
+    manifest_path = Path(manifest_path)
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = manifest_path.with_suffix(manifest_path.suffix + ".part")
     with open(temp_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
         f.write("\n")
         f.flush()
         os.fsync(f.fileno())
-    os.replace(temp_path, RELEASE_MANIFEST_PATH)
+    os.replace(temp_path, manifest_path)
 
-    print(f"✅ Release manifest frozen: {RELEASE_MANIFEST_PATH}")
-    return RELEASE_MANIFEST_PATH
+    print(f"✅ Release manifest frozen: {manifest_path}")
+    return manifest_path
 
 
-def run_pipeline(*, include_branding: bool = False) -> Path:
+def run_pipeline(
+    *,
+    include_branding: bool = False,
+    plan_path: Path = SUBCUT_PLAN_PATH,
+    plates_dir: Path = IMAGES_DIR,
+    ass_path: Path = ASS_PATH,
+    montage_path: Path = RAW_MONTAGE_VIDEO,
+    output_mp4: Path = FINAL_MASTER_VIDEO,
+    manifest_path: Path = RELEASE_MANIFEST_PATH,
+    release_id: str = "HL-RANK2-EXACT-CLONE-V1",
+    release_status: str = "PROMOTED_MASTER",
+    expected_min_cuts: int = 800,
+    expected_max_cuts: int = 900,
+) -> Path:
     print("================================================================================")
     print("🚀 HUMAN LIBRARY RANK 2 EXACT CLONE PRODUCTION PIPELINE (1,440.00s / 24.00m)")
     print("================================================================================")
@@ -479,30 +535,48 @@ def run_pipeline(*, include_branding: bool = False) -> Path:
     master_audio = step_1_prepare_audio(TARGET_DURATION_SEC)
 
     # 2. Subcut Montage Plan
-    with open(SUBCUT_PLAN_PATH, "r", encoding="utf-8") as f:
+    with open(plan_path, "r", encoding="utf-8") as f:
         subcut_data = json.load(f)
     cuts = [SubcutPlan(**c) for c in subcut_data["cuts"]]
-    print(f"Loaded {len(cuts)} cuts from {SUBCUT_PLAN_PATH} ({sum(c.frame_count for c in cuts)} frames)")
+    print(f"Loaded {len(cuts)} cuts from {plan_path} ({sum(c.frame_count for c in cuts)} frames)")
 
     # 3. Video Montage Stream
-    montage_video = step_2_render_montage(cuts)
+    montage_video = step_2_render_montage(cuts, plates_dir=plates_dir, output_path=montage_path)
 
     # 4. Cinema Assembly
     master_mp4 = step_3_cinema_assembly(
         montage_video=montage_video,
         master_audio=master_audio,
-        ass_subtitles=ASS_PATH,
-        output_mp4=FINAL_MASTER_VIDEO,
+        ass_subtitles=ass_path,
+        output_mp4=output_mp4,
         target_duration_sec=TARGET_DURATION_SEC,
         target_frames=TARGET_FRAMES,
         include_branding=include_branding,
     )
 
     # 5. Postflight Verification
-    metrics = step_4_verify_postflight(master_mp4)
+    metrics = step_4_verify_postflight(
+        master_mp4,
+        ass_path=ass_path,
+        plan_path=plan_path,
+        audio_path=master_audio,
+        plates_dir=plates_dir,
+        expected_min_cuts=expected_min_cuts,
+        expected_max_cuts=expected_max_cuts,
+    )
 
     # 6. Release Manifest
-    step_5_generate_release_manifest(master_mp4, metrics)
+    step_5_generate_release_manifest(
+        master_mp4,
+        metrics,
+        plan_path=plan_path,
+        ass_path=ass_path,
+        audio_path=master_audio,
+        montage_path=montage_video,
+        manifest_path=manifest_path,
+        release_id=release_id,
+        release_status=release_status,
+    )
 
     print("\n🎉 Rank 2 Exact Clone Pipeline Complete & Release Manifest Frozen!")
     return master_mp4
@@ -512,9 +586,26 @@ def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Human Library Rank 2 Exact Clone Pipeline Runner")
     parser.add_argument("--with-branding", action="store_true", help="Enable optional channel branding overlays")
+    parser.add_argument("--candidate-v2", action="store_true", help="Render isolated clean-scope candidate V2")
     args = parser.parse_args()
 
-    run_pipeline(include_branding=args.with_branding)
+    if args.candidate_v2:
+        candidate_output = REPO_ROOT / "output" / "NOLLAM-HUMAN-LIBRARY-RANK2-EXACT-MASTER-V2-CANDIDATE.mp4"
+        run_pipeline(
+            include_branding=False,
+            plan_path=METADATA_DIR / "rank2_candidate_v2_subcut_montage_plan.json",
+            plates_dir=EP_DIR / "images_2d_candidate_v2",
+            ass_path=SUBTITLES_DIR / "rank2_candidate_v2_subtitles.ass",
+            montage_path=VIDEO_DIR / "rank2_candidate_v2_montage_raw.mp4",
+            output_mp4=candidate_output,
+            manifest_path=METADATA_DIR / "rank2_candidate_v2_release_manifest.json",
+            release_id="HL-RANK2-EXACT-CANDIDATE-V2",
+            release_status="CANDIDATE",
+            expected_min_cuts=550,
+            expected_max_cuts=600,
+        )
+    else:
+        run_pipeline(include_branding=args.with_branding)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ and D-5 (Opaque Black Tape Subtitle Box):
 - Uses master_script_clean.json (274 clean, non-stuttering sentences)
 - Splits into 510~550 balanced single-line clauses (max_chars <= 25, avg duration ~2.6s)
 - Comprehensive STT typo correction (40+ historical and speech errors)
-- High-visibility 52pt Pretendard style (BorderStyle=1, Outline=3.5, Shadow=2.0)
+  - High-visibility 72pt Pretendard style (BorderStyle=3, semi-transparent box)
 - Preserves commas inside numbers for yellow keyword highlighting
 - Enforces strict audit invariants (0 multiline, 0 overlap, 0 zero-start, >= 507 events)
 """
@@ -169,7 +169,7 @@ def highlight_keywords_safe(text: str) -> str:
     return HIGHLIGHT_PATTERN.sub(_repl, text)
 
 
-def build_rank2_clean_ass() -> Path:
+def build_rank2_clean_ass(output_ass: Path = OUTPUT_ASS) -> Path:
     script_data = json.loads(SCRIPT_PATH.read_text(encoding="utf-8"))
     sentences = script_data["sentences"]
     print(f"Loaded {len(sentences)} clean sentences from {SCRIPT_PATH}")
@@ -220,8 +220,8 @@ PlayResY: 1080
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: DocuNarrator_v4,Pretendard,52,&H00FFFFFF,&H000000FF,&H800C0C12,&H80000000,-1,0,0,0,100,100,0,0,1,3.5,2.0,2,50,50,55,1
-Style: DocuNarrator_Exact,Pretendard,52,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,3,2.0,0,2,50,50,55,1
+Style: DocuNarrator_v4,Pretendard,72,&H00FFFFFF,&H000000FF,&H800C0C12,&H80000000,-1,0,0,0,100,100,0,0,3,2.0,0,2,50,50,72,1
+Style: DocuNarrator_Exact,Pretendard,72,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,3,2.0,0,2,50,50,72,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -235,11 +235,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         )
 
     content = header + "\n".join(dialogue_lines) + "\n"
-    OUTPUT_ASS.write_text(content, encoding="utf-8")
-    print(f"✅ Generated clean ASS: {OUTPUT_ASS} ({OUTPUT_ASS.stat().st_size:,} bytes, {len(dialogue_lines)} events)")
+    output_ass = Path(output_ass)
+    output_ass.parent.mkdir(parents=True, exist_ok=True)
+    output_ass.write_text(content, encoding="utf-8")
+    print(f"✅ Generated clean ASS: {output_ass} ({output_ass.stat().st_size:,} bytes, {len(dialogue_lines)} events)")
 
     # Audit
-    audit_res = audit_ass_strict(OUTPUT_ASS, target_duration_sec=1440.0)
+    audit_res = audit_ass_strict(output_ass, target_duration_sec=1440.0)
     print(f"Audit Result: status={audit_res['status']}, events={audit_res['dialogue_events']}, errors={audit_res['errors']}")
     assert audit_res["status"] == "PASS", f"Audit failed: {audit_res['errors']}"
     assert audit_res["dialogue_events"] >= 507, f"Too few events: {audit_res['dialogue_events']} < 507"
@@ -252,7 +254,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     print(f"Yellow highlighted lines: {yellow_count}/50 required")
     assert yellow_count >= 50, f"Too few yellow lines: {yellow_count}"
 
-    return OUTPUT_ASS
+    return output_ass
 
 
 if __name__ == "__main__":

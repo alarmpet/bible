@@ -16,6 +16,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from PIL import Image
 
+from .rank2_visual_contract import blend_transition_frame
+
 
 @dataclass
 class SubcutPlan:
@@ -38,6 +40,14 @@ class SubcutPlan:
     start_cy: float = 0.5
     end_cy: float = 0.5
     role: str = ""
+    start_rotation: float = 0.0
+    end_rotation: float = 0.0
+    sentence_ids: List[str] = field(default_factory=list)
+    cue_ids: List[str] = field(default_factory=list)
+    claim_ids: List[str] = field(default_factory=list)
+    visual_beat: str = ""
+    motion_profile: Dict[str, Any] = field(default_factory=dict)
+    transition_in: Dict[str, Any] = field(default_factory=lambda: {"type": "hard_cut", "frames": 0})
 
 
 def compute_saliency_center(img: Image.Image) -> Tuple[float, float]:
@@ -223,6 +233,7 @@ def render_subcut_montage_stream(
 
         # Cache loaded plate images to avoid repeated disk reads
         image_cache: Dict[str, Image.Image] = {}
+        previous_frame: Optional[np.ndarray] = None
 
         def get_plate_image(plate_id: str, parent_shot_id: str) -> Image.Image:
             if plate_id in image_cache:
@@ -256,6 +267,8 @@ def render_subcut_montage_stream(
                 ecx = getattr(c, "end_cx", c.center_x)
                 scy = getattr(c, "start_cy", c.center_y)
                 ecy = getattr(c, "end_cy", c.center_y)
+                sr = float(getattr(c, "start_rotation", 0.0))
+                er = float(getattr(c, "end_rotation", 0.0))
 
                 # If static, apply a gentle cinematic 5% drift
                 if abs(sz - ez) < 1e-4 and abs(scx - ecx) < 1e-4 and abs(scy - ecy) < 1e-4:
@@ -290,8 +303,23 @@ def render_subcut_montage_stream(
                     top = max(0.0, min(float(ih - crop_h), (cur_cy * ih) - (crop_h / 2.0)))
                     box = (left, top, left + crop_w, top + crop_h)
 
-                    frame = img.resize((w, h), box=box, resample=Image.Resampling.BILINEAR)
-                    proc.stdin.write(frame.tobytes())
+                    frame = img.resize((w, h), box=box, resample=Image.Resampling.BICUBIC)
+                    rotation = sr + (er - sr) * st
+                    if abs(rotation) > 0.001:
+                        frame = frame.rotate(
+                            rotation,
+                            resample=Image.Resampling.BICUBIC,
+                            expand=False,
+                            fillcolor=(245, 235, 215),
+                        )
+                    frame_array = np.asarray(frame, dtype=np.uint8)
+                    transition = getattr(c, "transition_in", {}) or {}
+                    transition_frames = int(transition.get("frames", 0) or 0)
+                    if previous_frame is not None and f < transition_frames:
+                        alpha = (f + 1) / float(transition_frames + 1)
+                        frame_array = blend_transition_frame(previous_frame, frame_array, alpha)
+                    proc.stdin.write(frame_array.tobytes())
+                    previous_frame = frame_array.copy()
 
             proc.stdin.close()
             proc.wait(timeout=1200)
