@@ -91,6 +91,86 @@ def check_decoded_stream_motion_mae(
     return True, min_mae, f"Continuous decoded motion verified: min 25-frame MAE={min_mae:.3f} >= {min_mae_threshold}"
 
 
+def measure_decoded_video_motion_diversity(
+    video_path: Path,
+    window_size: int = 25,
+    min_mae_threshold: float = 0.85,
+    subtitle_bottom_ratio: float = 0.20,
+    resize_width: int = 320,
+) -> Tuple[bool, float, str]:
+    """Stream-decode ``video_path`` and compute the same sliding-window luma MAE
+    check as :func:`check_decoded_stream_motion_mae`, without holding the entire
+    decoded stream in memory (a full 20-minute 25fps release is ~30k frames).
+
+    Only the last ``window_size`` frames are ever buffered; frames are downsized
+    to ``resize_width`` before comparison since the motion signal this gate cares
+    about (frozen holds vs. continuous camera motion) does not require full
+    resolution. Any failure to open/decode the file is treated as a failed
+    check (fail-closed), not silently skipped, so the gate blocks release
+    rather than passing by omission when the motion QA step did not actually run.
+    """
+    try:
+        import cv2
+    except Exception as ex:
+        return False, 0.0, f"Could not import cv2 for decoded motion check: {ex}"
+
+    cap = cv2.VideoCapture(str(video_path))
+    if not cap.isOpened():
+        return False, 0.0, f"Could not open video for decoded motion check: {video_path}"
+
+    buffer: List[np.ndarray] = []
+    min_mae = float("inf")
+    frame_count = 0
+    active_h: int | None = None
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                break
+            frame_count += 1
+            h, w = frame.shape[:2]
+            if resize_width and w > resize_width:
+                scale = resize_width / w
+                frame = cv2.resize(frame, (resize_width, max(1, int(h * scale))), interpolation=cv2.INTER_AREA)
+                h, w = frame.shape[:2]
+            if active_h is None:
+                active_h = int(h * (1.0 - subtitle_bottom_ratio))
+            # cv2 decodes BGR; weights mirror the R/G/B luma weights used by
+            # check_decoded_stream_motion_mae, just reordered for channel order.
+            gray = (
+                0.114 * frame[:active_h, :, 0].astype(np.float32)
+                + 0.587 * frame[:active_h, :, 1].astype(np.float32)
+                + 0.299 * frame[:active_h, :, 2].astype(np.float32)
+            )
+            buffer.append(gray)
+            if len(buffer) > window_size + 1:
+                buffer.pop(0)
+            if len(buffer) == window_size + 1:
+                diff = np.abs(buffer[-1] - buffer[0])
+                mae = float(np.mean(diff))
+                if mae < min_mae:
+                    min_mae = mae
+    finally:
+        cap.release()
+
+    if frame_count <= window_size:
+        return True, 99.0, f"Decoded stream length ({frame_count}) <= window_size, motion check bypassed"
+
+    if min_mae < min_mae_threshold:
+        return (
+            False,
+            min_mae,
+            f"Static hold / frozen frame detected in decoded release video across {frame_count} frames: "
+            f"min {window_size}-frame MAE={min_mae:.3f} < threshold={min_mae_threshold}",
+        )
+    return (
+        True,
+        min_mae,
+        f"Continuous decoded motion verified across {frame_count} frames: "
+        f"min {window_size}-frame MAE={min_mae:.3f} >= {min_mae_threshold}",
+    )
+
+
 def verify_postflight(
     video_path: Path,
     contract_path: Path | None = None,
@@ -277,6 +357,19 @@ def verify_postflight(
         except Exception:
             pass
 
+        # Gate 8.4: decoded-stream motion diversity, measured fresh from the actual
+        # release video every time — not read from a manifest field a caller could
+        # set to True without ever running the check (see check_decoded_stream_motion_mae,
+        # which was previously defined but never called from here).
+        motion_passed, motion_min_mae, motion_msg = measure_decoded_video_motion_diversity(video_path)
+        checks["decoded_motion_diversity"] = {
+            "status": "PASS" if motion_passed else "FAIL",
+            "min_window_mae": motion_min_mae,
+            "message": motion_msg,
+        }
+        if not motion_passed:
+            errors.append(f"Gate 8.4 violation (decoded, not manifest-reported): {motion_msg}")
+
     overall_status = "PASS" if not errors else "FAIL"
 
     report = {
@@ -353,12 +446,23 @@ def generate_release_manifest_v4(
     shots: list[dict[str, Any]],
     parity_diff: float,
     first_frame_visibility_passed: bool = True,
-    motion_diversity_passed: bool = True,
+    motion_diversity_passed: bool | None = None,
     baretip_in_opening_rejected: bool = True,
 ) -> dict[str, Any]:
-    """Generate official production release manifest v4 with Gate 8 bindings."""
+    """Generate official production release manifest v4 with Gate 8 bindings.
+
+    ``motion_diversity_passed`` used to default to ``True`` unconditionally, which
+    meant a manifest could self-report "motion QA passed" without the check ever
+    running. Leave it unset (``None``) to have it measured for real from
+    ``video_path`` via :func:`measure_decoded_video_motion_diversity`; a caller
+    may still pass an explicit bool if it already computed one upstream.
+    """
     video_path = Path(video_path)
     audio_path = Path(audio_path)
+    if motion_diversity_passed is None:
+        motion_diversity_passed = (
+            measure_decoded_video_motion_diversity(video_path)[0] if video_path.exists() else False
+        )
     return {
         "schema_version": 4,
         "release_schema_version": "OFFICIAL_PRODUCTION_RELEASE_V4",
@@ -390,13 +494,22 @@ def generate_release_manifest_v5(
     pre_mux_parity: float,
     final_stream_parity: float,
     first_frame_visibility_passed: bool = True,
-    motion_diversity_passed: bool = True,
+    motion_diversity_passed: bool | None = None,
     baretip_in_opening_rejected: bool = True,
     artifact_registry: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Generate official production release manifest v5 with physical decoded bindings."""
+    """Generate official production release manifest v5 with physical decoded bindings.
+
+    See :func:`generate_release_manifest_v4` — ``motion_diversity_passed`` is
+    measured for real from ``video_path`` when left unset instead of defaulting
+    to ``True``.
+    """
     video_path = Path(video_path)
     audio_path = Path(audio_path)
+    if motion_diversity_passed is None:
+        motion_diversity_passed = (
+            measure_decoded_video_motion_diversity(video_path)[0] if video_path.exists() else False
+        )
     return {
         "schema_version": 5,
         "release_schema_version": "OFFICIAL_PRODUCTION_RELEASE_V5",

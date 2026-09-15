@@ -102,10 +102,33 @@ def test_generate_release_manifest_v4_creates_valid_record(tmp_path: Path):
         audio_path=a_file,
         shots=shots,
         parity_diff=0.012,
+        # Explicit override: this test isn't exercising the real decoded-motion
+        # measurement, just the manifest shape. See
+        # test_generate_release_manifest_v4_measures_motion_when_not_overridden
+        # for the fail-closed default behavior.
+        motion_diversity_passed=True,
     )
     assert manifest["release_schema_version"] == "OFFICIAL_PRODUCTION_RELEASE_V4"
     assert manifest["baretip_in_opening_rejected"] is True
     assert manifest["first_frame_visibility_passed"] is True
     assert manifest["motion_diversity_passed"] is True
     assert manifest["parity_difference_sec"] == 0.012
+
+
+def test_generate_release_manifest_v4_measures_motion_when_not_overridden(tmp_path: Path):
+    # A caller that does NOT pass motion_diversity_passed must no longer get a
+    # free True: with an undecodable "video" (dummy bytes, no real stream) the
+    # manifest must fail closed rather than self-report success.
+    v_file = tmp_path / "video.mp4"
+    a_file = tmp_path / "audio.wav"
+    v_file.write_bytes(b"not a real video stream")
+    a_file.write_bytes(b"dummy audio data")
+
+    manifest = generate_release_manifest_v4(
+        video_path=v_file,
+        audio_path=a_file,
+        shots=[{"shot_id": "SHOT_001", "editing_effect": "subpixel_push_in"}],
+        parity_diff=0.012,
+    )
+    assert manifest["motion_diversity_passed"] is False
 
