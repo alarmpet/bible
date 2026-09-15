@@ -55,9 +55,10 @@ def test_both_implementations_agree_at_the_1200s_nominal_calibration_target() ->
     """1200s is the nollam_decay_20m nominal target (config/visual_pacing_profiles.yaml's
     `target_duration_sec: 1200`) both implementations were calibrated against.
     At this one duration the two independently-computed boundary sets must be
-    identical for every zone the two implementations both fully resolve
-    (cold_open..late_body's start/end, and outro's start -- see the note on
-    outro's end below)."""
+    identical for every zone, start_sec and end_sec alike -- including outro,
+    whose end used to be a separate, undocumented quirk (see
+    test_outro_end_sec_is_the_true_episode_end_not_late_bodys_end below; fixed
+    together with this test)."""
     yaml_zones = {
         zone["zone_id"]: zone
         for zone in _resolve_nollam_decay_zones(_load_yaml_zones_cfg(), total_duration_sec=1200.0)
@@ -66,24 +67,36 @@ def test_both_implementations_agree_at_the_1200s_nominal_calibration_target() ->
 
     assert set(yaml_zones) == set(ratio) == set(_ZONE_ORDER)
 
-    # cold_open..late_body: both start_sec and end_sec must match exactly.
-    for zone_id in ("cold_open", "hook", "roadmap", "early_body", "body", "late_body"):
+    for zone_id in _ZONE_ORDER:
         assert ratio[zone_id]["start_sec"] == yaml_zones[zone_id]["start_sec"], zone_id
         assert ratio[zone_id]["end_sec"] == yaml_zones[zone_id]["end_sec"], zone_id
 
-    # outro: only start_sec is compared. shot_timing._resolve_nollam_decay_zones()
-    # reuses outro's end_offset_from_end_sec for BOTH the start-sentinel
-    # resolution (start_sec: -1) and the end computation, so its resolved
-    # outro end_sec comes out equal to late_body's end (1200 - 90 = 1110)
-    # rather than the true episode end (1200) -- a pre-existing quirk in
-    # shot_timing.py, out of scope for this fix. It is harmless in practice
-    # because _zone_bounds_at() falls back to the last zone in the list (the
-    # same outro zone) whenever no zone's [start, end) contains the queried
-    # time, which is exactly what happens for any t >= 1110. This test only
-    # asserts what both implementations agree on: where outro *starts*.
-    assert ratio["outro"]["start_sec"] == yaml_zones["outro"]["start_sec"] == 1110.0
-    assert ratio["outro"]["end_sec"] == 1200.0
-    assert yaml_zones["outro"]["end_sec"] == 1110.0
+    assert yaml_zones["outro"]["start_sec"] == 1110.0
+    assert yaml_zones["outro"]["end_sec"] == 1200.0
+
+
+def test_outro_end_sec_is_the_true_episode_end_not_late_bodys_end() -> None:
+    """Regression test for a latent bug found while writing the test above:
+    shot_timing._resolve_nollam_decay_zones() used to reuse outro's
+    end_offset_from_end_sec for BOTH resolving its dynamic start (start_sec:
+    -1 sentinel) AND its end, so outro resolved to the empty range
+    [total-90, total-90) -- identical to late_body's own end -- instead of
+    [total-90, total). This never surfaced as a wrong answer because
+    _zone_bounds_at() falls back to the last zone in the list (always outro)
+    for any unmatched query, which is every t >= total-90 -- exactly the
+    range outro should have matched directly. Checked at two different
+    durations so a fix that only works at the 1200s calibration point would
+    still be caught."""
+    for total in (1200.0, 900.0):
+        zones = {
+            zone["zone_id"]: zone
+            for zone in _resolve_nollam_decay_zones(_load_yaml_zones_cfg(), total_duration_sec=total)
+        }
+        assert zones["outro"]["start_sec"] == total - 90.0
+        assert zones["outro"]["end_sec"] == total
+        assert zones["outro"]["end_sec"] > zones["outro"]["start_sec"], (
+            "outro must resolve to a non-empty range"
+        )
 
 
 def test_first_five_zones_diverge_at_other_durations_because_the_yaml_boundaries_are_fixed() -> None:

@@ -25,16 +25,31 @@ def _resolve_nollam_decay_zones(zones_cfg, total_duration_sec: float):
     """
     resolved = []
     for zone in zones_cfg:
-        start = zone.get("start_sec")
-        if start is None or start < 0:
+        raw_start = zone.get("start_sec")
+        # start_sec: -1 (or absent) is the "compute my start dynamically" sentinel
+        # -- only the curve's last zone (outro) uses it, meaning "start
+        # end_offset_from_end_sec seconds before the real end". That field is
+        # then already spent describing this zone's START, not its end, so its
+        # own END must be the measured episode end itself (offset 0), not a
+        # second read of the same end_offset_from_end_sec value. Reusing it for
+        # both used to resolve outro to the empty range [total-90, total-90),
+        # which only ever produced a sensible zone because _zone_bounds_at()
+        # falls back to the last zone in the list for any unmatched query --
+        # true for every t >= total-90, masking the bug (see
+        # test_pacing_scheduler_zone_source_of_truth.py's regression test).
+        is_dynamic_start = raw_start is None or raw_start < 0
+        if is_dynamic_start:
             start = total_duration_sec - float(zone["end_offset_from_end_sec"])
-        end_offset = zone.get("end_offset_from_end_sec")
-        if end_offset is not None:
-            end = total_duration_sec - float(end_offset)
+            end = total_duration_sec
         else:
-            end = zone.get("end_sec")
-            if end is None:
-                end = total_duration_sec
+            start = raw_start
+            end_offset = zone.get("end_offset_from_end_sec")
+            if end_offset is not None:
+                end = total_duration_sec - float(end_offset)
+            else:
+                end = zone.get("end_sec")
+                if end is None:
+                    end = total_duration_sec
         resolved.append({**zone, "start_sec": float(start), "end_sec": float(end)})
     return resolved
 
