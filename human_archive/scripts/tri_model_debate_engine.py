@@ -7,16 +7,23 @@ docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-mult
   `SentenceHistoricalFactChecker` cannot confidently classify (its silent "VERIFIED_FACT"
   default) to an actual codex+grok cross-check via `run_consensus_round.escalate_claim()`.
   Disagreement or a failed participant becomes REVIEW_REQUIRED, never a silent pass.
-- `execute_topic_debate()`, `orchestrate_deep_tri_model_script()`, and the "Gemini
-  3.8/3.7/3.6" persona framing elsewhere in this file are the ORIGINAL, still-hollow
-  implementation the diagnosis found: templated proposals/critiques, no live model calls
-  on the default (non-`GEMINI_API_KEY`) path, and even when a Gemini key is configured, the
-  script-generation path never actually calls it (only `execute_topic_debate()`'s Round 1
-  proposals do). Not yet rewired to the real orchestration engine.
-- `orchestrate_deep_tri_model_script()`'s output manifest now labels itself honestly
-  (`metadata.provenance == "simulated_fixture"`) for exactly this reason, and
-  `postflight_release.py`'s `verify_postflight()` refuses to release any build whose
-  generation manifest carries that label (Task 2, §5.3 rule 4).
+- `orchestrate_deep_tri_model_script()`'s Round 1 (proposals) and Round 2 (cross-critique)
+  are also real as of Task 2's Quarantine follow-up (`lib/tri_model_real_debate.py`): one
+  `run_consensus_round.escalate_claim()` round runs codex as `proposer` and grok as
+  `adversary` against the same structural-framing spec, and their agreement/disagreement
+  is what gets emitted as the cross-critique -- not a hardcoded Korean critique dict. Only
+  two of the three Studio UI lanes ("gemini_38"/"gemini_37") are backed by a real model
+  call; the third ("gemini_36") honestly points at Round 3's real per-sentence fact audit
+  instead of a fabricated third proposal (Gemini/agy is not installed on this machine).
+  `final_manifest["metadata"]["provenance"]` is now conditional: `"live_orchestration"`
+  when that round actually completed, else the fail-closed `"simulated_fixture"` label
+  (Task 2, §5.3 rule 4) so `postflight_release.py`'s `verify_postflight()` still refuses to
+  release a build whose debate round did not really run.
+- `execute_topic_debate()` and the "Gemini 3.8/3.7/3.6" persona framing in
+  `tri_model_llm_bridge.py` remain the ORIGINAL, still-hollow implementation the diagnosis
+  found (templated text, no live model calls on the default non-`GEMINI_API_KEY` path).
+  Not yet rewired -- out of scope for this follow-up, which covers only
+  `orchestrate_deep_tri_model_script()`'s Round 1/2 per Task 2's Quarantine deliverable.
 Persists audit trails to audit/ and streams live events to Studio GUI."""
 from __future__ import annotations
 
@@ -1179,88 +1186,87 @@ class TriModelDebateEngine:
             pass
 
         # ---------------------------------------------------------------------
-        # Round 1: Autonomous Deep Proposals by 3 Models
+        # Round 1+2: Real codex+grok structural debate (Task 2 Quarantine,
+        # 2026-09-15-...-plan.md §2/§7). One real run_consensus_round.escalate_claim()
+        # round concurrently runs a real "proposer" (codex) and a real "adversary"
+        # (grok) against the SAME structural-framing spec; their agreement/
+        # disagreement *is* the cross-critique. See lib/tri_model_real_debate.py's
+        # module docstring for why this replaces the old two-stage
+        # p_38/p_37/p_36 + critiques dicts (which were static f-string templates,
+        # no model call at all) instead of running two separate rounds. Only
+        # codex+grok are real subprocess participants -- the third UI lane
+        # ("gemini_36") is not filled with a fabricated third model call; it
+        # honestly points at Round 3 below, which does the real per-sentence
+        # fact audit.
         # ---------------------------------------------------------------------
+        from lib.tri_model_real_debate import (
+            build_cross_critique_event_data,
+            build_proposal_events,
+            build_structure_debate_spec,
+            resolve_provenance,
+            run_structure_debate,
+        )
+
         emit({
             "type": "round_start",
             "round": 1,
-            "title": f"Round 1: 삼사(Gemini 3.8 / 3.7 / 3.6) 독립 기획 (대본 연동 유동적 {total_dynamic_shots}개 샷)",
+            "title": f"Round 1: codex+grok 실시간 독립 구조 제안 (대본 연동 유동적 {total_dynamic_shots}개 샷)",
             "progress": 20
         })
-        time.sleep(0.6)
+        time.sleep(0.2)
 
-        p_38 = {
-            "model": "Gemini 3.8",
-            "role": "Lead Systems Architect",
-            "focus": "거시 인과 사슬 & Suspense-Wisdom 4-Act 하이브리드 서사 설계",
-            "benchmark_formula": "기묘한밤 30초 인지적 부조화 훅 + 지혜의빛 1차 사료 실존적 성찰 융합",
-            "parallel_pair": parallel_match["historical_parallel"],
-            "modern_lesson": parallel_match["modern_lesson"],
-            "phases_budget": f"고정 56씬 절대 금지 — 서사 호흡 연동 유동적 {total_dynamic_shots}개 샷 수렴 ({base_manifest['total_duration_sec']}초)"
-        }
-        emit({"type": "proposal", "model": "gemini_38", "data": p_38})
-        time.sleep(0.4)
+        structure_spec = build_structure_debate_spec(
+            title=title,
+            parallel_match=parallel_match,
+            total_dynamic_shots=total_dynamic_shots,
+            total_duration_sec=base_manifest["total_duration_sec"],
+        )
+        debate_round_dir = audit_dir / "orchestration" / "round1_structure_debate"
+        debate_outcome = run_structure_debate(
+            structure_spec, debate_round_dir,
+            topic=f"script-structure-{ep_dir.name}",
+        )
 
-        p_37 = {
-            "model": "Gemini 3.7",
-            "role": "Documentary Director",
-            "focus": f"키아로스쿠로 다크 시네마틱 미장센 & 4-Look 로테이션 연출 ({parallel_match.get('protagonist', '주인공')})",
-            "anchor": parallel_match["time_space_anchor"],
-            "killer_hook": parallel_match["core_hook"],
-            "style_principles": [
-                f"시공간 앵커: {parallel_match.get('time_space_anchor', '')}",
-                "키아로스쿠로 명암 대비 및 슬로우 크립 줌인",
-                "자막 56pt / MarginV=55 / 2줄 시맨틱 줄바꿈 (하단 18% 클리어존 엄수)",
-                f"킬러 퀘스천: {parallel_match.get('core_hook', '')}"
-            ]
-        }
-        emit({"type": "proposal", "model": "gemini_37", "data": p_37})
-        time.sleep(0.4)
-
-        p_36 = {
-            "model": "Gemini 3.6",
-            "role": "Empirical Fact-Checker",
-            "focus": f"1차 사료 전수 조사 & 씬별 1:1 고유 이미지 무중복(No Recycling) 검증 ({len(parallel_match.get('primary_sources', []))}종 사료)",
-            "primary_sources": parallel_match.get("primary_sources", ["1차 사료집"]),
-            "myth_exclusion_rules": [
-                "후대 창작 낭설 및 비과학적 음모론 완전 격리",
-                "구전 및 주술적 믿음은 정사로 단정하지 않고 '전해집니다' 결합 강제",
-                "연도 및 실측치 판본 이견 명시",
-                "씬별 1:1 고유 이미지 매칭 (이미지 재활용률 0% 원칙)",
-                "한국어 음절 종성 판별식 기반 조사 오류 원천 차단"
-            ]
-        }
-        emit({"type": "proposal", "model": "gemini_36", "data": p_36})
-        time.sleep(0.4)
+        proposal_events = build_proposal_events(
+            debate_outcome,
+            parallel_match=parallel_match,
+            total_dynamic_shots=total_dynamic_shots,
+            total_duration_sec=base_manifest["total_duration_sec"],
+        )
+        for model_key, data in proposal_events:
+            emit({"type": "proposal", "model": model_key, "data": data})
+            time.sleep(0.2)
 
         (audit_dir / "debate_round1_proposals.json").write_text(
-            json.dumps({"round": 1, "gemini_38": p_38, "gemini_37": p_37, "gemini_36": p_36}, ensure_ascii=False, indent=2),
+            json.dumps({
+                "round": 1,
+                "round_dir": str(debate_outcome.round_dir),
+                "ok": debate_outcome.ok,
+                "agreed": debate_outcome.agreed,
+                "verdict": debate_outcome.verdict,
+                "lanes": {model_key: data for model_key, data in proposal_events},
+            }, ensure_ascii=False, indent=2),
             encoding="utf-8"
         )
 
-        # ---------------------------------------------------------------------
-        # Round 2: Cross-Critique and Defect Hunting Loop
-        # ---------------------------------------------------------------------
         emit({
             "type": "round_start",
             "round": 2,
-            "title": "Round 2: 상호 교차 비판 및 결함 반려 루프 가동",
+            "title": "Round 2: codex/grok 실시간 상호 교차 비판 결과 정리",
             "progress": 40
         })
-        time.sleep(0.6)
+        time.sleep(0.2)
 
-        critiques = {
-            "critique_36_to_37": f"Gemini 3.7의 대본 중 '{parallel_match.get('protagonist')}' 관련 민간 전승 및 구전 설화는 1차 사료 실측 정사가 아니므로 Grade C '전해집니다' 결합 필수.",
-            "critique_37_to_38": "Gemini 3.8의 거시 설명이 지나치게 학술적이어서 시청자 이탈 위험. 3~8자 펀치라인으로 호흡을 쪼개는 연출 적용 필요.",
-            "consensus_38": f"양측 비판을 전면 수용하여, {base_manifest['total_duration_sec']}초 유동적 {total_dynamic_shots}개 샷의 정밀 시간 버짓 위에 3.7의 드라마틱 펀치와 3.6의 팩트체크 보정문을 결합함."
-        }
+        critiques = build_cross_critique_event_data(debate_outcome)
         emit({"type": "cross_critique", "data": critiques})
-        time.sleep(0.6)
+        time.sleep(0.2)
 
         (audit_dir / "debate_round2_cross_critique.json").write_text(
             json.dumps({"round": 2, "critiques": critiques}, ensure_ascii=False, indent=2),
             encoding="utf-8"
         )
+
+        debate_provenance, debate_provenance_detail = resolve_provenance(debate_outcome)
 
         # ---------------------------------------------------------------------
         # Round 3: Sentence-by-Sentence 4-Tier Fact-Checking & Revision
@@ -1366,19 +1372,18 @@ class TriModelDebateEngine:
                 "modern_lesson": parallel_match["modern_lesson"],
                 "primary_sources": parallel_match.get("primary_sources", []),
                 "orchestration_type": "DEEP_TRI_MODEL_5_ROUNDS",
-                # Round 1 (p_38/p_37/p_36 proposals) and Round 2 (cross-critique) below are
-                # static templated dicts, not live model calls -- see tri_model_llm_bridge.py's
-                # HYBRID_ARCHIVAL_ENGINE fallback and the 2026-09-15 overhaul plan §2/§5.3 rule 4.
-                # Round 3's fact grades come from a real regex rule engine
-                # (SentenceHistoricalFactChecker), not an LLM either. Labeled honestly here so a
-                # release gate can refuse to treat this manifest as real multi-model output
-                # (see postflight_release.py's simulated-fixture provenance check).
-                "provenance": "simulated_fixture",
-                "provenance_detail": (
-                    "Round 1/2 proposals and cross-critique are static templated text, not "
-                    "live Gemini/Codex/Grok calls. Do not present this manifest's "
-                    "orchestration_type as evidence of real multi-model debate."
-                ),
+                # Round 1 (proposals) and Round 2 (cross-critique) now come from a real
+                # codex+grok run_consensus_round.escalate_claim() round (Task 2 Quarantine,
+                # 2026-09-15 overhaul plan §2/§5.3 rule 4/§7) -- see
+                # lib/tri_model_real_debate.py. provenance is conditional on whether that
+                # round actually completed (both participants answered and parsed cleanly):
+                # "live_orchestration" if so, else the fail-closed "simulated_fixture" label
+                # so postflight_release.py's verify_postflight() still refuses to release a
+                # build whose debate round did not really run. Round 3's fact grades still
+                # come from a real regex rule engine (SentenceHistoricalFactChecker) plus,
+                # for unmatched sentences, the same real escalate_claim() mechanism (Task 3).
+                "provenance": debate_provenance,
+                "provenance_detail": debate_provenance_detail,
                 "factcheck_stats": fact_stats,
                 "shot_scale_stats": shot_scale_counts,
                 "generated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
