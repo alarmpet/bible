@@ -108,8 +108,38 @@ def test_gate_4_audio_multitrack_sidechain():
 
 
 def test_gate_5_branding_and_hud_assets():
+    """Gate 5 originally verified that the *original YouTube channel's* watermark,
+    emblem, and HUD-card PNGs were staged in the release-reachable
+    assets/branding/ directory, per the 2026-09-11 "human-library-1to1-exact-
+    replication" master plan's branding/HUD restoration item.
+
+    That plan was withdrawn by docs/superpowers/plans/2026-09-15-human-archive-
+    nollam-script-visual-motion-multi-llm-overhaul-plan.md section 6 point 2:
+    cloning another channel's specific watermark/emblem/HUD design is exactly
+    the kind of verbatim-replica artifact that must never reach a release
+    path, so it orders the branding assets removed from assets/branding/
+    immediately. Commit 88e4242 (Task 9) carried this out -- it relocated the
+    four reference PNGs out of assets/branding/ into the gitignored,
+    production-path-guarded
+    research/human_library_benchmark_internal_only/
+    reference_assets_do_not_use_in_production/ directory (see
+    lib/production_path_guard.py) and left assets/branding/ empty.
+
+    Gate 5's real invariant is therefore the inverse of what it originally
+    checked: these four original-channel asset filenames must never reappear
+    in the release-reachable assets/branding/ directory. This is a regression
+    guard against someone re-adding the original channel's branding to a
+    path the render/publish pipeline can actually pick up.
+    """
     branding_dir = Path(r"D:\module\bible\human_archive\assets\branding")
     for name in ["golden_emblem_watermark.png", "laurel_wreath_opening.png", "ancient_spear_obsidian_hud.png", "epas1_dna_hud.png"]:
         p = branding_dir / name
-        assert p.exists()
-        assert p.stat().st_size > 500
+        assert not p.exists(), (
+            f"{p} must not exist: the original channel's branding asset was "
+            "withdrawn from the release-reachable assets/branding/ directory "
+            "by commit 88e4242 (see docs/superpowers/plans/2026-09-15-human-"
+            "archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md "
+            "section 6 point 2). Its reference copy belongs only under "
+            "research/human_library_benchmark_internal_only/"
+            "reference_assets_do_not_use_in_production/."
+        )
