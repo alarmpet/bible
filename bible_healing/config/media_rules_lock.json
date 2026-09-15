@@ -47,6 +47,9 @@
     "fontName": "Malgun Gothic",
     "fontSizePx_narrator": 96,
     "fontSizePx_scripture": 100,
+    "fontSizePx_chapter": 70,
+    "chapter_ratio_to_subtitle": 0.70,
+    "chapter_alignment": 9,
     "outlinePx": 6,
     "shadowPx": 3,
     "marginV_px": 90,
@@ -57,7 +60,7 @@
     "directory": "bible_healing/assets/movie-sample/pingpong-1min",
     "required_count": 12,
     "duration_seconds": 60,
-    "speed": 0.333,
+    "speed": 0.1,
     "switch_interval_seconds": 60,
     "still_images_forbidden": true
   },

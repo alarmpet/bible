@@ -50,7 +50,8 @@ Live 본편은 D: final + 오케스트레이터만.
 | 엠비언트 영상 계획 | `../계획서_구약힐링_엠비언트영상_매칭.md` v1.1 |
 | 플레이트 파이프 | ✅ yaml + timeline + assign + qa |
 | 엠비언트 스모크 | `smoke_review/final-sample5-ambient-smoke.mp4` (~6.5분, 플레이트 1) |
-| **최종 본편 (live)** | **`D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4`** — `run_full_media_pipeline.py` 만 |
+| **최종 본편 (live)** | **`D:\bible_healing_ep01\final\deploy-ep01-authoritative-audio-aligned.mp4`** — `run_full_media_pipeline.py` 만 (0.1배속 앰비언트 + 70px 우측상단 챕터) |
+| 썸네일 (옵션 A) | `D:\bible_healing_ep01\final\thumbnail_ep01_optionA.jpg` (1920×1080 4K 롱폼) |
 | ~~구 본편~~ | ~~`hermes_jobs/full/final-ep01-full.mp4`~~ — **legacy, do not deploy** |
 | ~~업로드 복사본~~ | ~~`upload_package/final-ep01-full.mp4`~~ — **legacy** |
 | 권장 청취 샘플 | `voice_casting/sample5_F10_M10_stable.mp3` |

@@ -57,6 +57,11 @@ pytest
   2. 에피소드 스크립트 빌드: `python bible_healing/scripts/build_episode.py --episode ep01_anxious_night`
   3. QA 및 길이 예측: `python bible_healing/scripts/qa_healing_script.py --episode ep01_anxious_night`
   4. Hermes 작업 패킹: `python bible_healing/scripts/pack_to_hermes.py --episode ep01_anxious_night --mode full`
+- **핵심 미디어 규격 (채널 '꿀잠성경' 표준)**:
+  - **배경 영상**: 12개 1분 앰비언트 영상, **0.1배속 초슬로우 모션 (`setpts=10*PTS`)**, 1분 주기 컷 전환
+  - **하단 본문 자막**: 2줄 균형형 자막 (본문 96px, 성경 100px, outline 6, shadow 3, marginV 90)
+  - **우측 상단 챕터 자막**: 권/장/절(`- 시편 4편 -`) 또는 큰 주제(`- 오프닝 -`), **하단 자막의 70% 크기 (70px, Alignment 9)** 지속 노출
+  - **이중 보이스**: 여성 나레이터 F5 (속도 0.95, 피치 -4%) + 남성 성경 낭독 M4 (속도 0.86, 피치 -10%)
 - **핵심 문서**:
   - `CLAUDE.md`: 구약 힐링 작업 규칙 및 필수 게이트
   - `MEDIA_RULES.md`: 미디어 규칙 및 음성/자막/배경 규격
