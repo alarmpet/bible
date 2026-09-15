@@ -279,7 +279,7 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 **완료 기준:** `git status`에서 `human_archive` 미추적 파일이 산출물 디렉터리 제외 0건. `audit_declared_vs_wired.py`가 CI에서 매 PR마다 실행된다.
 
-### Task 1 — 파이프라인 수렴: nollam_file_v1을 ①CLI v5/v6 계약 위에 이식
+### Task 1 — 파이프라인 수렴: nollam_file_v1을 ①CLI v5/v6 계약 위에 이식 — ✅ 완료 (2026-09-15, 커밋 `412152f`)
 
 **Modify**
 - `human_archive/scripts/lib/script_generation.py` (템플릿 경로 하드코딩 제거, profile 기반 선택)
@@ -290,7 +290,11 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 2. nollam_file_v1 프로필 선택 시 `nollam_script_prompt_v3.j2`가 실제로 렌더링되는지 회귀 테스트로 고정한다.
 3. `aligned_prompt_compiler.py`의 `compile_nollam_prompt()`(이미 존재, §1.3)를 Studio 경로 대신 nollam 운영 진입점으로 승격한다.
 
-**완료 기준:** nollam_file_v1 빌드의 `script_candidate.json`이 nollam phase 구조(`phase_1_hook`~`phase_5_epilogue`)와 `visual_mode` 필드를 갖는다.
+**완료 기준 검증:** `channel_profiles.yaml`에 프로필별 `script_template_path`/`script_schema_path`/`script_policy_path`/`image_prompt_compiler` 필드를 신설하고, `resolve_script_paths()`가 이를 읽어 `build_prompt_context()`/`generate_script_candidate()`에 프로필 기반으로 배선했다. `generate_verified_script.py`/`generate_visual_briefs.py`에 opt-in `--profile`/`--channel-profile`을 추가했고, 생략 시 기존 seonbi 동작은 바이트 단위로 그대로 유지된다(CLAUDE.md 문서화된 EP02 흐름은 이 플래그를 쓰지 않는다). 회귀 테스트로 `nollam_script_prompt_v3.j2`가 실제 `script_policy_v3.yaml`을 상대로 렌더링되는 것을 확인하는 과정에서, 템플릿이 seonbi 정책과 같은 `policy.voice.prohibited_patterns`/`policy.voice.neutral_outro` 구조를 기대하는데 실제 nollam 정책 파일에는 그 구조가 없어 `jinja2.StrictUndefined`로 즉시 실패하는 버그를 발견해 함께 고쳤다(YAML 앵커로 값 중복 없이 `voice:` 블록 추가). `generate_script_candidate()`가 nollam 프로필에서 `trend_verified_script_v1.schema.json`으로 실제 검증하고, 같은 nollam 모양 픽스처가 구 seonbi 스키마로는 거부됨을 네거티브 컨트롤로 증명했다 — `visual_mode`와 5단계 phase(`hook/roadmap/evidence/paradigm_shift/philosophical_outro`) 필드가 검증을 통과해 남는 것을 직접 확인했다. `compile_nollam_prompt()`도 `generate_visual_briefs.py`에 실제 배선해, nollam 프로필을 명시하면 (기존에 무조건 쓰이던) seonbi 잉크두들 스타일(`compile_aligned_prompt`의 `STYLE` 상수) 대신 photorealistic 정책으로 이미지 프롬프트가 컴파일됨을 확인했다. 신규 테스트 21개 + 관련 기존 스위트 전체(85개) 통과.
+
+**부수 발견:** `lib/profile_resolver.py`(선언만 되고 프로덕션 호출자가 0건인 채로 남아있던 모듈)의 `pacing_profile_id` 계산이 Task 7에서 `channel_profiles.yaml`에 추가한 것과 **같은 매핑을 독립적으로 재하드코딩**하고 있어 함께 고쳤다 — "같은 설계를 두 곳에서 각자 구현"하는 이 계획서의 핵심 패턴이 이 세션 안에서도 재발했다는 방증.
+
+**의도적으로 다루지 않은 것:** `templates/nollam_script_prompt_v3.j2`가 문장별 `phase`로 지시하는 6개 값(`hook/roadmap/evidence/paradigm_shift/insight/philosophical_outro`)과 `config/script_policy_v3.yaml`의 `story_phases`가 선언하는 5단계(`phase_1_hook~phase_5_outro`) 명명이 서로 다르다 — 이번 Task는 "실제로 렌더링되는가"만 고쳤고, 두 아티팩트 간 phase 명명 불일치 자체는 후속 과제로 남긴다.
 
 ### Task 2 — `D:\all-manage` 오케스트레이션 엔진을 human_archive로 포팅 (§5 설계 구현)
 
