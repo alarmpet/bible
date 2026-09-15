@@ -276,7 +276,7 @@ def audit_subcut_montage_plan(
     """Audit ordered subcut montage plan for A/B toggle loops and role progression.
 
     Enforces Task 5 fail-closed invariants:
-    - Total cuts within bounds [expected_min_cuts, expected_max_cuts]
+    - Total cuts within the caller's documented visual-beat bounds
     - Total frames exactly matches expected_total_frames
     - aba_repeat_count == 0 (no A-B-A or B-A-B 2-back toggle loops)
     - Monotonic role progression (no context_wide after detail_evidence within a parent shot)

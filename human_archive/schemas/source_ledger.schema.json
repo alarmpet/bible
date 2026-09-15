@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SourceLedger",
+  "type": "object",
+  "required": ["schema_version", "topic", "reviewed_at_utc", "sources", "claims"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "topic": { "type": "string" },
+    "reviewed_at_utc": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "title",
+          "authors_or_agency",
+          "year",
+          "url_or_doi",
+          "source_type",
+          "peer_reviewed"
+        ],
+        "properties": {
+          "source_id": { "type": "string" },
+          "title": { "type": "string" },
+          "authors_or_agency": { "type": "string" },
+          "year": { "type": "integer" },
+          "url_or_doi": { "type": "string" },
+          "source_type": { "type": "string", "enum": ["primary_source", "official_agency", "peer_reviewed_journal", "academic_press"] },
+          "peer_reviewed": { "type": "boolean" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "statement",
+          "type",
+          "source_ids",
+          "locators",
+          "entity_scope",
+          "time_scope",
+          "support_level",
+          "allowed_wording",
+          "forbidden_wording",
+          "risk"
+        ],
+        "properties": {
+          "claim_id": { "type": "string" },
+          "statement": { "type": "string" },
+          "type": { "type": "string", "enum": ["verified_fact", "contested_fact", "inference", "bounded_reconstruction", "editorial"] },
+          "source_ids": { "type": "array", "items": { "type": "string" } },
+          "locators": { "type": "array", "items": { "type": "string" } },
+          "entity_scope": { "type": "array", "items": { "type": "string" } },
+          "time_scope": { "type": "array", "items": { "type": "string" } },
+          "conflict_group_id": { "type": ["string", "null"] },
+          "support_level": { "type": "string", "enum": ["high", "medium", "qualified"] },
+          "allowed_wording": { "type": "array", "items": { "type": "string" } },
+          "forbidden_wording": { "type": "array", "items": { "type": "string" } },
+          "risk": { "type": "string", "enum": ["low", "medium", "high"] }
+        }
+      }
+    }
+  }
+}

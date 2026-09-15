@@ -48,3 +48,18 @@ bible_healing/assets/generated/
 bible_healing/runs/
 modern/runs/smoke_g1/
 
+# human_archive: generated build/run outputs and run-scoped audit logs (never commit)
+human_archive/runs/
+human_archive/audit/
+human_archive/audits/
+human_archive/.pytest_temp/
+human_archive/*.pytest-*/
+
+# human_archive: isolated internal-benchmark-only content — never publish, never commit
+# (docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md §6)
+human_archive/research/human_library_benchmark_internal_only/
+
+# human_archive: runtime databases regenerated from seeds/scripts, not source
+human_archive/**/*.sqlite3
+human_archive/**/*.sqlite
+

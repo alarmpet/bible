@@ -1,6 +1,6 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
-  [Parameter(Mandatory=$true)][string]$ExtensionId,
+  [Parameter(Mandatory=$false)][string]$ExtensionId = 'dcfagefigjdcoacookdfcpllckdajfok',
   [string]$PythonExe = 'python'
 )
 $ErrorActionPreference = 'Stop'
@@ -10,7 +10,8 @@ $launcher = (Resolve-Path (Join-Path $PSScriptRoot 'host_launcher.cmd')).Path
 $template = Join-Path $PSScriptRoot 'com.nollam.flow_automation.json.template'
 $installDir = Join-Path $env:LOCALAPPDATA 'NollamFlowAutomation'
 $manifestPath = Join-Path $installDir 'com.nollam.flow_automation.json'
-$manifest = (Get-Content -Raw $template).Replace('__HOST_LAUNCHER__', $launcher).Replace('__EXTENSION_ID__', $ExtensionId)
+$escapedLauncher = $launcher.Replace('\', '\\')
+$manifest = (Get-Content -Raw $template).Replace('__HOST_LAUNCHER__', $escapedLauncher).Replace('__EXTENSION_ID__', $ExtensionId)
 $registryPath = 'HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.nollam.flow_automation'
 $result = [ordered]@{ manifest_path=$manifestPath; registry_path=$registryPath; extension_id=$ExtensionId; python_exe=$PythonExe; what_if=[bool]$WhatIfPreference }
 if ($PSCmdlet.ShouldProcess($manifestPath, 'write native host manifest')) {

@@ -19,6 +19,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from lib.provenance import compute_file_sha256
 from lib.media_probe import measure_ebu_r128_loudness, probe_video_streams
+from lib.production_path_guard import assert_not_isolated_research_path
 
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -99,6 +100,7 @@ def verify_postflight(
     target_fps: int = 25,
 ) -> tuple[bool, dict]:
     video_path = Path(video_path).resolve()
+    assert_not_isolated_research_path(video_path, contract_path, build_dir)
     if not video_path.exists():
         raise SystemExit(f"Target video not found: {video_path}")
 

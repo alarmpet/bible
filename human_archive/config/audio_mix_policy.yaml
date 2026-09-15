@@ -1,0 +1,65 @@
+# 놀람파일 오디오 믹싱 정책 — 인류의 서재 벤치마크 기반
+# 20분 롱폼 시네마틱 다큐멘터리 전용
+
+policy_id: nollam_audio_mix_v1
+profile_id: nollam_file_v1
+
+# TTS 보이스 설정
+voice:
+  provider: elevenlabs
+  voice_lock_id: M2_WARM
+  voice_id: M2
+  speed: 0.95
+  total_step: 10
+  style: "중저음 다큐멘터리 내레이터"
+
+# 마스터링 파라미터
+mastering:
+  target_lufs: -14.0              # 마스터 LUFS
+  true_peak_dbtp: -1.0            # True Peak 상한
+  narration_level_db: -3.0        # 나레이션 레벨
+  bgm_duck_level_db: -18.0       # BGM 덕킹 레벨 (나레이션 구간)
+  bgm_ambient_level_db: -12.0    # BGM 기본 레벨 (무음 구간)
+
+# EQ 설정 (내레이션 트랙)
+eq:
+  highpass_hz: 80                 # 80Hz HPF (저음 럼블 제거)
+  presence_boost_hz: 250          # 250Hz 부스트 (중저음 풍성함)
+  presence_boost_db: 2.5
+  clarity_boost_hz: 3000          # 3kHz 부스트 (명료도)
+  clarity_boost_db: 1.5
+
+# 사운드 디자인
+sound_design:
+  # 전환 효과음
+  transition_whoosh: true         # 챕터 전환 시 우쉬 효과음
+  transition_whoosh_level_db: -20.0
+  
+  # 앰비언트 사운드
+  ambient_enabled: true
+  ambient_categories:
+    - deep_space_drone            # 우주/과학 주제
+    - nature_atmosphere           # 자연/지질 주제
+    - ancient_ambient             # 고대 문명 주제
+    - tension_underscore          # 미스터리 빌드업 구간
+  ambient_level_db: -22.0
+
+  # 임팩트 사운드
+  impact_hit_on_reveal: true      # 핵심 사실 공개 시 임팩트 힛
+  impact_level_db: -15.0
+
+# 구간별 BGM 에너지 매핑
+bgm_energy_curve:
+  cold_open: 0.7                  # 0~15초: 긴장감 있는 시작
+  hook: 0.6                       # 15~60초: 서스펜스 유지
+  roadmap: 0.4                    # 60~120초: 차분한 설명
+  body: 0.3                       # 120~600초: 최소 배경
+  late_body: 0.4                  # 600초~끝-90초: 점진적 상승
+  outro: 0.6                      # 마지막 90초: 감성적 마무리
+
+# 출력 포맷
+output:
+  sample_rate: 48000
+  bit_depth: 24
+  channels: stereo
+  format: wav                     # 마스터링 원본은 WAV, 최종 업로드는 AAC

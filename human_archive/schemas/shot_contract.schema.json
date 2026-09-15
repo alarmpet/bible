@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CanonicalShotContract",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "contract_sha256",
+    "episode_id",
+    "title",
+    "target_duration_sec",
+    "upstream_hashes",
+    "shots"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "contract_sha256": { "type": "string" },
+    "episode_id": { "type": "string" },
+    "title": { "type": "string" },
+    "target_duration_sec": { "type": "integer" },
+    "upstream_hashes": {
+      "type": "object",
+      "required": ["script_sha256", "claim_inventory_sha256", "fact_approval_sha256", "shot_plan_sha256"],
+      "properties": {
+        "script_sha256": { "type": "string" },
+        "claim_inventory_sha256": { "type": "string" },
+        "fact_approval_sha256": { "type": "string" },
+        "shot_plan_sha256": { "type": "string" }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "shot_id",
+          "order",
+          "chapter",
+          "sentence_ids",
+          "display_text",
+          "duration_target_sec",
+          "visual"
+        ],
+        "properties": {
+          "shot_id": { "type": "string" },
+          "order": { "type": "integer" },
+          "chapter": { "type": "integer" },
+          "sentence_ids": { "type": "array", "items": { "type": "string" } },
+          "display_text": { "type": "string" },
+          "tts_text": { "type": "string" },
+          "duration_target_sec": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+          "visual": {
+            "type": "object",
+            "required": ["depiction_mode", "subject", "place", "era", "action", "tone", "must_not", "disclosure"],
+            "properties": {
+              "visual_claim_ids": { "type": "array", "items": { "type": "string" } },
+              "depiction_mode": { "type": "string", "enum": ["documented", "bounded_reconstruction", "metaphor"] },
+              "visual_evidence_scope": { "type": "string" },
+              "subject": { "type": "array", "items": { "type": "string" } },
+              "place": { "type": "string" },
+              "era": { "type": "string" },
+              "action": { "type": "array", "items": { "type": "string" } },
+              "tone": { "type": "string" },
+              "must_not": { "type": "array", "items": { "type": "string" } },
+              "forbidden_implications": { "type": "array", "items": { "type": "string" } },
+              "disclosure": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

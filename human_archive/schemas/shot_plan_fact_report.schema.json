@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShotPlanFactReport",
+  "type": "object",
+  "required": ["schema_version", "verified_at_utc", "total_shots", "invalid_shot_count", "evaluations"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "verified_at_utc": { "type": "string" },
+    "total_shots": { "type": "integer" },
+    "invalid_shot_count": { "type": "integer" },
+    "evaluations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["shot_id", "status", "issues"],
+        "properties": {
+          "shot_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+          "issues": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

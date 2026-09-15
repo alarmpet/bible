@@ -1,0 +1,1 @@
+{"type":"object","required":["manifest_id","ai_media_types","operator_approved"],"properties":{"ai_media_types":{"type":"array","items":{"enum":["synthetic_voice","synthetic_image","synthetic_video","synthetic_music"]}},"operator_approved":{"type":"boolean"}},"additionalProperties":true}

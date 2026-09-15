@@ -1,0 +1,6 @@
+policy_id: trend_safe_release_v1
+schema_version: 1
+manual_operator_required: true
+auto_post: false
+correction_monitor_hours: [6, 24, 72]
+ai_disclosure_required_when: [synthetic_voice, synthetic_image, synthetic_video, synthetic_music]

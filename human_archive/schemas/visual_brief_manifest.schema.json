@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "episode_id",
+    "script_sha256",
+    "timing_sha256",
+    "provider",
+    "model",
+    "brief_manifest_sha256",
+    "briefs"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "episode_id": {
+      "type": "string"
+    },
+    "script_sha256": {
+      "type": "string"
+    },
+    "timing_sha256": {
+      "type": "string"
+    },
+    "fact_approval_sha256": {
+      "type": "string",
+      "pattern": "^[A-F0-9]{64}$"
+    },
+    "fact_review_set_sha256": {
+      "type": "string",
+      "pattern": "^[A-F0-9]{64}$"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "brief_manifest_sha256": {
+      "type": "string"
+    },
+    "briefs": {
+      "type": "array"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": 2
+          }
+        },
+        "required": [
+          "schema_version"
+        ]
+      },
+      "then": {
+        "required": [
+          "fact_approval_sha256",
+          "fact_review_set_sha256"
+        ]
+      }
+    }
+  ]
+}

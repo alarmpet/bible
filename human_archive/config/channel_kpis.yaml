@@ -1,0 +1,9 @@
+schema_version: 1
+calibration_episodes_count: 5
+kpis:
+  retention_15s_target: 0.70
+  retention_30s_target: 0.55
+  hook_review_drop_threshold: 0.20 # 30초 유지율이 20 percentage point 이상 하락 시 다음 훅 재검토
+snapshots_days:
+  - 7
+  - 28

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "episode_id", "script_sha256", "master_audio", "total_duration_sec", "gap_sec", "room_tone", "sentences"],
+  "properties": {
+    "schema_version": {"type": "integer"},
+    "episode_id": {"type": "string"},
+    "script_sha256": {"type": "string", "minLength": 1},
+    "master_audio": {"type": "string"},
+    "total_duration_sec": {"type": "number", "minimum": 0},
+    "gap_sec": {"type": "number", "minimum": 0.35, "maximum": 0.5},
+    "room_tone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "peak_dbfs", "sample_rate", "channels", "duration_sec"],
+      "properties": {
+        "mode": {"const": "deterministic_low_level"},
+        "peak_dbfs": {"type": "number", "maximum": -35},
+        "sample_rate": {"const": 48000},
+        "channels": {"const": 1},
+        "duration_sec": {"type": "number", "minimum": 0.35, "maximum": 0.5}
+      }
+    },
+    "sentences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sentence_id", "order", "chapter", "beat", "tts_text", "start_sec", "end_sec", "duration_sec", "audio_file", "wav_sha256", "provenance"],
+        "properties": {
+          "sentence_id": {"type": "string"},
+          "order": {"type": "integer"},
+          "chapter": {},
+          "beat": {"type": "string"},
+          "tts_text": {"type": "string"},
+          "start_sec": {"type": "number"},
+          "end_sec": {"type": "number"},
+          "duration_sec": {"type": "number", "exclusiveMinimum": 0},
+          "audio_file": {"type": "string"},
+          "wav_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+          "provenance": {"type": "object"}
+        }
+      }
+    }
+  }
+}

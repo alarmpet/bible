@@ -1,0 +1,9 @@
+policy_id: nollam_trend_v1
+schema_version: 1
+profile_id: nollam_file_v1
+discovery_role: DISCOVERY_ONLY
+freshness_classes: [DAILY, STABLE]
+core_claim_min_sources: 2
+direct_record_core_claims: [sports_score, official_filing, court_order]
+unverified_usage: attributed_non_core_rumor_explanation_only
+human_approval_required: [privacy, minor, allegation, legal_review]

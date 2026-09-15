@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChannelProfile",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["schema_version", "default_profile_id", "profiles"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "default_profile_id": {"type": "string"},
+        "profiles": {"type": "object", "minProperties": 1}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "default_profile_id", "profiles"],
+      "properties": {
+        "schema_version": {"const": 2},
+        "default_profile_id": {"type": "string", "minLength": 1},
+        "profiles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": ["display_name", "is_default", "visual", "narration"],
+            "properties": {
+              "display_name": {"type": "string", "minLength": 1},
+              "is_default": {"type": "boolean"},
+              "visual": {"type": "object", "required": ["aspect_ratio", "fps"]},
+              "narration": {"type": "object", "required": ["language"]},
+              "delivery_profile": {"type": "string"},
+              "delivery_profile_id": {"type": "string"},
+              "voice_lock_id": {"type": "string"},
+              "freshness_classes": {"type": "array", "items": {"enum": ["DAILY", "STABLE"]}},
+              "discovery_role": {"const": "DISCOVERY_ONLY"}
+            },
+            "allOf": [
+              {"not": {"required": ["delivery_profile", "delivery_profile_id"]}},
+              {"if": {"required": ["voice_lock_id"]}, "then": {"required": ["delivery_profile_id", "voice_lock_id"]}}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

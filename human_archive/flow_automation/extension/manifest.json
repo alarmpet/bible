@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsl9v0vQBuz/dr0azVj1iOc6jmpn1wmHV9cHgfnJsp9jaKRs9npwOS55cpeLNZ6z/xfzJ/EU2bhuZ53IjgzpUnDqABWpmGZnw8Pkli6qMBc7rxuDBMMx7UTfrzDbremOGmcRqsulFSid5dlCqr/00XgEtZtzCtH9KF1RNBwSxAyI0ixZLO99LooZokIsMfQaf2tKSlvpZQweU/4vECtTdoeLbFC5CGI+4HiVBCdQi4x/K3FCFfVBkUgjKXfDTEM6MgX6Ar5RbVLlBUr5NPdCaHKqCUTzOpzYeSUE9W+K6vc3or6YNdKP3E5caxG4XDG6aMhBYfBewLF2go/xUcaGfhwIDAQAB",
   "name": "NOLLAM Flow Automation",
   "version": "0.1.0",
   "description": "Fail-closed bulk image generation orchestration for Google Flow.",
@@ -8,5 +9,11 @@
   "action": {"default_title": "Open NOLLAM Flow Automation"},
   "background": {"service_worker": "service-worker.js", "type": "module"},
   "side_panel": {"default_path": "sidepanel/index.html"},
-  "content_scripts": [{"matches": ["https://labs.google/*/tools/flow/project/*"], "js": ["content/flow-adapter.js"]}]
+  "content_scripts": [{"matches": ["https://labs.google/*/tools/flow/project/*"], "js": ["content/content-script.js"]}],
+  "web_accessible_resources": [
+    {
+      "resources": ["content/*"],
+      "matches": ["https://labs.google/*"]
+    }
+  ]
 }

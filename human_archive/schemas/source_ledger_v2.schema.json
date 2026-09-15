@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SourceLedgerV2",
+  "type": "object",
+  "required": ["schema_version", "episode_id", "sources", "claims"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 2 },
+    "episode_id": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "title",
+          "author_or_agency",
+          "year",
+          "source_type",
+          "peer_reviewed",
+          "evidence_spans"
+        ],
+        "properties": {
+          "source_id": { "type": "string" },
+          "title": { "type": "string" },
+          "author_or_agency": { "type": "string" },
+          "year": { "type": "integer" },
+          "source_type": {
+            "type": "string",
+            "enum": ["primary_source", "academic_paper", "official_agency", "academic_book", "excavation_report"]
+          },
+          "peer_reviewed": { "type": "boolean" },
+          "url_or_doi": { "type": "string" },
+          "evidence_spans": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "span_id",
+                "locator",
+                "excerpt",
+                "excerpt_language",
+                "translation",
+                "translation_credit",
+                "capture_method",
+                "captured_at_utc",
+                "snapshot_sha256"
+              ],
+              "properties": {
+                "span_id": { "type": "string" },
+                "locator": { "type": "string" },
+                "excerpt": { "type": "string" },
+                "excerpt_language": { "type": "string" },
+                "translation": { "type": "string" },
+                "translation_credit": { "type": "string" },
+                "capture_method": {
+                  "type": "string",
+                  "enum": ["manual_verified_excerpt", "api_snapshot", "official_publication_ocr"]
+                },
+                "captured_at_utc": { "type": "string" },
+                "snapshot_sha256": { "type": "string", "pattern": "^[A-F0-9]{64}$" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "statement",
+          "type",
+          "risk",
+          "source_ids",
+          "evidence_refs",
+          "allowed_wording",
+          "forbidden_wording"
+        ],
+        "properties": {
+          "claim_id": { "type": "string" },
+          "statement": { "type": "string" },
+          "type": { "type": "string", "enum": ["verified_fact", "contested_fact", "absence_based_inference", "reconstruction"] },
+          "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+          "source_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "evidence_refs": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "approved_paraphrases": { "type": "array", "items": { "type": "string" } },
+          "allowed_wording": { "type": "array", "items": { "type": "string" } },
+          "forbidden_wording": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

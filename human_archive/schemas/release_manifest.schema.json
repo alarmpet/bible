@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PolymorphicReleaseManifest",
+  "description": "Schema for NOLLAM polymorphic release manifests covering historical V2/V3 and official V4/V5 releases.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "release_schema_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "release_schema_version": {
+      "type": "string",
+      "enum": [
+        "HISTORICAL_PRODUCTION_RELEASE",
+        "HISTORICAL_PRODUCTION_RELEASE_V3",
+        "OFFICIAL_PRODUCTION_RELEASE_V4",
+        "OFFICIAL_PRODUCTION_RELEASE_V5"
+      ]
+    },
+    "release_id": {
+      "type": "string"
+    },
+    "supersedes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "generated_at_utc": {
+      "type": "string"
+    },
+    "video_file": {
+      "type": "string"
+    },
+    "video_path": {
+      "type": "string"
+    },
+    "video_sha256": {
+      "type": "string",
+      "pattern": "^[A-Fa-f0-9]{64}$"
+    },
+    "audio_file": {
+      "type": "string"
+    },
+    "audio_path": {
+      "type": "string"
+    },
+    "audio_sha256": {
+      "type": "string",
+      "pattern": "^[A-Fa-f0-9]{64}$"
+    },
+    "mirror_path": {
+      "type": "string"
+    },
+    "mirror_sha256": {
+      "type": "string",
+      "pattern": "^[A-Fa-f0-9]{64}$"
+    },
+    "mirror_size_bytes": {
+      "type": "integer"
+    },
+    "pre_mux_video_duration_sec": {
+      "type": "number"
+    },
+    "final_video_duration_sec": {
+      "type": "number"
+    },
+    "final_audio_duration_sec": {
+      "type": "number"
+    },
+    "parity_difference_sec": {
+      "type": "number"
+    },
+    "pre_mux_parity_difference_sec": {
+      "type": "number"
+    },
+    "final_stream_parity_difference_sec": {
+      "type": "number"
+    },
+    "first_frame_visibility_passed": {
+      "type": "boolean"
+    },
+    "baretip_in_opening_rejected": {
+      "type": "boolean"
+    },
+    "motion_diversity_passed": {
+      "type": "boolean"
+    },
+    "total_shots": {
+      "type": "integer"
+    },
+    "opening_group_cuts": {
+      "type": "integer"
+    },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "artifact_registry": {
+      "type": "object"
+    },
+    "opening_cuts_audit": {
+      "type": "object"
+    },
+    "subtitles_manifest": {
+      "type": "object"
+    },
+    "topic": {
+      "type": "object"
+    }
+  },
+  "if": {
+    "properties": {
+      "release_schema_version": {
+        "enum": [
+          "OFFICIAL_PRODUCTION_RELEASE_V4",
+          "OFFICIAL_PRODUCTION_RELEASE_V5"
+        ]
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "video_file",
+      "video_sha256",
+      "audio_file",
+      "audio_sha256",
+      "first_frame_visibility_passed",
+      "baretip_in_opening_rejected",
+      "motion_diversity_passed"
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+policy_id: nollam_file_narration_v1
+schema_version: 1
+persona_id: nollam_curious_explainer_v1
+voice_lock_id: M2_WARM
+voice: M2
+speed: 0.95
+total_step: 10
+language: ko

@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HumanLibraryReplicaContractV1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "episode_id",
+    "title",
+    "target_duration_sec",
+    "pacing_summary",
+    "total_shots",
+    "total_sentences",
+    "shots"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "episode_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_duration_sec": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "total_shots": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "total_sentences": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pacing_summary": {
+      "type": "object",
+      "required": [
+        "opening_cuts",
+        "tier1_cuts",
+        "tier2_cuts",
+        "tier3_cuts"
+      ],
+      "properties": {
+        "opening_cuts": {
+          "type": "integer"
+        },
+        "tier1_cuts": {
+          "type": "integer"
+        },
+        "tier2_cuts": {
+          "type": "integer"
+        },
+        "tier3_cuts": {
+          "type": "integer"
+        }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "shot_id",
+          "order",
+          "pacing_tier",
+          "look_type",
+          "motion_profile",
+          "duration_sec",
+          "start_sec",
+          "end_sec",
+          "sentence_spans",
+          "display_text",
+          "spoken_text",
+          "visual"
+        ],
+        "properties": {
+          "shot_id": {
+            "type": "string",
+            "pattern": "^SHOT_\\d{3}$"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pacing_tier": {
+            "enum": [
+              "Opening",
+              "Tier 1",
+              "Tier 2",
+              "Tier 3"
+            ]
+          },
+          "look_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "motion_profile": {
+            "type": "object",
+            "required": [
+              "motion_family",
+              "axis",
+              "phases"
+            ],
+            "properties": {
+              "motion_family": {
+                "type": "string",
+                "minLength": 1
+              },
+              "axis": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "duration_sec": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "start_sec": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end_sec": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "sentence_spans": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^SENT_\\d{3}$"
+            }
+          },
+          "display_text": {
+            "type": "string"
+          },
+          "spoken_text": {
+            "type": "string"
+          },
+          "visual": {
+            "type": "object",
+            "required": [
+              "subject",
+              "place",
+              "era",
+              "action",
+              "prompt_en"
+            ],
+            "properties": {
+              "subject": {
+                "type": "string"
+              },
+              "place": {
+                "type": "string"
+              },
+              "era": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "tone": {
+                "type": "string"
+              },
+              "prompt_en": {
+                "type": "string",
+                "minLength": 20
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

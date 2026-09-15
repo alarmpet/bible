@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VerifiedScriptV2",
+  "type": "object",
+  "required": ["schema_version", "episode_id", "persona", "title", "target_duration_sec", "sentences"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 2 },
+    "episode_id": { "type": "string" },
+    "persona": { "type": "string", "enum": ["ship_seonbi", "standard"] },
+    "title": { "type": "string" },
+    "target_duration_sec": { "type": "integer" },
+    "sentences": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["sentence_id", "order", "chapter", "beat", "display_text", "tts_text", "segments"],
+        "properties": {
+          "sentence_id": { "type": "string" },
+          "order": { "type": "integer" },
+          "chapter": { "type": "integer" },
+          "beat": {
+            "type": "string",
+            "enum": ["hook", "roadmap", "body", "analogy", "source_commentary", "insight", "outro"]
+          },
+          "display_text": { "type": "string" },
+          "tts_text": { "type": "string" },
+          "segments": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["kind", "text"],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": ["transition", "fact", "analogy", "direct_quote", "insight"]
+                },
+                "text": { "type": "string" },
+                "claim_id": { "type": "string" },
+                "evidence_span_ids": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "disclosure": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

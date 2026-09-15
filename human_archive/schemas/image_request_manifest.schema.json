@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "episode_id", "provider", "requests"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "episode_id": {"type": "string"},
+    "provider": {"type": "string"},
+    "requests": {"type": "array", "items": {"type": "object", "required": ["request_id", "scene_id", "positive_prompt", "negative", "request_sha256"]}}
+  }
+}

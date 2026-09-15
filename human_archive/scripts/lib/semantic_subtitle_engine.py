@@ -201,7 +201,7 @@ class SemanticSubtitleEngine:
         self.max_clause_chars = max_clause_chars
 
     def generate_header(self, title: str = "History-Ida Master Subtitles") -> str:
-        """Generate ASS script header with high-readability DocuNarrator_v4 52pt style."""
+        """Generate ASS script header with high-readability DocuNarrator styles."""
         return f"""[Script Info]
 Title: {title}
 ScriptType: v4.00+
@@ -213,33 +213,54 @@ PlayResY: {self.play_res_y}
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: DocuNarrator_v4,{self.font_name},{self.font_size},&H00FFFFFF,&H000000FF,&H000C0C12,&H90000000,-1,0,0,0,100,100,0,0,1,3.5,2.0,2,{self.margin_l},{self.margin_r},{self.margin_v},1
+Style: DocuNarrator_Exact,{self.font_name},44,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,3,2.0,0,2,40,40,65,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
-    def process_shot_to_events(self, shot: Dict[str, Any]) -> List[str]:
+    def process_shot_to_events(
+        self,
+        shot: Dict[str, Any],
+        style_name: str = "DocuNarrator_v4",
+        highlight_keywords: bool = False,
+    ) -> List[str]:
         """Convert a single shot dictionary into 1 or more timed ASS Dialogue lines."""
-        display_text = (shot.get("display_text") or shot.get("narration") or "").strip()
+        display_text = (shot.get("display_text") or shot.get("narration") or shot.get("spoken_text") or "").strip()
         if not display_text:
             return []
 
-        # Determine timestamps
-        if "speech_start" in shot and "speech_end" in shot:
+        # Determine timestamps (SSOT priority order)
+        if "global_start_sec" in shot and "global_end_sec" in shot:
+            t_start = float(shot["global_start_sec"])
+            t_end = float(shot["global_end_sec"])
+        elif "start_sec" in shot and "end_sec" in shot:
+            t_start = float(shot["start_sec"])
+            t_end = float(shot["end_sec"])
+        elif "start_sec" in shot and "duration_sec" in shot:
+            t_start = float(shot["start_sec"])
+            t_end = t_start + float(shot["duration_sec"])
+        elif "speech_start" in shot and "speech_end" in shot:
             t_start = float(shot["speech_start"])
             t_end = float(shot["speech_end"])
         elif "start_time" in shot and "speech_duration" in shot:
             t_start = float(shot["start_time"])
             t_end = t_start + float(shot["speech_duration"])
+        elif "start_time" in shot and "duration_sec" in shot:
+            t_start = float(shot["start_time"])
+            t_end = t_start + float(shot["duration_sec"])
         elif "startSeconds" in shot and "endSeconds" in shot:
             t_start = float(shot["startSeconds"])
             t_end = float(shot["endSeconds"])
         elif "speech_start" in shot and "speech_duration" in shot:
             t_start = float(shot["speech_start"])
             t_end = t_start + float(shot["speech_duration"])
+        elif "start_time" in shot and "end_time" in shot:
+            t_start = float(shot["start_time"])
+            t_end = float(shot["end_time"])
         else:
-            t_start = float(shot.get("start_time", 0.0))
-            t_end = t_start + float(shot.get("scene_duration", 5.0))
+            t_start = float(shot.get("start_time", shot.get("start_sec", 0.0)))
+            t_end = t_start + float(shot.get("scene_duration", shot.get("duration_sec", 5.0)))
 
         duration = max(1.0, t_end - t_start)
 
@@ -257,12 +278,20 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             else:
                 clauses_with_weights.append(sent)
 
+        def _format_clause(c: str) -> str:
+            res = split_korean_two_lines(c, max_line_chars=self.max_line_chars)
+            if highlight_keywords:
+                # Highlight numbers, measurements, and key punchlines in vivid yellow
+                pat = r"(\b\d+[만억천백십]?(?:\s*(?:년|cm|센티미터|도|퍼센트|%|m|개|명))?|인종이 없었습니다|산소가 반밖에|전염병에|에어컨|라디에이터|EPAS1|데니소바인)"
+                res = re.sub(pat, r"{\\c&H003BEBFF&}\1{\\c&H00FFFFFF&}", res)
+            return res
+
         # If only 1 clause, format directly into <= 2 lines
         if len(clauses_with_weights) == 1:
-            formatted = split_korean_two_lines(clauses_with_weights[0], max_line_chars=self.max_line_chars)
+            formatted = _format_clause(clauses_with_weights[0])
             start_ass = seconds_to_ass(t_start)
             end_ass = seconds_to_ass(t_end)
-            return [f"Dialogue: 0,{start_ass},{end_ass},DocuNarrator_v4,,0,0,0,,{formatted}"]
+            return [f"Dialogue: 0,{start_ass},{end_ass},{style_name},,0,0,0,,{formatted}"]
 
         # Multiple clauses: apportion duration proportionally by character count
         total_chars = sum(len(c) for c in clauses_with_weights)
@@ -275,10 +304,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             c_start = cur_t
             c_end = cur_t + c_dur if idx < len(clauses_with_weights) - 1 else t_end
 
-            formatted = split_korean_two_lines(clause, max_line_chars=self.max_line_chars)
+            formatted = _format_clause(clause)
             start_ass = seconds_to_ass(c_start)
             end_ass = seconds_to_ass(c_end)
-            events.append(f"Dialogue: 0,{start_ass},{end_ass},DocuNarrator_v4,,0,0,0,,{formatted}")
+            events.append(f"Dialogue: 0,{start_ass},{end_ass},{style_name},,0,0,0,,{formatted}")
 
             cur_t = c_end
 
@@ -289,13 +318,17 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         shots: List[Dict[str, Any]],
         output_path: Path,
         title: str = "History-Ida Master Subtitles",
+        style_name: str = "DocuNarrator_v4",
+        highlight_keywords: bool = False,
     ) -> Path:
         """Compile full ASS file from a list of shots and write to disk."""
         header = self.generate_header(title=title)
         dialogue_events = []
 
         for shot in shots:
-            events = self.process_shot_to_events(shot)
+            events = self.process_shot_to_events(
+                shot, style_name=style_name, highlight_keywords=highlight_keywords
+            )
             dialogue_events.extend(events)
 
         content = header + "\n".join(dialogue_events) + "\n"

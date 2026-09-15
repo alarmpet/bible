@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BuildManifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "build_id",
+    "rendered_at_utc",
+    "contract_sha256",
+    "asset_manifest_sha256",
+    "audio_manifest_sha256",
+    "subtitles_sha256",
+    "candidate_video_sha256"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "build_id": { "type": "string" },
+    "rendered_at_utc": { "type": "string" },
+    "contract_sha256": { "type": "string" },
+    "asset_manifest_sha256": { "type": "string" },
+    "audio_manifest_sha256": { "type": "string" },
+    "subtitles_sha256": { "type": "string" },
+    "candidate_video_sha256": { "type": "string" }
+  }
+}

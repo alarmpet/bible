@@ -52,7 +52,7 @@ def validate_asset(job: Mapping[str, Any], shot_id: str, chrome_path: str | Path
     except (UnidentifiedImageError, OSError):
         return _reject(job, shot, source, root, "IMAGE_DECODE_FAILED")
     if mime not in ALLOWED_MIME_TYPES: return _reject(job, shot, source, root, "UNSUPPORTED_MEDIA_TYPE", width=width, height=height, mime_type=mime)
-    if width * 9 != height * 16: return _reject(job, shot, source, root, "INVALID_ASPECT_RATIO", width=width, height=height, mime_type=mime)
+    if width * 9 != height * 16 and abs(width / height - 16 / 9) > 0.05: return _reject(job, shot, source, root, "INVALID_ASPECT_RATIO", width=width, height=height, mime_type=mime)
     original_name = source.name
     source_digest = _sha256_file(source)
     approved = root / "approved" / str(shot["expected_filename"])

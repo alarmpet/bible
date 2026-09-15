@@ -1,0 +1,25 @@
+schema_version: 2
+episode_id: "HA001"
+title: "폼페이 최후의 밤 — 많은 이들은 떠났고, 누가 남았나"
+format_profile: "standard_docu"
+genre: "ANCIENT_DISASTER_HISTORY"
+historical_period: "AD 79 (고대 로마 제국)"
+location: "폼페이, 미세눔, 스타비아이, 베수비오 화산"
+target_duration_sec: 1200 # 기본 1200초 (허용 범위: 840초 ~ 1560초, +-30%)
+slogan: "역사가 어렵다구요? 이 선비가 귀에 쏙 넣어 드리지요!"
+research_status: "approved"
+core_question: "폼페이 희생자는 도시 전체가 아니었습니다. 많은 사람은 빠져나갔습니다. 남겨진 이들은 누구였고, 마지막 밤의 위험은 어떻게 바뀌었을까요?"
+opening_hooks:
+  hook_15s: "폼페이에서 발견된 희생자는 도시 전체가 아니었습니다. 많은 사람은 빠져나갔습니다."
+  roadmap_45s: "서기 79년 가을, 베수비오 화산의 18시간 분출 동안 도시에 남겨진 이들의 실체와 변화하는 재난의 위험을 추적합니다."
+source_references:
+  - "플리니우스 서한집 (Pliny the Younger, Epistles 6.16, 6.20)"
+  - "이탈리아 국립지구물리학화산학연구소 (INGV) 베수비오 종합 보고서 (2022)"
+  - "폼페이 화쇄밀도류(PDC) 동역학 및 위험도 연구 (Nature Scientific Reports, 2021)"
+  - "폼페이 유적청 (Parco Archeologico di Pompei) 발굴 및 고대 DNA 분석 데이터 (2024)"
+structure_4phase:
+  phase_1_hook: "첫 연기와 다수 탈출 — 오해와 진실 (0:00-3:00, 빠른 컷 전환)"
+  phase_2_context: "지붕의 붕괴와 퇴로의 차단 — 밤의 공포 (3:00-9:00, 중간 컷 전환)"
+  phase_3_evidence: "새벽의 화쇄류와 사망 기전의 실체 (9:00-15:00, 안정적 사료 중계)"
+  phase_4_insight: "발굴사의 오류 교정과 현대 인류에게 남긴 질문 (15:00-20:00, 깊은 여운 롱테이크)"
+content_disclosure: "본 영상은 INGV 및 폼페이 유적청의 고고학적 사료와 최신 동료평가 연구를 기반으로 제작되었으며, 시각 장면 중 일부는 학술적 근거에 기반한 AI 재현입니다."

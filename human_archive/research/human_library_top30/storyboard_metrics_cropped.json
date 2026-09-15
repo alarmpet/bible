@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "videos": [
+    {
+      "rank": 1,
+      "id": "tPBVrfcU85g",
+      "interval_sec": 9.828,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 0.9898
+    },
+    {
+      "rank": 2,
+      "id": "o-x6sIGANPY",
+      "interval_sec": 9.931,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 3,
+      "id": "1hWiArIW_wY",
+      "interval_sec": 9.875,
+      "median_phash_top72": 26.0,
+      "near_duplicate_ratio_le_6": 0.0559,
+      "strong_change_ratio_ge_14": 0.8462
+    },
+    {
+      "rank": 4,
+      "id": "G7NU2cndsAU",
+      "interval_sec": 9.864,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0342,
+      "strong_change_ratio_ge_14": 0.9658
+    },
+    {
+      "rank": 5,
+      "id": "7xPoMQVXcwI",
+      "interval_sec": 9.898,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 0.9907
+    },
+    {
+      "rank": 6,
+      "id": "rWT_Mme7wvs",
+      "interval_sec": 9.86,
+      "median_phash_top72": 32.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 7,
+      "id": "-v8yEkTavT4",
+      "interval_sec": 9.893,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 8,
+      "id": "5aYz15TsOEQ",
+      "interval_sec": 9.909,
+      "median_phash_top72": 28.0,
+      "near_duplicate_ratio_le_6": 0.0248,
+      "strong_change_ratio_ge_14": 0.8678
+    },
+    {
+      "rank": 9,
+      "id": "KwzHGnkP_9s",
+      "interval_sec": 9.843,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 10,
+      "id": "Tcuqh4-XqNU",
+      "interval_sec": 9.849,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 11,
+      "id": "zqSeTZuR3T4",
+      "interval_sec": 9.862,
+      "median_phash_top72": 31.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 12,
+      "id": "XzMxtGjQu8Y",
+      "interval_sec": 9.838,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 0.9909
+    },
+    {
+      "rank": 13,
+      "id": "fzssMVVENoU",
+      "interval_sec": 9.871,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0087,
+      "strong_change_ratio_ge_14": 0.9652
+    },
+    {
+      "rank": 14,
+      "id": "afRoBP2uoiA",
+      "interval_sec": 9.85,
+      "median_phash_top72": 28.0,
+      "near_duplicate_ratio_le_6": 0.0252,
+      "strong_change_ratio_ge_14": 0.8655
+    },
+    {
+      "rank": 15,
+      "id": "MHlJC0MZYiU",
+      "interval_sec": 9.866,
+      "median_phash_top72": 29.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 0.9911
+    },
+    {
+      "rank": 16,
+      "id": "yrdNprkuRw4",
+      "interval_sec": 4.756,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0056,
+      "strong_change_ratio_ge_14": 0.9888
+    },
+    {
+      "rank": 17,
+      "id": "MQr2a3Rn6ZI",
+      "interval_sec": 9.836,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0086,
+      "strong_change_ratio_ge_14": 0.9914
+    },
+    {
+      "rank": 18,
+      "id": "vxbvDhYGNho",
+      "interval_sec": 9.835,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 0.9917
+    },
+    {
+      "rank": 19,
+      "id": "bQ89UHaRdIg",
+      "interval_sec": 9.879,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0345,
+      "strong_change_ratio_ge_14": 0.9138
+    },
+    {
+      "rank": 20,
+      "id": "zl8OohLCwdA",
+      "interval_sec": 9.884,
+      "median_phash_top72": 28.0,
+      "near_duplicate_ratio_le_6": 0.018,
+      "strong_change_ratio_ge_14": 0.8649
+    },
+    {
+      "rank": 21,
+      "id": "s2YoR22SwOE",
+      "interval_sec": 9.875,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 0.9916
+    },
+    {
+      "rank": 22,
+      "id": "Xy_mPlREOf8",
+      "interval_sec": 9.909,
+      "median_phash_top72": 32.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 23,
+      "id": "t1OLCzOt7A8",
+      "interval_sec": 9.891,
+      "median_phash_top72": 28.0,
+      "near_duplicate_ratio_le_6": 0.0459,
+      "strong_change_ratio_ge_14": 0.9358
+    },
+    {
+      "rank": 24,
+      "id": "gQKg5-V9oV8",
+      "interval_sec": 9.862,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 25,
+      "id": "DJ5FtDAME4Y",
+      "interval_sec": 9.894,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 0.9911
+    },
+    {
+      "rank": 26,
+      "id": "gMDnPhlbOYo",
+      "interval_sec": 9.886,
+      "median_phash_top72": 32.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 27,
+      "id": "R1fuPFqtXoA",
+      "interval_sec": 9.882,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0066,
+      "strong_change_ratio_ge_14": 0.9934
+    },
+    {
+      "rank": 28,
+      "id": "5HC9hUz4dD4",
+      "interval_sec": 9.845,
+      "median_phash_top72": 32.0,
+      "near_duplicate_ratio_le_6": 0.0078,
+      "strong_change_ratio_ge_14": 0.9922
+    },
+    {
+      "rank": 29,
+      "id": "-w25CK4W6Y0",
+      "interval_sec": 9.848,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    },
+    {
+      "rank": 30,
+      "id": "9mzyGn1fCPw",
+      "interval_sec": 9.878,
+      "median_phash_top72": 30.0,
+      "near_duplicate_ratio_le_6": 0.0,
+      "strong_change_ratio_ge_14": 1.0
+    }
+  ]
+}

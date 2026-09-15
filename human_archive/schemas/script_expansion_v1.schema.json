@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScriptExpansionV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "episode_id",
+    "base_script_sha256",
+    "target_duration_sec",
+    "blocks"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "episode_id": { "type": "string", "const": "HA002" },
+    "base_script_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "target_duration_sec": { "type": "integer", "const": 1080 },
+    "blocks": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["after_sentence_id", "chapter", "sentences"],
+        "properties": {
+          "after_sentence_id": {
+            "type": "string",
+            "enum": [
+              "HA002-S018",
+              "HA002-S036",
+              "HA002-S054",
+              "HA002-S072",
+              "HA002-S090",
+              "HA002-S108",
+              "HA002-S124"
+            ]
+          },
+          "chapter": { "type": "integer", "minimum": 1, "maximum": 7 },
+          "sentences": {
+            "type": "array",
+            "minItems": 13,
+            "maxItems": 13,
+            "items": { "$ref": "#/$defs/sentence" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sentence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sentence_id",
+        "order",
+        "chapter",
+        "beat",
+        "display_text",
+        "tts_text",
+        "segments",
+        "disclosure"
+      ],
+      "properties": {
+        "sentence_id": {
+          "type": "string",
+          "pattern": "^HA002-V6-N[0-9]{3}$"
+        },
+        "order": { "type": "integer", "minimum": 127, "maximum": 217 },
+        "chapter": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "beat": {
+          "type": "string",
+          "enum": ["body", "analogy", "source_commentary", "insight"]
+        },
+        "display_text": { "type": "string", "minLength": 10, "maxLength": 45 },
+        "tts_text": { "type": "string", "minLength": 10, "maxLength": 45 },
+        "segments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "$ref": "#/$defs/segment" }
+        },
+        "disclosure": { "type": ["string", "null"] }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "text", "claim_id", "evidence_span_ids"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["transition", "fact", "analogy", "direct_quote", "insight"]
+        },
+        "text": { "type": "string", "minLength": 10, "maxLength": 45 },
+        "claim_id": {
+          "type": ["string", "null"],
+          "enum": [
+            null,
+            "CLM-JH-001",
+            "CLM-JH-002",
+            "CLM-JH-003",
+            "CLM-JH-004",
+            "CLM-JH-005",
+            "CLM-JH-006",
+            "CLM-JH-007"
+          ]
+        },
+        "evidence_span_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

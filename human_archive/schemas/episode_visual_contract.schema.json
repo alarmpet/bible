@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "episode_id", "captions", "scenes"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "episode_id": {"type": "string"},
+    "script_sha256": {"type": "string"},
+    "captions": {"type": "array", "items": {"type": "object", "required": ["caption_id", "sentence_id", "text_span", "text_sha256", "scene_id"]}},
+    "scenes": {"type": "array", "items": {"type": "object", "required": ["scene_id", "order", "visual_beat", "subject_refs", "subject_lock", "place", "era", "action", "depiction_mode", "tone", "must_not", "disclosure"]}}
+  }
+}

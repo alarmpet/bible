@@ -1,6 +1,22 @@
-import messageTypes from '../shared/message_types.json' with { type: 'json' };
+const CANONICAL_MESSAGE_TYPES = [
+  "HELLO",
+  "LOAD_JOB",
+  "JOB_START_REQUESTED",
+  "SHOT_SUBMITTED",
+  "SHOT_RESULT_FOUND",
+  "DOWNLOAD_STARTED",
+  "DOWNLOAD_COMPLETED",
+  "SHOT_FAILED",
+  "JOB_STOPPED",
+  "JOB_STATE",
+  "RUN_SHOT",
+  "SHOT_ACCEPTED",
+  "SHOT_RETRY",
+  "JOB_PAUSED",
+  "JOB_COMPLETED"
+];
 
-const MESSAGE_TYPES = new Set(messageTypes);
+const MESSAGE_TYPES = new Set(CANONICAL_MESSAGE_TYPES);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const ALLOWED_KEYS = new Set(['protocol_version', 'message_id', 'type', 'job_id', 'payload']);
 

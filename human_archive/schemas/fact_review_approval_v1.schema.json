@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FactReviewApprovalV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision",
+    "reviewer_id",
+    "role",
+    "approved_at_utc",
+    "approval_source",
+    "artifacts",
+    "review_scope",
+    "unresolved_issues",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "decision": {
+      "type": "string",
+      "const": "approved"
+    },
+    "reviewer_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "type": "string",
+      "const": "Human fact and editorial reviewer"
+    },
+    "approved_at_utc": {
+      "type": "string",
+      "pattern": "(Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "approval_source": {
+      "type": "string",
+      "const": "explicit_user_confirmation_in_codex_thread"
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "script_sha256",
+        "fact_report_sha256",
+        "persona_report_sha256",
+        "claim_inventory_sha256",
+        "source_snapshot_sha256"
+      ],
+      "properties": {
+        "script_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "fact_report_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "persona_report_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "claim_inventory_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_snapshot_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "review_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_required_count",
+        "review_set_sha256",
+        "items"
+      ],
+      "properties": {
+        "review_required_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "review_set_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "review_id",
+              "sentence_id",
+              "segment_index",
+              "kind",
+              "claim_id",
+              "issues"
+            ],
+            "properties": {
+              "review_id": {
+                "type": "string",
+                "pattern": "^.+:[0-9]+$"
+              },
+              "sentence_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "segment_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "fact",
+                  "direct_quote"
+                ]
+              },
+              "claim_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "issues": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "type": "string",
+                  "const": "Segment phrasing differs from approved paraphrase"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unresolved_issues": {
+      "type": "integer",
+      "const": 0
+    },
+    "notes": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[A-F0-9]{64}$"
+    }
+  }
+}

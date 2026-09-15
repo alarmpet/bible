@@ -1,0 +1,76 @@
+# Narration-aligned visual brief generation
+
+Return only one JSON object accepted by the supplied output schema.
+
+Episode: {{ episode_id }}
+Required brief count: {{ brief_count }}
+
+## Immutable shot contract
+
+- Emit exactly one brief for every supplied shot.
+- Preserve every `shot_id` exactly and keep the supplied order.
+- Copy each `narration_digest` exactly; do not rewrite, summarize, or translate it.
+- Use `host_chapter_hinge` for exactly the IDs in `host_shot_ids`, and never for another shot.
+- For a host shot, describe a background plate with no people, hands, faces, or body parts. Keep the vignette in the left 55 percent and clean ivory space in the right 40 percent for the canonical host overlay.
+- For every non-host shot, prohibit presenters, pointing scholars, mascots, and direct-to-camera figures.
+
+## Evidence and depiction rules
+
+- Use only facts present in the supplied narration, claim statements, and evidence span IDs.
+- Keep named people, concrete action, place, and Joseon-era context when the narration supports them.
+- Do not invent dialogue, motives, extra people, violence, emotions, architecture, chronology, labels, dates, or outcomes.
+- `evidence_artifact` is allowed only when the evidence object or record distinction is the narrated subject.
+- Treat accusation, political support, royal decision, dissent, execution wording, and later storytelling as different layers.
+- Do not show forced poison administration or sensational death imagery.
+- Do not depict the shamanic allegation as wholly fabricated.
+- Do not imply that every minister agreed.
+
+## Visual mode rules
+
+- `historical_reconstruction`: a sourced political or palace event with people acting.
+- `evidence_artifact`: a concrete record/evidence distinction, using closed blank cases or unmarked objects; never open written pages.
+- `place_establishing`: a named or clearly supported location is the subject.
+- `diagram_metaphor`: one coherent physical metaphor for structure or causality, not a chart or collage.
+- `atmosphere`: only when mood or transition is truly the narrated subject.
+- `character_action`: one named or role-specific person performs one supported action.
+- `host_chapter_hinge`: only the exact host IDs supplied below.
+- `analogy_explainer`: a narration-marked analogy rendered as one coherent scene.
+
+## Episode-level distribution and repetition constraints
+
+- At least 60 percent of all briefs must use direct depiction modes: historical_reconstruction, character_action, place_establishing, or evidence_artifact.
+- Never use the same visual_mode for more than two consecutive shots.
+- In every rolling window of ten shots, use each concrete motif family at most twice. Treat synonyms as one family: case/box/chest/record container; gate/threshold/barrier/boundary; balance/scale; path/road/route/rail; screen/curtain/veil; bowl/vessel/cup.
+- Do not use closed record cases, gates, thresholds, empty frames, paths, balances, or curtains as generic substitutes for unrelated narration.
+- Reserve diagram_metaphor for narration that explicitly explains a structure, causal mechanism, distinction, or analogy. When the narration supports a named person, role-specific actor, concrete palace action, place, or evidence object, depict that directly instead.
+- Vary subject, action, place, depth, and prop families across neighboring shots; superficial synonym changes do not count as novelty.
+
+## Image-facing field rules
+
+- Write `semantic_anchors`, `focal_subject`, `action`, `place`, `era`, framing fields, motifs, and safety treatment in concise English.
+- Use three or four concrete visible semantic anchors. Do not use abstract placeholders such as history, responsibility, politics, or narration.
+- Do not put Korean, Chinese characters, letters, digits, years, captions, labels, handwriting, calligraphy, signatures, seals, logos, or watermarks into image-facing descriptions.
+- Keep every paper-like or sign-like surface blank and unmarked.
+- No open book, open manuscript, written scroll, written map, generic desk, repeated books, collage, split panel, catalog sheet, or empty-room placeholder.
+- Use one coherent full-frame 16:9 composition with complete bodies where people are present.
+- `reference_asset_ids` may contain only IDs from `approved_reference_asset_ids`; otherwise use an empty array.
+- Prefer `overlay_items: []`. If an overlay is indispensable, copy exact approved narration wording and cite its supplied sentence ID. Overlay text is renderer metadata and must never be requested inside the image.
+- Do not imitate or mention any benchmark channel, living artist, studio, or copyrighted house style.
+
+## Host shot IDs
+
+{{ host_shot_ids_json }}
+
+## Approved reference asset IDs
+
+{{ approved_reference_asset_ids_json }}
+
+## Claim inventory
+
+{{ claims_json }}
+
+## Shots
+
+{{ shots_json }}
+
+Before returning JSON, silently verify the exact shot count, shot order, host set, narration digests, English image-facing fields, concrete anchors, evidence bounds, and absence of generated text requests.

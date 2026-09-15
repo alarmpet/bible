@@ -1,0 +1,1 @@
+{"type":"object","required":["manifest_id","events","base_image_text_policy"],"properties":{"base_image_text_policy":{"const":"no_glyph"},"events":{"type":"array"}},"additionalProperties":true}

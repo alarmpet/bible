@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "script": {},
+  "visual": {
+    "asset_count": 0,
+    "unique_prompt_count": 0,
+    "prompt_reuse_count": 0,
+    "duration_over_25_sec": 0,
+    "max_duration_sec": 0
+  }
+}

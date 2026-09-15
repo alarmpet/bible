@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "episode_id": "GENERIC-002",
+  "persona": "ship_seonbi",
+  "title": "알렉산드리아 도서관의 진실",
+  "target_duration_sec": 930,
+  "sentences": [
+    {
+      "sentence_id": "s-gen-001",
+      "order": 1,
+      "chapter": 1,
+      "beat": "hook",
+      "display_text": "다들 알렉산드리아 도서관이 단 하룻밤에 불타 없어진 줄 아시지요? 허허, 천만의 말씀!",
+      "tts_text": "다들 알렉산드리아 도서관이 단 하룻밤에 불타 없어진 줄 아시지요? 허허, 천만의 말씀!",
+      "segments": [
+        {
+          "kind": "fact",
+          "text": "다들 알렉산드리아 도서관이 단 하룻밤에 불타 없어진 줄 아시지요? 허허, 천만의 말씀!",
+          "claim_id": "CLM-GEN-001",
+          "evidence_span_ids": ["SRC-GEN-01:SPAN-01"]
+        }
+      ],
+      "disclosure": null
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "script": {
+    "sentence_count": 180,
+    "unique_sentence_count": 51,
+    "duplicate_occurrences": 129,
+    "duplicate_texts": {
+      "선비 한 명이 목숨을 걸고 작성한 특급 내부 고발서인 셈이지요!": 44,
+      "정사인 실록이 차마 적지 못한 진실이 매천야록에 고스란히 남았습니다.": 44,
+      "역사의 거울 앞에 부끄러움 없이 서고자 했던 선비의 결기이지요.": 44
+    }
+  },
+  "visual": {
+    "asset_count": 45,
+    "unique_prompt_count": 1,
+    "prompt_reuse_count": 44,
+    "duration_over_25_sec": 0,
+    "max_duration_sec": 0.0
+  }
+}

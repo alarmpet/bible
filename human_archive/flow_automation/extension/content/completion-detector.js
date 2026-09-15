@@ -35,8 +35,21 @@ function preflight(document, location, job) {
 function submitPrompt(document, prompt) {
   const editor = first(document, SELECTORS_V1.promptEditor);
   if (!editor) return { ok: false, code: 'FLOW_UI_CHANGED' };
-  editor.textContent = String(prompt);
+  editor.focus?.();
+  if (typeof document?.execCommand === 'function') {
+    try {
+      document.execCommand('selectAll', false, null);
+      document.execCommand('insertText', false, String(prompt));
+    } catch (_) {}
+  }
+  if (!editor.textContent || editor.textContent !== String(prompt)) {
+    editor.textContent = String(prompt);
+  }
   editor.dispatchEvent?.(new Event('input', { bubbles: true }));
+  editor.dispatchEvent?.(new Event('change', { bubbles: true }));
+  try {
+    editor.dispatchEvent?.(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+  } catch (_) {}
   return { ok: true, prompt: String(prompt) };
 }
 

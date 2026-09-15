@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FactCheckReportV2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "verified_at_utc",
+    "overall_status",
+    "total_sentences",
+    "total_segments",
+    "fail_count",
+    "review_required_count",
+    "segment_evaluations"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 2 },
+    "verified_at_utc": { "type": "string" },
+    "overall_status": { "type": "string", "enum": ["PASS", "REVIEW_REQUIRED", "FAIL"] },
+    "total_sentences": { "type": "integer" },
+    "total_segments": { "type": "integer" },
+    "fail_count": { "type": "integer" },
+    "review_required_count": { "type": "integer" },
+    "segment_evaluations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sentence_id", "segment_index", "kind", "status", "issues"],
+        "properties": {
+          "sentence_id": { "type": "string" },
+          "segment_index": { "type": "integer" },
+          "kind": { "type": "string" },
+          "claim_id": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["PASS", "REVIEW_REQUIRED", "FAIL"] },
+          "issues": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

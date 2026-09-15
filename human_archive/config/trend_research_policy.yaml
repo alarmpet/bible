@@ -1,0 +1,6 @@
+policy_id: trend_verified_v1
+schema_version: 1
+required_inputs: [offline_fixture, google_trends_official, google_news_human_verified]
+optional_inputs: [x, threads, reddit, youtube]
+source_state_enum: [active, edited, deleted, private, unavailable]
+retention_classes: [ephemeral, standard, restricted]

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShotPlanApproval",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "approved_at_utc",
+    "reviewer_id",
+    "role",
+    "decision",
+    "shot_plan_sha256",
+    "unresolved_issues"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "approved_at_utc": { "type": "string" },
+    "reviewer_id": { "type": "string" },
+    "role": { "type": "string" },
+    "decision": { "type": "string", "enum": ["approved", "rejected"] },
+    "shot_plan_sha256": { "type": "string" },
+    "unresolved_issues": { "type": "integer" },
+    "notes": { "type": "string" }
+  }
+}

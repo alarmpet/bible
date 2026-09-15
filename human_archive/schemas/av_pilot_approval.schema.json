@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AVPilotApproval",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "approved_at_utc",
+    "reviewer_id",
+    "decision",
+    "pilot_candidate_sha256",
+    "postflight_status"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "approved_at_utc": { "type": "string" },
+    "reviewer_id": { "type": "string" },
+    "role": { "type": "string" },
+    "decision": { "type": "string", "enum": ["approved", "rejected"] },
+    "pilot_candidate_sha256": { "type": "string" },
+    "postflight_status": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "notes": { "type": "string" }
+  }
+}

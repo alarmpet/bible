@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReleaseReport",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "verified_at_utc",
+    "target_video_file",
+    "sha256",
+    "duration_sec",
+    "overall_status",
+    "checks",
+    "upstream_hashes"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "verified_at_utc": { "type": "string" },
+    "target_video_file": { "type": "string" },
+    "sha256": { "type": "string" },
+    "duration_sec": { "type": "number" },
+    "overall_status": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "checks": {
+      "type": "object",
+      "required": ["dimensions", "aspect_ratio", "framerate", "color_tags", "loudness", "subtitles"],
+      "properties": {
+        "dimensions": { "type": "object" },
+        "aspect_ratio": { "type": "object" },
+        "framerate": { "type": "object" },
+        "color_tags": { "type": "object" },
+        "loudness": { "type": "object" },
+        "subtitles": { "type": "object" }
+      }
+    },
+    "upstream_hashes": { "type": "object" }
+  }
+}

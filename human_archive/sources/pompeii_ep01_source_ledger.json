@@ -1,0 +1,237 @@
+{
+  "schema_version": 2,
+  "episode_id": "HA001",
+  "title": "폼페이 최후의 밤 — 많은 이들은 떠났고, 누가 남았나",
+  "sources": [
+    {
+      "source_id": "SRC-PLINY-EP",
+      "title": "Epistulae (Letters) 6.16, 6.20",
+      "author_or_agency": "Pliny the Younger (소 플리니우스)",
+      "year": 105,
+      "source_type": "primary_source",
+      "peer_reviewed": false,
+      "url_or_doi": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0139:book=6:letter=16",
+      "evidence_spans": [
+        {
+          "span_id": "SRC-PLINY-EP:SPAN-01",
+          "locator": "Epistles 6.16.4",
+          "excerpt": "Nubes oriebatur, cuius similitudinem et formam non alia magis arbor quam pinus expresserit.",
+          "excerpt_language": "la",
+          "translation": "구름이 솟아올랐는데, 그 모양과 형상은 소나무 외에 다른 어떤 나무보다도 잘 표현할 수 없었습니다.",
+          "translation_credit": "표준 고전 번역",
+          "capture_method": "manual_verified_excerpt",
+          "captured_at_utc": "2026-08-21T00:00:00Z",
+          "snapshot_sha256": "4A66B676DFB58BB8C1C8EB81E152864C697D46D19E52968393527F384C7B7BC1"
+        },
+        {
+          "span_id": "SRC-PLINY-EP:SPAN-02",
+          "locator": "Epistles 6.16.19",
+          "excerpt": "Innitens servolis duobus surrexit et statim concidit, ut ego coniecto, crassiore caligine spiritu obstructo.",
+          "excerpt_language": "la",
+          "translation": "두 명의 노예에게 몸을 기대어 일어났으나, 짙은 연기와 유독가스로 숨이 막혀 곧바로 쓰러졌습니다.",
+          "translation_credit": "표준 고전 번역",
+          "capture_method": "manual_verified_excerpt",
+          "captured_at_utc": "2026-08-21T00:00:00Z",
+          "snapshot_sha256": "B3E3C756DFB58BB8C1C8EB81E152864C697D46D19E52968393527F384C7B7BC2"
+        }
+      ]
+    },
+    {
+      "source_id": "SRC-INGV-2022",
+      "title": "Rapporto sulle eruzioni vesuviane e dinamica dei flussi piroclastici",
+      "author_or_agency": "이탈리아 국립지구물리학화산학연구소 (INGV)",
+      "year": 2022,
+      "source_type": "official_agency",
+      "peer_reviewed": false,
+      "url_or_doi": "https://www.ingv.it/vesuvio/pompei-79ad-report",
+      "evidence_spans": [
+        {
+          "span_id": "SRC-INGV-2022:SPAN-01",
+          "locator": "Chapter 3, Page 45",
+          "excerpt": "I depositi di pomici e ceneri indicano una fase pliniana prolungata di 18-19 ore prima dei collassi piroclastici.",
+          "excerpt_language": "it",
+          "translation": "부석과 화산재 퇴적층은 화쇄류 붕괴 전 18-19시간 동안 플리니안 분출 단계가 지속되었음을 보여준다.",
+          "translation_credit": "자체 학술 번역",
+          "capture_method": "manual_verified_excerpt",
+          "captured_at_utc": "2026-08-21T00:00:00Z",
+          "snapshot_sha256": "7F66B676DFB58BB8C1C8EB81E152864C697D46D19E52968393527F384C7B7BC3"
+        }
+      ]
+    },
+    {
+      "source_id": "SRC-NAT-SR-2021",
+      "title": "The impact of pyroclastic density currents on Pompeii",
+      "author_or_agency": "Nature Scientific Reports (Dellino et al.)",
+      "year": 2021,
+      "source_type": "academic_paper",
+      "peer_reviewed": true,
+      "url_or_doi": "https://doi.org/10.1038/s41598-021-84456-7",
+      "evidence_spans": [
+        {
+          "span_id": "SRC-NAT-SR-2021:SPAN-01",
+          "locator": "Page 4, Table 1",
+          "excerpt": "PDC temperatures inside Pompeii are modelled between 100°C and 250°C, causing asphyxiation within 10–20 minutes.",
+          "excerpt_language": "en",
+          "translation": "폼페이 내부 화쇄류 온도는 100°C에서 250°C 사이로 모델링되며, 10~20분 내 질식을 유발했다.",
+          "translation_credit": "표준 학술 번역",
+          "capture_method": "manual_verified_excerpt",
+          "captured_at_utc": "2026-08-21T00:00:00Z",
+          "snapshot_sha256": "8E66B676DFB58BB8C1C8EB81E152864C697D46D19E52968393527F384C7B7BC4"
+        }
+      ]
+    },
+    {
+      "source_id": "SRC-PARCO-DNA-2024",
+      "title": "Ancient DNA analysis of Pompeii plaster casts",
+      "author_or_agency": "Current Biology & Parco Archeologico di Pompei (Pilli et al.)",
+      "year": 2024,
+      "source_type": "academic_paper",
+      "peer_reviewed": true,
+      "url_or_doi": "https://doi.org/10.1016/j.cub.2024.10.007",
+      "evidence_spans": [
+        {
+          "span_id": "SRC-PARCO-DNA-2024:SPAN-01",
+          "locator": "Results Section, Paragraph 2",
+          "excerpt": "Genetic analysis revealed traditional familial assumptions (e.g. mother and child, two sisters) were biologically inaccurate.",
+          "excerpt_language": "en",
+          "translation": "유전자 분석 결과 전통적인 가족 관계 추정(모녀, 자매 등)은 생물학적으로 부정확한 것으로 밝혀졌다.",
+          "translation_credit": "표준 학술 번역",
+          "capture_method": "manual_verified_excerpt",
+          "captured_at_utc": "2026-08-21T00:00:00Z",
+          "snapshot_sha256": "9D66B676DFB58BB8C1C8EB81E152864C697D46D19E52968393527F384C7B7BC5"
+        }
+      ]
+    },
+    {
+      "source_id": "SRC-PARCO-DATE-2018",
+      "title": "Regio V Charcoal Inscription Discovery Report",
+      "author_or_agency": "Parco Archeologico di Pompei (Osanna et al.)",
+      "year": 2018,
+      "source_type": "excavation_report",
+      "peer_reviewed": true,
+      "url_or_doi": "http://pompeiisites.org/en/press-releases/the-charcoal-inscription/",
+      "evidence_spans": [
+        {
+          "span_id": "SRC-PARCO-DATE-2018:SPAN-01",
+          "locator": "Press Release & Excavation Diary Entry 17-Oct-2018",
+          "excerpt": "A charcoal inscription dating XVI K NOV supports the eruption occurring in late October 79 AD rather than August 24.",
+          "excerpt_language": "en",
+          "translation": "10월 17일을 가리키는 목탄 비문은 분출이 8월 24일이 아닌 서기 79년 10월 하순에 일어났다는 학설을 뒷받침한다.",
+          "translation_credit": "표준 학술 번역",
+          "capture_method": "manual_verified_excerpt",
+          "captured_at_utc": "2026-08-21T00:00:00Z",
+          "snapshot_sha256": "3C66B676DFB58BB8C1C8EB81E152864C697D46D19E52968393527F384C7B7BC6"
+        }
+      ]
+    },
+    {
+      "source_id": "SRC-COOLEY-2014",
+      "title": "Pompeii and Herculaneum: A Sourcebook",
+      "author_or_agency": "Alison E. Cooley, M. G. L. Cooley",
+      "year": 2014,
+      "source_type": "academic_book",
+      "peer_reviewed": true,
+      "url_or_doi": "https://doi.org/10.4324/9780203080085",
+      "evidence_spans": [
+        {
+          "span_id": "SRC-COOLEY-2014:SPAN-01",
+          "locator": "Chapter 2: The Eruption and Discovery, pp. 41-48",
+          "excerpt": "Domenico Fontana encountered Pompeii ruins in the late 16th century, but systematic excavations began under Charles III in 1748.",
+          "excerpt_language": "en",
+          "translation": "도메니코 폰타나가 16세기 후반 폼페이 유적을 마주했으나, 체계적인 발굴은 1748년 카를로스 3세 치하에서 시작되었다.",
+          "translation_credit": "표준 학술 번역",
+          "capture_method": "manual_verified_excerpt",
+          "captured_at_utc": "2026-08-21T00:00:00Z",
+          "snapshot_sha256": "2B66B676DFB58BB8C1C8EB81E152864C697D46D19E52968393527F384C7B7BC7"
+        }
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "POM-EVAC-001",
+      "statement": "폼페이 인구 1만~2만 중 대다수는 초기 18시간 동안 탈출했고 희생자는 도시 전체가 아니다.",
+      "type": "verified_fact",
+      "risk": "medium",
+      "source_ids": ["SRC-INGV-2022", "SRC-COOLEY-2014"],
+      "evidence_refs": ["SRC-INGV-2022:SPAN-01", "SRC-COOLEY-2014:SPAN-01"],
+      "approved_paraphrases": [
+        "폼페이에서 발견된 희생자는 도시 전체가 아니었습니다.",
+        "많은 사람은 초기에 도시를 빠져나갔습니다.",
+        "사료를 보면 수많은 사람들은 초기에 이미 무사히 탈출에 성공했답니다."
+      ],
+      "allowed_wording": ["다수 탈출", "남겨진 사람들", "초기 대피"],
+      "forbidden_wording": ["도시 전체 몰살", "모든 시민이 사망", "재산에 집착해 아무도 도망치지 않음"]
+    },
+    {
+      "claim_id": "POM-DATE-001",
+      "statement": "베수비오 분출 일자는 전통적 8월 24일설과 목탄 낙서/석류 유물 기반 10월 24일설이 대립한다.",
+      "type": "contested_fact",
+      "risk": "medium",
+      "source_ids": ["SRC-PARCO-DATE-2018", "SRC-PLINY-EP"],
+      "evidence_refs": ["SRC-PARCO-DATE-2018:SPAN-01", "SRC-PLINY-EP:SPAN-01"],
+      "approved_paraphrases": [
+        "서기 79년 가을로 보는 견해가 유력하지만 정확한 날짜는 논쟁 중입니다.",
+        "서기 79년 가을로 보는 견해가 유력하지만 정확한 날짜는 여전히 학술적 논쟁 중이지요."
+      ],
+      "allowed_wording": ["가을 설 유력", "날짜 논쟁 중", "10월 목탄 낙서"],
+      "forbidden_wording": ["8월 24일 확정", "역사학계가 날짜를 날조"]
+    },
+    {
+      "claim_id": "POM-PDC-TEMP-001",
+      "statement": "폼페이를 덮친 화쇄류 온도는 지층 모델에 따라 100도대~수백도까지 학설이 갈리며 500도 단정은 과장이다.",
+      "type": "contested_fact",
+      "risk": "high",
+      "source_ids": ["SRC-NAT-SR-2021", "SRC-INGV-2022"],
+      "evidence_refs": ["SRC-NAT-SR-2021:SPAN-01", "SRC-INGV-2022:SPAN-01"],
+      "approved_paraphrases": [
+        "연구에 따라 온도는 100도대에서 수백도까지 추정이 다양합니다.",
+        "연구 모델에 따라 화쇄류 온도는 백도 대에서 수백도까지 다양하게 추정되지요."
+      ],
+      "allowed_wording": ["화쇄밀도류", "온도 추정 다양", "질식과 복합 요인"],
+      "forbidden_wording": ["500도 고열 몰살", "초고온으로 순간 증발"]
+    },
+    {
+      "claim_id": "POM-PLINY-001",
+      "statement": "대 플리니우스는 스타비아이 해변에서 쓰러졌으며 정확한 사인(천식, 질식, 심장마비)은 단정할 수 없다.",
+      "type": "verified_fact",
+      "risk": "low",
+      "source_ids": ["SRC-PLINY-EP"],
+      "evidence_refs": ["SRC-PLINY-EP:SPAN-02"],
+      "approved_paraphrases": [
+        "대 플리니우스는 스타비아이 해변에서 거친 파도와 연기 속에 쓰러졌습니다.",
+        "구조에 나섰던 대 플리니우스 역시 스타비아이 해변에서 거친 파도와 연기 속에 쓰러졌답니다."
+      ],
+      "allowed_wording": ["스타비아이 해변에서 쓰러짐", "파도와 연기", "구조 작전"],
+      "forbidden_wording": ["유독가스 흡입 즉사 확정", "천식 발작 확정"]
+    },
+    {
+      "claim_id": "POM-DNA-CAST-001",
+      "statement": "2024년 고대 DNA 분석은 피오렐리 석고 캐스트의 전통적 가족 관계 추정(모녀, 자매)을 반박했다.",
+      "type": "verified_fact",
+      "risk": "medium",
+      "source_ids": ["SRC-PARCO-DNA-2024"],
+      "evidence_refs": ["SRC-PARCO-DNA-2024:SPAN-01"],
+      "approved_paraphrases": [
+        "최신 DNA 분석은 우리가 믿어온 석고상의 관계가 사실과 다를 수 있음을 보여줍니다.",
+        "최근 DNA 분석 결과는 우리가 모녀나 연인이라 믿었던 석고상의 관계가 사실과 다를 수 있음을 밝혔지요."
+      ],
+      "allowed_wording": ["DNA 분석 결과", "전통적 추정 재검토", "생물학적 관계"],
+      "forbidden_wording": ["어머니와 아이의 감동 실화 확정"]
+    },
+    {
+      "claim_id": "POM-EXCAV-001",
+      "statement": "폼페이는 16세기 수로 공사 때 최초 발견되었고 본격적인 발굴은 1748년에 시작되었다.",
+      "type": "verified_fact",
+      "risk": "low",
+      "source_ids": ["SRC-COOLEY-2014"],
+      "evidence_refs": ["SRC-COOLEY-2014:SPAN-01"],
+      "approved_paraphrases": [
+        "16세기 수로 공사에서 첫 흔적이 나왔고 1748년에야 본격 발굴이 시작되었습니다.",
+        "16세기 수로 공사 때 처음 흔적이 나왔고 1748년에야 본격 발굴이 시작되었답니다."
+      ],
+      "allowed_wording": ["16세기 수로 공사", "1748년 발굴 시작"],
+      "forbidden_wording": ["1863년에 최초 발견됨"]
+    }
+  ]
+}

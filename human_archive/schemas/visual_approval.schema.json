@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VisualApproval",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "approved_at_utc",
+    "reviewer_id",
+    "contract_sha256",
+    "manifest_sha256",
+    "shot_evaluations"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "approved_at_utc": { "type": "string" },
+    "reviewer_id": { "type": "string" },
+    "contract_sha256": { "type": "string" },
+    "manifest_sha256": { "type": "string" },
+    "shot_evaluations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["shot_id", "image_sha256", "axes", "decision"],
+        "properties": {
+          "shot_id": { "type": "string" },
+          "image_sha256": { "type": "string" },
+          "axes": {
+            "type": "object",
+            "required": ["subject", "place", "era", "action", "tone", "result"],
+            "properties": {
+              "subject": { "type": "string", "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] },
+              "place": { "type": "string", "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] },
+              "era": { "type": "string", "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] },
+              "action": { "type": "string", "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] },
+              "tone": { "type": "string", "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] },
+              "result": { "type": "string", "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] }
+            }
+          },
+          "decision": { "type": "string", "enum": ["approved", "rejected"] },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

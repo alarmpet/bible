@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TopicsCatalog",
+  "type": "object",
+  "required": ["schema_version", "topics"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "topic_id",
+          "title",
+          "theme",
+          "historical_period",
+          "core_hook",
+          "primary_sources",
+          "modern_analogy",
+          "humanistic_insight",
+          "target_duration_sec",
+          "status"
+        ],
+        "properties": {
+          "topic_id": { "type": "string" },
+          "title": { "type": "string" },
+          "theme": {
+            "type": "string",
+            "enum": ["paradox", "joseon_royal", "myth_debunk", "folklore", "ancient_disaster", "military_irony"]
+          },
+          "historical_period": { "type": "string" },
+          "core_hook": { "type": "string" },
+          "primary_sources": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "modern_analogy": { "type": "string" },
+          "humanistic_insight": { "type": "string" },
+          "target_duration_sec": { "type": "integer" },
+          "status": { "type": "string", "enum": ["AVAILABLE", "RESERVED", "USED", "ARCHIVED"] },
+          "used_in_episode_id": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

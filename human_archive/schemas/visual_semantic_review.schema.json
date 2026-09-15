@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "scope", "reviewed_count", "issues", "summary"],
+  "properties": {
+    "status": {"enum": ["PASS", "FAIL", "REVIEW_REQUIRED"]},
+    "scope": {"type": "string"},
+    "reviewed_count": {"type": "integer", "minimum": 0},
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["shot_id", "severity", "categories", "detail"],
+        "properties": {
+          "shot_id": {"type": "string"},
+          "severity": {"enum": ["blocking", "warning"]},
+          "categories": {"type": "array", "items": {"type": "string"}},
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "summary": {"type": "string"}
+  }
+}

@@ -1,0 +1,48 @@
+schema_version: 2
+default_profile_id: nollam_file_v1
+profiles:
+  nollam_file_v1:
+    display_name: "놀람파일"
+    is_default: true
+    visual:
+      style: "photorealistic cinematic documentary (Humanity Library benchmark)"
+      forbidden: [flat_doodle_only, generated_caption, fake_ui, unlicensed_logo, watermark, host_avatar_overlay]
+      aspect_ratio: "16:9"
+      fps: 25
+      base_image_text_policy: "no letters, numerals, captions, signage, or logos"
+    narration:
+      language: ko
+      persona_id: nollam_documentary_narrator_v1
+    delivery_profile_id: trend_explainer_20m
+    voice_lock_id: M2_WARM
+    freshness_classes: [DAILY, STABLE]
+    discovery_role: DISCOVERY_ONLY
+  doodle_seonbi_v1:
+    display_name: "갓쓴 스틱맨 쉽선비"
+    is_default: false
+    visual:
+      style: "hand-drawn doodle animation"
+      forbidden: [gradient, shadow, texture, photorealism, 3d, anime, realistic_face, poster_layout, empty_infographic_panel, generated_caption, seal, speech_bubble]
+      host_ratio: [0.15, 0.25]
+      max_consecutive_host_scenes: 2
+      base_image_text_policy: "no letters, numerals, captions, signage, seals, or speech bubbles"
+      palette: [white, black, muted_red, muted_blue, muted_yellow]
+      aspect_ratio: "16:9"
+      fps: 25
+    narration:
+      language: ko
+      speaker: "calm curious second-person explainer"
+    delivery_profile: doodle_docu_12m
+  human_archive_cinematic_v1:
+    display_name: "Human Archive Cinematic"
+    is_default: false
+    visual:
+      style: "cinematic K-webtoon documentary"
+      forbidden: [flat_doodle_only]
+      palette: [hanji, charcoal, warm_amber]
+      aspect_ratio: "16:9"
+      fps: 25
+    narration:
+      language: ko
+      speaker: "calm documentary narrator"
+    delivery_profile: standard_docu

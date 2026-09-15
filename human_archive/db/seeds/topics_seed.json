@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "topics": [
+    {
+      "topic_id": "TOPIC-POMPEII-001",
+      "title": "폼페이 최후의 밤 — 많은 이들은 떠났고 누가 남았나",
+      "theme": "ancient_disaster",
+      "historical_period": "서기 79년 고대 로마 제국",
+      "core_hook": "폼페이 사람들이 미련하게 남아있다 다 죽은 줄 아시지요? 허허, 천만의 말씀!",
+      "primary_sources": [
+        "플리니우스 서한집 (Pliny the Younger, Epistles 6.16, 6.20)",
+        "이탈리아 국립지구물리학화산학연구소 (INGV) 베수비오 종합 보고서 (2022)",
+        "폼페이 화쇄밀도류(PDC) 동역학 및 위험도 연구 (Nature Scientific Reports, 2021)",
+        "폼페이 유적청 고대 DNA 분석 데이터 (Current Biology, 2024)"
+      ],
+      "modern_analogy": "지붕에 덤프트럭이 올라앉은 격이라 수억 톤의 부석에 기와지붕들이 무너져 내렸지요.",
+      "humanistic_insight": "2천 년 전 폼페이의 비극은 오늘날 우리에게 '재난 앞 인간의 선택'이란 묵직한 질문을 던집니다.",
+      "target_duration_sec": 1200,
+      "status": "USED",
+      "used_in_episode_id": "HA001"
+    },
+    {
+      "topic_id": "TOPIC-JANG-HUIBIN-001",
+      "title": "장희빈은 정말 사약을 마시며 발악했을까? — 숙종실록과 승정원일기가 숨긴 진짜 최후",
+      "theme": "korean_joseon_mysteries",
+      "historical_period": "조선 숙종 27년 (1701년 신사환국)",
+      "core_hook": "장희빈이 사약을 엎지르고 발악하며 패악질을 부렸다구요? 허허, 천만의 말씀!",
+      "primary_sources": [
+        "조선왕조실록 숙종실록 27년 9월~10월 기사",
+        "승정원일기 숙종 27년 10월 8일~10일 국왕 친필 전교",
+        "이민서 수문록(隨聞錄) 및 인현왕후전 원문 비교",
+        "한국학중앙연구원 조선 후기 환국 정치와 왕권 강화 연구"
+      ],
+      "modern_analogy": "야사에선 막장 드라마 악녀로 그렸지만 실상은 냉혹한 왕권 강화 정치 싸움의 희생양이었던 셈이지요!",
+      "humanistic_insight": "역사는 승자의 기록이지만 사료의 행간을 뜯어보면 권력이라는 칼날 앞에 스러져간 인간의 비극이 선명히 드러납니다.",
+      "target_duration_sec": 1080,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-COBRA-001",
+      "title": "뱀 잡으려다 뱀 농장 차린 영국 총독부 — 코브라 효과",
+      "theme": "paradox",
+      "historical_period": "19세기 영국령 인도 제국 델리",
+      "core_hook": "영국 정부가 맹독성 코브라를 박멸하려고 포상금을 걸었더니 어떻게 됐을까요? 허허, 천만의 말씀! 뱀이 10배로 늘어났답니다!",
+      "primary_sources": [
+        "영국령 델리 행정관 보고서 및 식민지 보건 연보",
+        "Horst Siebert 경제학 인센티브 왜곡 모델 (Cobra Effect Theory)",
+        "인도 총독부 공문서철 아카이브"
+      ],
+      "modern_analogy": "쥐 잡으라고 지원금 줬더니 안방에서 쥐 양식장을 차려 납품한 꼴이지요!",
+      "humanistic_insight": "선한 의도만으로 설계된 정책이 인간의 탐욕과 만나면 어떤 기형적 재앙을 낳는지 보여줍니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-PIGWAR-001",
+      "title": "감자 먹은 돼지 한 마리 때문에 터진 영-미 전쟁 — 돼지 전쟁 (1859)",
+      "theme": "military_irony",
+      "historical_period": "1859년 미국-영국령 캐나다 국경 산후안 섬",
+      "core_hook": "세계 최강 대영제국 함대와 미 육군이 대포를 겨누고 일촉즉발 전쟁 직전까지 간 이유가 고작 돼지 한 마리 때문이라구요?",
+      "primary_sources": [
+        "미 국립공원관리청(NPS) 산후안 섬 분쟁 공식 역사 기록",
+        "대영제국 해군 태평양 함대 사령부 항해 일지",
+        "피켓 대위와 하니 장군의 미 육군 보고서 (1859)"
+      ],
+      "modern_analogy": "이웃집 마당 감자 훔쳐먹은 돼지 때문에 동네 싸움이 대형 주주총회 소송전으로 번진 격이지요!",
+      "humanistic_insight": "사소한 자존심과 관료주의적 체면이 국가 간 평화를 얼마나 위태롭게 흔들 수 있는지 증명합니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-VINEGAR-VAL-001",
+      "title": "19세기 빅토리아 시대의 잔혹한 착불 악플 — 식초 발렌타인",
+      "theme": "paradox",
+      "historical_period": "19세기 영국 및 미국 빅토리아 시대",
+      "core_hook": "발렌타인데이에 사랑의 고백을 보냈을 것 같지요? 허허, 천만의 말씀! 19세기 사람들은 앙숙에게 익명으로 저주와 조롱 카드를 보냈답니다!",
+      "primary_sources": [
+        "스미스소니언 매거진(Smithsonian) 빅토리아 시대 우편 문화 아카이브",
+        "미국 의회도서관(LOC) 희귀 인쇄물 컬렉션 (Vinegar Valentines)",
+        "19세기 영국 우정국 연례 보고서 및 불만 접수 기록"
+      ],
+      "modern_analogy": "상대방 면전에 익명으로 욕설 악플을 빽빽이 적어놓고, 배송비까지 착불로 떠넘겨버린 셈이지요!",
+      "humanistic_insight": "시대와 매체는 달라져도 익명성 뒤에 숨어 타인을 깎아내리려는 인간의 어두운 본성은 똑같습니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-SEUNGJEONG-001",
+      "title": "조선 왕 24시간 실시간 감시 일기 — 『승정원일기』의 기상천외한 일상",
+      "theme": "joseon_royal",
+      "historical_period": "조선왕조 (17~19세기)",
+      "core_hook": "조선 임금님이 방귀 뀌고 재채기한 것까지 유네스코 세계기록유산에 적혀 있다는 걸 아십니까?",
+      "primary_sources": [
+        "국사편찬위원회 한국사데이터베이스 『승정원일기』 원문 (3,243책)",
+        "서울대학교 규장각한국학연구원 의궤 및 일기 해제집",
+        "한국고전번역원 승정원일기 국역본"
+      ],
+      "modern_analogy": "임금님 머리맡에 24시간 실시간 블랙박스 카메라를 달아놓고 숨소리까지 받아 적은 격이지요!",
+      "humanistic_insight": "절대 군주조차 철저한 기록과 감시 앞에 세웠던 조선 지식인들의 경이로운 역사의식입니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-DONGUI-BACKPAIN-001",
+      "title": "왕들의 지독한 만성 요통과 종기 — 『동의보감』과 어의들의 목숨 건 진료",
+      "theme": "joseon_royal",
+      "historical_period": "조선 중기 (선조~숙종 연간)",
+      "core_hook": "조선 최고의 권력자 임금님들이 왜 하루 종일 곡소리를 내며 온돌방에 누워 있었을까요?",
+      "primary_sources": [
+        "『승정원일기』 조선 중기 요통 치료 및 탕약 복용 기록",
+        "허준의 『동의보감』 신형편(身形篇) 및 침구편(鍼灸篇)",
+        "내의원 의관들의 진료 처방전 및 탕약 배합 기록"
+      ],
+      "modern_analogy": "하루 18시간 의자에 묶여 결재 서류만 보던 왕들이 오늘날 만성 디스크 환자가 된 셈이지요!",
+      "humanistic_insight": "화려한 곤룡포 뒤에 가려진 극심한 격무와 스트레스, 왕 또한 나약한 한 인간이었음을 보여줍니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-MAECHEON-001",
+      "title": "황현이 목숨 걸고 폭로한 조선의 마지막 47년 — 『매천야록(梅泉野錄)』",
+      "theme": "joseon_royal",
+      "historical_period": "1864년(고종 즉위) ~ 1910년(경술국치)",
+      "core_hook": "실록에는 절대 안 나오는 구한말 궁중의 은밀한 매관매직과 암투, 누가 기록했을까요?",
+      "primary_sources": [
+        "매천 황현의 『매천야록(梅泉野錄)』 원문 필사본",
+        "국사편찬위원회 한국사료총서 제1집",
+        "황현의 유서 및 절명시(絶命詩)"
+      ],
+      "modern_analogy": "선비 한 명이 목숨을 걸고 작성한 조선 왕실의 특급 내부 고발 블랙리스트인 셈이지요!",
+      "humanistic_insight": "망국의 비극 앞에서 붓을 꺾지 않고 진실을 증언한 뒤 목숨을 던진 지식인의 숭고한 결기입니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-NERO-FIRE-001",
+      "title": "로마가 불탈 때 네로는 하프를 켜며 노래했을까? — 네로 황제 방화설의 진실",
+      "theme": "myth_debunk",
+      "historical_period": "서기 64년 고대 로마 대화재",
+      "core_hook": "네로가 로마에 불을 지르고 불타는 도시를 보며 예술에 취했다구요? 허허, 천만의 말씀!",
+      "primary_sources": [
+        "타키투스(Tacitus) 『연대기(Annales)』 15권 38-44장",
+        "수에토니우스(Suetonius) 『황제전(De Vita Caesarum)』",
+        "현대 로마 화재 고고학 지층 및 도시 재건 발굴 보고서"
+      ],
+      "modern_analogy": "재난 현장에 달려가 사재를 털어 구호 텐트를 쳤더니, 후대 정적들이 방화범으로 프레임을 씌운 격이지요!",
+      "humanistic_insight": "역사는 승자의 기록이며, 권력 투쟁 속에서 진실이 어떻게 악마화되는지 생생하게 고발합니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-TITANIC-SPEED-001",
+      "title": "타이타닉 선장은 빙산 경고를 무시하고 과속했을까? — 항해 관행의 딜레마",
+      "theme": "myth_debunk",
+      "historical_period": "1912년 북대서양",
+      "core_hook": "타이타닉호가 미련하게 경고를 다 무시하고 전속력으로 달리다 침몰한 줄 아시지요?",
+      "primary_sources": [
+        "1912년 영국 상무원 타이타닉 침몰 공식 조사 보고서 (Wreck Report)",
+        "미국 상원 타이타닉 청문회 속기록 (Senate Inquiry)",
+        "당시 북대서양 정기선 항해 지침 및 마르코니 무선 전신 기록"
+      ],
+      "modern_analogy": "안개 낀 고속도로에서 '앞차들도 다 100km로 달리니 괜찮겠지' 하다가 빙판을 만난 격이지요!",
+      "humanistic_insight": "첨단 기술에 대한 오만과 안전 불감증 관행이 빚어낸 문명사적 비극입니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-BULGASARI-001",
+      "title": "쇠를 먹는 괴물 '불가사리' — 백성들은 왜 무기 먹는 괴물을 꿈꿨나?",
+      "theme": "folklore",
+      "historical_period": "고려 말 ~ 조선 초 (14세기)",
+      "core_hook": "밥풀로 만든 작은 벌레가 온 세상의 칼과 창을 다 집어삼키는 괴물이 된 이유가 뭘까요?",
+      "primary_sources": [
+        "한국민족문화대백과사전 송도 불가사리 설화 사료집",
+        "고려사 열전 및 고려 말 왜구 침입 군사 기록",
+        "조선왕조실록 철기 무기 징발 및 민간 탄압 기사"
+      ],
+      "modern_analogy": "지긋지긋한 전쟁 무기들을 전부 녹여 없애버리는 고대판 친환경 무기 청소기인 셈이지요!",
+      "humanistic_insight": "끝없는 전쟁과 수탈에 신음하던 고려 백성들이 품었던 눈물겨운 평화와 반전(反戰)의 염원입니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-SAMGUK-GII-001",
+      "title": "『삼국유사』 기이(紀異)편 — 일연 스님은 왜 황당한 신화를 맨 앞에 적었을까?",
+      "theme": "folklore",
+      "historical_period": "13세기 고려 원 간섭기",
+      "core_hook": "고려 승려 일연은 왜 점잖은 역사책 대신 도깨비, 용, 단군 신화부터 시작했을까요?",
+      "primary_sources": [
+        "일연의 『삼국유사』 권제1 기이편 서문 및 찬시(讚詩)",
+        "차광호(우석대) 『삼국유사 기이편의 저술의도와 고구려 인식』 학술 논문",
+        "국사편찬위원회 한국사데이터베이스 삼국유사 원문"
+      ],
+      "modern_analogy": "몽골군 말발굽에 짓밟힌 백성들에게 '우리는 하늘의 자손이다'라며 자존감을 불어넣어 준 정신적 에너지 드링크지요!",
+      "humanistic_insight": "국가적 절망의 시대, 사료와 신화가 어떻게 민족의 정체성을 지키는 불멸의 방패가 되었는가.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    },
+    {
+      "topic_id": "TOPIC-COLUMBUS-EARTH-001",
+      "title": "콜럼버스는 지구가 둥글다고 주장해 비웃음을 샀을까? — 조작된 평면지구 신화",
+      "theme": "myth_debunk",
+      "historical_period": "1492년 스페인 살라망카 학술회의",
+      "core_hook": "중세인들은 지구가 평평하다고 믿었고 콜럼버스만 둥글다고 맞섰다구요? 허허, 천만의 말씀!",
+      "primary_sources": [
+        "살라망카 대학 학술회의 심의 기록 (1490)",
+        "워싱턴 어빙(Washington Irving)의 1828년 콜럼버스 전기 (신화 날조 출처)",
+        "고대 에라토스테네스 및 중세 천문학 지구 둘레 계산 사료"
+      ],
+      "modern_analogy": "지구 둘레 계산을 잘못해서 엉뚱한 데 도착한 선장을 근대 작가들이 불굴의 과학 영웅으로 둔갑시킨 격이지요!",
+      "humanistic_insight": "역사적 사실보다 매력적인 서사가 어떻게 대중의 상식을 지배하는지 고발합니다.",
+      "target_duration_sec": 1200,
+      "status": "AVAILABLE"
+    }
+  ]
+}

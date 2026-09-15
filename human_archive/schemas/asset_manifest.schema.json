@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AssetManifest",
+  "type": "object",
+  "required": ["schema_version", "build_id", "contract_sha256", "created_at_utc", "assets"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "build_id": { "type": "string" },
+    "contract_sha256": { "type": "string" },
+    "created_at_utc": { "type": "string" },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "shot_id",
+          "order",
+          "card_id",
+          "prompt_sha256",
+          "file_path",
+          "sha256",
+          "bytes",
+          "width",
+          "height",
+          "status"
+        ],
+        "properties": {
+          "shot_id": { "type": "string" },
+          "order": { "type": "integer" },
+          "card_id": { "type": "string" },
+          "prompt_sha256": { "type": "string" },
+          "file_path": { "type": "string" },
+          "sha256": { "type": "string" },
+          "bytes": { "type": "integer" },
+          "width": { "type": "integer" },
+          "height": { "type": "integer" },
+          "status": { "type": "string", "enum": ["COMPLETED", "TIMEOUT", "FAILED", "BLOCKED"] }
+        }
+      }
+    }
+  }
+}

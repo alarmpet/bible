@@ -145,8 +145,18 @@ def test_premux_parity_gate_rejects_asymmetric_av_durations(tmp_path: Path) -> N
     assert "Pre-Mux Strict Parity Gate FAILED" in str(exc_info.value)
 
 
-def test_preflight_probe_fails_closed_when_external_service_offline() -> None:
-    # Port 3093 (SuperTonic3) is offline in current environment; require_tts must fail-closed
+def test_preflight_probe_fails_closed_when_external_service_offline(monkeypatch: pytest.MonkeyPatch) -> None:
+    # When SuperTonic3 is offline and auto_start is disabled, require_tts must fail-closed
+    import lib.external_service_manager as esm
+    monkeypatch.setattr(esm, "probe_supertonic3_health", lambda *a, **kw: False)
     with pytest.raises(PreflightServiceUnavailableError) as exc_info:
-        probe_required_external_services(require_tts=True)
+        probe_required_external_services(require_tts=True, auto_start=False)
     assert "SuperTonic3 TTS service is OFFLINE" in str(exc_info.value)
+
+    # When auto-start is attempted but times out, require_tts must also fail-closed safely
+    def mock_launch_fail(*a, **kw):
+        raise TimeoutError("Mock launch timeout")
+    monkeypatch.setattr(esm, "ensure_supertonic3_running", mock_launch_fail)
+    with pytest.raises(PreflightServiceUnavailableError) as exc_info:
+        probe_required_external_services(require_tts=True, auto_start=True)
+    assert "Failed to auto-launch SuperTonic3" in str(exc_info.value)

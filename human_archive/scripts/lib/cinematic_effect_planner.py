@@ -65,6 +65,188 @@ class PlannedProfile:
         }
 
 
+@dataclass(frozen=True)
+class RenderMotionProfile:
+    motion_family: str
+    axis: str
+    focal_anchor: Tuple[float, float]
+    phases: Tuple[MotionPhase, ...]
+    transition_out: str
+    clamped_for_subtitles: bool
+    canonical_renderer_motion: str
+    is_tri_phasic: bool = False
+    is_perceptual_cut: bool = False
+    is_biphasic: bool = False
+    profile_version: str = "v5.0"
+
+    def as_dict(self) -> Dict[str, Any]:
+        return {
+            "motion_family": self.motion_family,
+            "axis": self.axis,
+            "focal_anchor": list(self.focal_anchor),
+            "phases": [p.as_dict() for p in self.phases],
+            "transition_out": self.transition_out,
+            "clamped_for_subtitles": self.clamped_for_subtitles,
+            "canonical_renderer_motion": self.canonical_renderer_motion,
+            "is_tri_phasic": self.is_tri_phasic,
+            "is_perceptual_cut": self.is_perceptual_cut,
+            "is_biphasic": self.is_biphasic,
+            "profile_version": self.profile_version,
+        }
+
+
+def adapt_planned_to_render_profile(
+    planned: PlannedProfile,
+    duration_sec: float = 0.0,
+) -> RenderMotionProfile:
+    """Type-safe conversion from PlannedProfile to RenderMotionProfile with fail-closed mapping."""
+    is_tri = (
+        duration_sec >= 30.0
+        or planned.sub_type == "tri_phasic_ken_burns"
+        or "tri_phasic" in planned.effect_id
+        or planned.motion_family in {"tri_phasic", "ambient_drift"}
+        or (planned.motion_family == "ambient_drift" and len(planned.phases) >= 3)
+    )
+    is_perceptual = (
+        planned.sub_type == "layer3_perceptual_cut"
+        or planned.motion_family == "perceptual_cut"
+        or "perceptual_cut" in planned.effect_id
+    )
+    is_bi = (
+        not is_tri
+        and not is_perceptual
+        and (
+            duration_sec >= 15.0
+            or planned.sub_type == "biphasic_ken_burns"
+            or planned.motion_family in {"biphasic_ken_burns", "biphasic"}
+            or "biphasic" in planned.effect_id
+            or len(planned.phases) == 2
+        )
+    )
+
+    if is_tri:
+        canonical = "tri_phasic"
+    elif is_perceptual:
+        canonical = "perceptual_cut"
+    elif is_bi:
+        canonical = "biphasic_ken_burns"
+    elif planned.axis in {"pan_left", "x_left"}:
+        canonical = "pan_left"
+    elif planned.axis in {"pan_right", "x_right"}:
+        canonical = "pan_right"
+    elif planned.axis in {"tilt_up", "y_up"}:
+        canonical = "tilt_up"
+    elif planned.axis in {"tilt_down", "y_down"}:
+        canonical = "tilt_down"
+    elif planned.axis in {"zoom_in", "push_in", "z_forward"}:
+        canonical = "push_in"
+    elif planned.axis in {"zoom_out", "pull_out", "z_backward"}:
+        canonical = "pull_out"
+    elif planned.axis == "drift":
+        canonical = "pan_right"
+    elif planned.axis == "compound":
+        canonical = "tri_phasic" if (duration_sec >= 30.0 or is_tri) else "biphasic_ken_burns"
+    else:
+        raise ValueError(f"Fail-Closed: Unknown axis '{planned.axis}' in planned profile: {planned.effect_id}")
+
+    return RenderMotionProfile(
+        motion_family=planned.motion_family,
+        axis=planned.axis,
+        focal_anchor=planned.focal_anchor,
+        phases=planned.phases,
+        transition_out=planned.transition_out,
+        clamped_for_subtitles=planned.clamped_for_subtitles,
+        canonical_renderer_motion=canonical,
+        is_tri_phasic=is_tri,
+        is_perceptual_cut=is_perceptual,
+        is_biphasic=is_bi,
+        profile_version="v5.0",
+    )
+
+
+def resolve_render_motion(
+    effect: str,
+    duration_sec: float = 0.0,
+    planned: Optional[Any] = None,
+) -> str:
+    """Resolve canonical motion string from effect identifier or planned profile. Fail-Closed."""
+    if planned is not None:
+        if isinstance(planned, PlannedProfile):
+            return adapt_planned_to_render_profile(planned, duration_sec).canonical_renderer_motion
+        if isinstance(planned, dict):
+            if "canonical_renderer_motion" in planned:
+                return str(planned["canonical_renderer_motion"])
+            if "motion_family" in planned and "axis" in planned:
+                p_phases = []
+                for ph in planned.get("phases", []):
+                    if isinstance(ph, dict):
+                        p_phases.append(
+                            MotionPhase(
+                                duration_ratio=float(ph.get("duration_ratio", 1.0)),
+                                zoom_start=float(ph.get("zoom_start", 1.0)),
+                                zoom_end=float(ph.get("zoom_end", 1.1)),
+                                center_start=tuple(ph.get("center_start", [0.5, 0.5])),
+                                center_end=tuple(ph.get("center_end", [0.5, 0.5])),
+                                easing=str(ph.get("easing", "cosine_s_curve")),
+                            )
+                        )
+                    elif isinstance(ph, str):
+                        p_phases.append(
+                            MotionPhase(
+                                duration_ratio=1.0,
+                                zoom_start=1.0,
+                                zoom_end=1.05,
+                                center_start=(0.5, 0.5),
+                                center_end=(0.5, 0.5),
+                                easing="cosine_s_curve",
+                            )
+                        )
+                pl = PlannedProfile(
+                    effect_id=str(planned.get("effect_id", effect)),
+                    motion_family=str(planned.get("motion_family", "")),
+                    axis=str(planned.get("axis", "")),
+                    focal_anchor=tuple(planned.get("focal_anchor", [0.5, 0.5])),
+                    phases=tuple(p_phases),
+                    transition_out=str(planned.get("transition_out", "hard_cut")),
+                    reason_codes=tuple(planned.get("reason_codes", ())),
+                    pacing_tier=str(planned.get("pacing_tier", "tier_2_context")),
+                    editing_tempo=str(planned.get("editing_tempo", "context_mid")),
+                    sub_type=str(planned.get("sub_type", "subpixel_ken_burns")),
+                    clamped_for_subtitles=bool(planned.get("clamped_for_subtitles", False)),
+                )
+                return adapt_planned_to_render_profile(pl, duration_sec).canonical_renderer_motion
+
+    eff = str(effect or "").lower().strip()
+    if not eff:
+        raise ValueError("Fail-Closed: Empty effect string cannot be resolved.")
+
+    if "tri_phasic" in eff or (duration_sec >= 30.0 and "ambient_drift" in eff):
+        return "tri_phasic"
+    if "perceptual_cut" in eff or "subcut" in eff:
+        return "perceptual_cut"
+    if "biphasic" in eff:
+        return "biphasic_ken_burns"
+    if "pan_left" in eff:
+        return "pan_left"
+    if "pan_right" in eff:
+        return "pan_right"
+    if "tilt_up" in eff:
+        return "tilt_up"
+    if "tilt_down" in eff:
+        return "tilt_down"
+    if "pull_out" in eff or "zoom_out" in eff:
+        return "pull_out"
+    if "push_in" in eff or "zoom_in" in eff or "threat_push" in eff or "reframe" in eff or "evidence_macro" in eff:
+        return "push_in"
+    if "ambient_drift" in eff:
+        return "tri_phasic" if duration_sec >= 30.0 else "pan_right"
+    if eff in {"bare_tip_whiteboard", "bare_tip"}:
+        return "bare_tip"
+
+    raise ValueError(f"Fail-Closed: Unresolvable effect identifier '{effect}'.")
+
+
+
 class CinematicEffectPlannerProtocol(Protocol):
     def plan_shot_effect(
         self,
@@ -118,7 +300,7 @@ class CinematicEffectPlanner:
             focal_anchor=(0.5, 0.45),
             phases=(
                 MotionPhase(
-                    duration_ratio=1.0,
+                    duration_ratio=r1,
                     zoom_start=1.0,
                     zoom_end=1.04,
                     center_start=(0.48, 0.45),
@@ -139,7 +321,7 @@ class CinematicEffectPlanner:
             focal_anchor=(0.5, 0.5),
             phases=(
                 MotionPhase(
-                    duration_ratio=1.0,
+                    duration_ratio=r2,
                     zoom_start=1.04,
                     zoom_end=1.12,
                     center_start=(0.5, 0.5),
@@ -160,15 +342,15 @@ class CinematicEffectPlanner:
             focal_anchor=(0.55, 0.55),
             phases=(
                 MotionPhase(
-                    duration_ratio=1.0,
+                    duration_ratio=r3,
                     zoom_start=1.10,
-                    zoom_end=1.18,
-                    center_start=(0.52, 0.52),
+                    zoom_end=1.20,
+                    center_start=(0.55, 0.55),
                     center_end=(0.55, 0.55),
                 ),
             ),
             transition_out="hard_cut",
-            reason_codes=("opening_pacing", "evidence_lock"),
+            reason_codes=("opening_pacing", "detail_climax"),
             pacing_tier="tier_1_hook",
             editing_tempo="rapid_montage",
             sub_type="opening_cut_evidence_detail",

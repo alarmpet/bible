@@ -472,3 +472,28 @@ def render_composite_opening_clip(
 
     return output_path
 
+
+def render_perceptual_cut_subscenes(
+    image_path: Path,
+    output_path: Path,
+    duration: float,
+    fps: int = 25,
+    width: int = 1920,
+    height: int = 1080,
+    cut_time_sec: float = 5.0,
+) -> Path:
+    """Render a Tier 1 perceptual subcut scene: wide establishing frame switching to tight crop at cut_time_sec.
+
+    Keeps master speech/audio/subtitles 100% intact while generating a broadcast jump cut via PIL 120% overscan.
+    """
+    return render_smooth_motion_clip(
+        image_path=image_path,
+        output_path=output_path,
+        duration=duration,
+        motion="perceptual_cut",
+        fps=fps,
+        width=width,
+        height=height,
+    )
+
+

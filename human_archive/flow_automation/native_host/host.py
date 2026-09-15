@@ -56,9 +56,57 @@ def dispatch(message: Mapping[str, Any], context: HostContext) -> list[dict[str,
         shot_id = str(payload.get("shot_id", ""))
         attempt = int(payload.get("attempt", 0))
         _event(context, normalized, "SHOT_SUBMITTED", shot_id, attempt, payload)
+        context.snapshot = replay_job(context.job, context.events_path)
         return [_envelope("RUN_SHOT", job_id, {"shot_id": shot_id, "attempt": attempt})]
+    if kind == "DOWNLOAD_COMPLETED":
+        shot_id = str(payload.get("shotId", payload.get("shot_id", "")))
+        attempt = int(payload.get("attempt", 1))
+        filename = str(payload.get("filename", ""))
+        downloads_root = Path(str(context.job.get("output_dir", "")))
+        source_path = Path(filename)
+        expected_binding = {
+            "job_id": job_id,
+            "shot_id": shot_id,
+            "prompt_sha256": str(payload.get("promptSha256", payload.get("prompt_sha256", ""))),
+            "attempt": attempt,
+            "card_id": str(payload.get("cardId", payload.get("card_id", f"card-{shot_id}"))),
+            "media_identity": str(payload.get("mediaIdentity", payload.get("media_identity", f"media-{shot_id}"))),
+            "download_id": str(payload.get("downloadId", payload.get("download_id", "0"))),
+            "original_filename": source_path.name,
+        }
+        binding = payload.get("binding", {"expected": expected_binding, "observed": expected_binding})
+        prior_assets: list[Any] = []
+        approved_manifest_path = downloads_root / "approved_asset_manifest.json"
+        if approved_manifest_path.exists():
+            try:
+                import json
+                prior_assets = json.loads(approved_manifest_path.read_text(encoding="utf-8")).get("assets", [])
+            except Exception:
+                pass
+        try:
+            from .asset_validator import validate_asset
+            res = validate_asset(context.job, shot_id, source_path, downloads_root, prior_assets, binding=binding)
+            if res.status == "APPROVED":
+                _event(context, normalized, "SHOT_ACCEPTED", shot_id, attempt, {"approved_path": res.approved_path, "sha256": res.sha256})
+                context.snapshot = replay_job(context.job, context.events_path)
+                return [
+                    _envelope("SHOT_ACCEPTED", job_id, {"shot_id": shot_id, "approved_path": res.approved_path}),
+                    _envelope("JOB_STATE", job_id, {"control_state": "RUNNING", "shots": {k: vars(v) for k, v in context.snapshot.shots.items()}})
+                ]
+            else:
+                _event(context, normalized, "SHOT_RETRY", shot_id, attempt, {"error": res.code})
+                context.snapshot = replay_job(context.job, context.events_path)
+                return [
+                    _envelope("SHOT_RETRY", job_id, {"shot_id": shot_id, "code": res.code}),
+                    _envelope("JOB_STATE", job_id, {"control_state": "RUNNING", "shots": {k: vars(v) for k, v in context.snapshot.shots.items()}})
+                ]
+        except Exception as exc:
+            _event(context, normalized, "JOB_PAUSED", shot_id, attempt, {"code": "VALIDATION_EXCEPTION", "message": str(exc)})
+            context.snapshot = replay_job(context.job, context.events_path)
+            return [_envelope("JOB_PAUSED", job_id, {"code": "VALIDATION_EXCEPTION", "message": str(exc)})]
     if kind in {"JOB_PAUSED", "SHOT_ACCEPTED", "SHOT_RETRY"}:
         _event(context, normalized, kind, str(payload.get("shot_id", "")), int(payload.get("attempt", 0)), payload)
+        context.snapshot = replay_job(context.job, context.events_path)
         return [_envelope("JOB_STATE", job_id, {"control_state": "PAUSED" if kind == "JOB_PAUSED" else "RUNNING"})]
     return [_envelope("JOB_PAUSED", job_id, {"code": "UNSUPPORTED_COMMAND"})]
 

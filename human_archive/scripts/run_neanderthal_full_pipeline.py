@@ -108,31 +108,78 @@ def probe_service_port(port: int, host: str = "127.0.0.1", timeout: float = 1.0)
             return False
 
 
-def probe_required_external_services(require_tts: bool = False, require_flow: bool = False) -> Dict[str, bool]:
-    """Check external services and fail-closed if required services are offline."""
-    tts_online = probe_service_port(3093)
-    flow_online = probe_service_port(9222)
+def probe_required_external_services(
+    require_tts: bool = False,
+    require_flow: bool = False,
+    auto_start: bool = True,
+) -> Dict[str, bool]:
+    """Check external services and auto-launch offline services if auto_start=True."""
+    try:
+        from lib.external_service_manager import (
+            ensure_supertonic3_running,
+            ensure_flow_cdp_chrome_running,
+            probe_supertonic3_health,
+            probe_flow_cdp_health,
+        )
+    except ImportError:
+        try:
+            from external_service_manager import (
+                ensure_supertonic3_running,
+                ensure_flow_cdp_chrome_running,
+                probe_supertonic3_health,
+                probe_flow_cdp_health,
+            )
+        except ImportError:
+            ensure_supertonic3_running = None
+            ensure_flow_cdp_chrome_running = None
+            probe_supertonic3_health = lambda: probe_service_port(3093)
+            probe_flow_cdp_health = lambda: probe_service_port(9222)
 
-    status = {
+    tts_online = probe_supertonic3_health()
+    flow_online = probe_flow_cdp_health()
+
+    if require_tts and not tts_online:
+        if auto_start and ensure_supertonic3_running is not None:
+            print("[*] Preflight Check: SuperTonic3 is offline. Auto-launching SuperTonic3 server...")
+            try:
+                ensure_supertonic3_running()
+                tts_online = probe_supertonic3_health()
+            except Exception as e:
+                raise PreflightServiceUnavailableError(
+                    f"Preflight Check FAILED: Failed to auto-launch SuperTonic3 on port 3093: {e}\n"
+                    "Refusing to generate dummy 140Hz tone audio."
+                ) from e
+
+        if not tts_online:
+            raise PreflightServiceUnavailableError(
+                "Preflight Check FAILED: SuperTonic3 TTS service is OFFLINE on port 3093.\n"
+                "Please start the SuperTonic3 TTS server before running audio generation.\n"
+                "Refusing to generate dummy 140Hz tone audio."
+            )
+
+    if require_flow and not flow_online:
+        if auto_start and ensure_flow_cdp_chrome_running is not None:
+            print("[*] Preflight Check: Google Flow CDP is offline. Auto-launching Chrome on port 9222...")
+            try:
+                ensure_flow_cdp_chrome_running()
+                flow_online = probe_flow_cdp_health()
+            except Exception as e:
+                raise PreflightServiceUnavailableError(
+                    f"Preflight Check FAILED: Failed to auto-launch Google Flow Chrome CDP on port 9222: {e}\n"
+                    "Refusing to generate PIL placeholder artwork."
+                ) from e
+
+        if not flow_online:
+            raise PreflightServiceUnavailableError(
+                "Preflight Check FAILED: Google Flow Chrome CDP is OFFLINE on port 9222.\n"
+                "Please start Chrome with remote debugging on port 9222 before running image generation.\n"
+                "Refusing to generate PIL placeholder artwork."
+            )
+
+    return {
         "supertonic3_tts": tts_online,
         "google_flow_cdp": flow_online,
     }
-
-    if require_tts and not tts_online:
-        raise PreflightServiceUnavailableError(
-            "Preflight Check FAILED: SuperTonic3 TTS service is OFFLINE on port 3093.\n"
-            "Please start the SuperTonic3 TTS server before running audio generation.\n"
-            "Refusing to generate dummy 140Hz tone audio."
-        )
-
-    if require_flow and not flow_online:
-        raise PreflightServiceUnavailableError(
-            "Preflight Check FAILED: Google Flow Chrome CDP is OFFLINE on port 9222.\n"
-            "Please start Chrome with remote debugging on port 9222 before running image generation.\n"
-            "Refusing to generate PIL placeholder artwork."
-        )
-
-    return status
 
 
 def ensure_workspace() -> Path:
@@ -266,6 +313,14 @@ def synthesize_all_audio(shots: List[Dict[str, Any]]) -> Path:
     PADDED_AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
     engine = None
+    if not probe_service_port(3093):
+        print("[*] SuperTonic3 server is offline. Auto-launching before synthesis...")
+        try:
+            from lib.external_service_manager import ensure_supertonic3_running
+            ensure_supertonic3_running()
+        except Exception as auto_err:
+            print(f"SuperTonic3 auto-launch warning: {auto_err}")
+
     if Supertonic3Engine:
         try:
             engine = Supertonic3Engine(output_dir=AUDIO_DIR)
@@ -856,9 +911,9 @@ def render_cinematic_master_video(master_audio: Path, shots: List[Dict[str, Any]
 
         print(f"[{idx+1:02d}/{len(shots)}] Rendering Motion Clip ({effect}, {dur:.2f}s): {clip_file.name}")
 
-        motion_type = effect.replace("subpixel_", "").replace("bare_tip_", "")
-        if motion_type not in ["push_in", "pull_out", "pan_left", "pan_right", "tilt_up", "tilt_down"]:
-            motion_type = "push_in"
+        from lib.cinematic_effect_planner import resolve_render_motion
+        motion_type = resolve_render_motion(effect=effect, duration_sec=dur, planned=s)
+
 
         if idx == 0:
             # 3-Cut Visible FLOW Opening

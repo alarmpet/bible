@@ -26,3 +26,10 @@ def test_unsupported_command_pauses(tmp_path: Path) -> None:
     ctx = host_context(tmp_path)
     response = dispatch(envelope("RUN_SHOT", "job-1", {}), ctx)
     assert response[0]["type"] == "JOB_PAUSED"
+
+def test_shot_submitted_returns_run_shot(tmp_path: Path) -> None:
+    ctx = host_context(tmp_path)
+    response = dispatch(envelope("SHOT_SUBMITTED", "job-1", {"shot_id": "SHOT_001", "attempt": 1}), ctx)
+    assert response[0]["type"] == "RUN_SHOT"
+    assert response[0]["payload"]["shot_id"] == "SHOT_001"
+

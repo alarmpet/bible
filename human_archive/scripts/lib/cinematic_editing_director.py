@@ -2,7 +2,7 @@
 """Cinematic Hybrid Editing Director.
 
 Orchestrates multi-modal documentary video editing:
-1. [Inviolable Rule 1] Every video starts with a Bare-Tip Whiteboard Animation effect (no hands/pens).
+1. [Inviolable Rule 1] Every video starts with a 3-Cut Visible FLOW Opening (context_wide -> subject_action -> evidence_detail). Bare-Tip is reserved only for interior explanatory inserts.
 2. [Inviolable Rule 2] 6-Vector kinetic rotation preventing consecutive identical motions (Anti-Monotony).
 3. [Inviolable Rule 3] Subpixel bicubic Ken Burns with Cosine S-curve easing (0-Pixel Judder).
 4. [Inviolable Rule 4] Theme-aware canvas padding (e.g. 0xF5EBD7) eliminating letterbox contrast mismatch.
@@ -85,7 +85,7 @@ def split_sentence_by_semantic_clause(text: str, max_chars: int = 35) -> List[st
 
 def calculate_variable_shot_budget(target_duration_sec: float) -> Dict[str, Any]:
     """Calculate the 3-Tier variable pacing shot budget according to tri-model consensus formula:
-    - Tier 1 (0% ~ 10%): Rapid montage (avg 3.25s, scene 1 is 11.0s Bare-Tip hook)
+    - Tier 1 (0% ~ 10%): Rapid montage (avg 3.25s, opening is 11.0s 3-Cut Visible FLOW hook)
     - Tier 2 (10% ~ 30%): Context mid-tempo (avg 10.5s)
     - Tier 3 (30% ~ 100%): Deep narrative (avg 42.5s, 30~60s long take with 2-stage Ken Burns)
 
@@ -140,6 +140,7 @@ def calculate_variable_shot_budget(target_duration_sec: float) -> Dict[str, Any]
             "max_shots": t1_max,
             "recommended_shots": t1_rec,
             "tempo": "rapid_montage",
+            "opening_visible_flow_hook_sec": 11.0,
             "shot_0_bare_tip_hook_sec": 11.0,
         },
         "tier_2_context": {
@@ -316,7 +317,7 @@ class CinematicEditingDirector:
         total_duration: Optional[float] = None
     ) -> List[Dict[str, Any]]:
         """Plan editing effects with explicit 3-Tier Variable Pacing standards:
-        - Tier 1 (0% ~ 10%): Rapid montage (2.0s ~ 4.5s), Shot 0 Bare-Tip Whiteboard (10~12s).
+        - Tier 1 (0% ~ 10%): Rapid montage (2.0s ~ 4.5s), Opening 3-Cut Visible FLOW (11s).
         - Tier 2 (10% ~ 30%): Context mid-tempo (6.0s ~ 15.0s), 6-vector kinetic + 3D HUD.
         - Tier 3 (30% ~ 100%): Deep contemplative (30.0s ~ 60.0s) with 2-stage Ken Burns.
         """
@@ -329,7 +330,7 @@ class CinematicEditingDirector:
         theme_color: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """Partition narrative sentences into shots dynamically using 3-Tier Variable Pacing:
-        - Tier 1 (0% ~ 10%): Rapid montage (2.0s ~ 4.5s/shot), Shot 0 is 11.0s Bare-Tip Whiteboard hook.
+        - Tier 1 (0% ~ 10%): Rapid montage (2.0s ~ 4.5s/shot), Opening is 11.0s 3-Cut Visible FLOW hook.
         - Tier 2 (10% ~ 30%): Context mid-tempo (6.0s ~ 15.0s/shot), 1 sentence = 1 shot.
         - Tier 3 (30% ~ 100%): Deep contemplative long takes (30.0s ~ 60.0s/shot), grouping 2~4 sentences.
         
@@ -409,8 +410,8 @@ class CinematicEditingDirector:
                 "narration": first_s["text"],
                 "pacing_tier": "tier_1_hook",
                 "editing_tempo": "rapid_montage",
-                "editing_effect": "bare_tip_whiteboard",
-                "editing_subtype": "ink_stream_blueprint",
+                "editing_effect": "visible_flow_opening",
+                "editing_subtype": "context_wide_cinematic",
                 "camera_motion": "push_in",
                 "is_pilot": True
             })

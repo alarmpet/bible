@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NarrationVisualBriefResponseV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "episode_id", "briefs"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "briefs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "items": {"$ref": "#/$defs/brief"}
+    }
+  },
+  "$defs": {
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shot_id",
+        "narration_digest",
+        "visual_mode",
+        "semantic_anchors",
+        "focal_subject",
+        "action",
+        "place",
+        "era",
+        "shot_scale",
+        "camera",
+        "foreground",
+        "midground",
+        "background",
+        "continuity_group",
+        "reference_asset_ids",
+        "prop_motifs",
+        "text_overlay_policy",
+        "overlay_items",
+        "motion_profile",
+        "safety_treatment"
+      ],
+      "properties": {
+        "shot_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+        "narration_digest": {"type": "string", "minLength": 1, "maxLength": 240},
+        "visual_mode": {
+          "type": "string",
+          "enum": [
+            "historical_reconstruction",
+            "evidence_artifact",
+            "place_establishing",
+            "diagram_metaphor",
+            "atmosphere",
+            "character_action",
+            "host_chapter_hinge",
+            "analogy_explainer"
+          ]
+        },
+        "semantic_anchors": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "items": {"type": "string", "minLength": 2, "maxLength": 80}
+        },
+        "focal_subject": {"type": "string", "minLength": 2, "maxLength": 160},
+        "action": {"type": "string", "minLength": 8, "maxLength": 360},
+        "place": {"type": "string", "minLength": 2, "maxLength": 120},
+        "era": {"type": "string", "minLength": 2, "maxLength": 80},
+        "shot_scale": {"type": "string", "minLength": 2, "maxLength": 120},
+        "camera": {"type": "string", "minLength": 2, "maxLength": 180},
+        "foreground": {"type": "string", "minLength": 2, "maxLength": 180},
+        "midground": {"type": "string", "minLength": 2, "maxLength": 180},
+        "background": {"type": "string", "minLength": 2, "maxLength": 180},
+        "continuity_group": {"type": "string", "pattern": "^chapter-[1-9][0-9]*$"},
+        "reference_asset_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "prop_motifs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {"type": "string", "minLength": 2, "maxLength": 80}
+        },
+        "text_overlay_policy": {"type": "string", "minLength": 8, "maxLength": 240},
+        "overlay_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text", "source_sentence_id"],
+            "properties": {
+              "text": {"type": "string", "minLength": 1, "maxLength": 80},
+              "source_sentence_id": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "motion_profile": {
+          "type": "string",
+          "enum": [
+            "reenactment_push",
+            "artifact_close_push",
+            "place_sweep",
+            "analogy_pan",
+            "atmosphere_drift",
+            "character_follow",
+            "host_hinge",
+            "diagram_reveal",
+            "route_pan"
+          ]
+        },
+        "safety_treatment": {"type": "string", "minLength": 8, "maxLength": 300}
+      }
+    }
+  }
+}

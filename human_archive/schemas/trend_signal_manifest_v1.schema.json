@@ -1,0 +1,1 @@
+{"type":"object","required":["signal_id","platform","canonical_url_or_provider_id","observed_at_utc","region","window","event_fingerprint","source_state","discovery_role","retention_class"],"properties":{"source_state":{"enum":["active","edited","deleted","private","unavailable"]},"discovery_role":{"const":"DISCOVERY_ONLY"},"window":{"type":"string"}},"additionalProperties":true}

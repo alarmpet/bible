@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["briefs"],
+  "properties": {
+    "briefs": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["shot_id", "narration_digest", "visual_mode", "semantic_anchors", "focal_subject", "action", "place", "era", "shot_scale", "camera", "foreground", "midground", "background", "continuity_group", "reference_asset_ids", "prop_motifs", "text_overlay_policy", "overlay_items", "motion_profile", "safety_treatment"],
+        "properties": {
+          "shot_id": {"type": "string"},
+          "narration_digest": {"type": "string"},
+          "visual_mode": {"enum": ["historical_reconstruction", "evidence_artifact", "place_establishing", "diagram_metaphor", "atmosphere", "character_action", "host_chapter_hinge", "analogy_explainer"]},
+          "semantic_anchors": {"type": "array", "minItems": 2, "maxItems": 5, "items": {"type": "string"}},
+          "focal_subject": {"type": "string"},
+          "action": {"type": "string"},
+          "place": {"type": "string"},
+          "era": {"type": "string"},
+          "shot_scale": {"type": "string"},
+          "camera": {"type": "string"},
+          "foreground": {"type": "string"},
+          "midground": {"type": "string"},
+          "background": {"type": "string"},
+          "continuity_group": {"type": "string"},
+          "reference_asset_ids": {"type": "array", "items": {"type": "string"}},
+          "prop_motifs": {"type": "array", "maxItems": 3, "items": {"type": "string"}},
+          "text_overlay_policy": {"type": "string"},
+          "overlay_items": {"type": "array", "items": {"type": "object"}},
+          "motion_profile": {"enum": ["reenactment_push", "place_sweep", "route_pan", "diagram_reveal", "artifact_close_push", "analogy_pan", "atmosphere_drift", "host_hinge"]},
+          "safety_treatment": {"type": "string"}
+        }
+      }
+    }
+  }
+}

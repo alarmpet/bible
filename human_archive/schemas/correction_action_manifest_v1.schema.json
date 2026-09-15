@@ -1,0 +1,1 @@
+{"type":"object","required":["action_id","severity","surfaces","status"],"properties":{"severity":{"enum":["CRITICAL","MATERIAL","MINOR"]},"surfaces":{"type":"array","minItems":1},"status":{"enum":["PROPOSED","APPROVED","EXECUTED","CANCELLED"]}},"additionalProperties":true}

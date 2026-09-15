@@ -1,0 +1,13 @@
+schema_version: 2
+episode_id: "GENERIC-002"
+title: "알렉산드리아 도서관의 진실 — 불타 사라진 지혜의 신화"
+format_profile: "standard_docu"
+target_duration_sec: 930
+slogan: "역사가 어렵다구요? 이 선비가 귀에 쏙 넣어 드리지요!"
+research_status: "approved"
+core_question: "알렉산드리아 도서관은 단 하룻밤 만에 불타 사라졌을까요? 아니면 수세기에 걸친 쇠퇴였을까요?"
+historical_period: "BC 3세기 - AD 4세기"
+location: "이집트 알렉산드리아"
+opening_hooks:
+  hook_15s: "다들 알렉산드리아 도서관이 시저의 불길에 단 하루 만에 다 타버린 줄 아시지요? 허허, 천만의 말씀!"
+  roadmap_45s: "오늘 선비와 함께 수백 년에 걸친 지혜의 흥망성쇠를 낱낱이 파헤쳐 보시지요!"

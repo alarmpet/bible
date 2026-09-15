@@ -46,15 +46,21 @@ from lib.exact_release_verifier import (
 )
 from lib.rank2_visual_contract import audit_plate_directory, audit_visual_anchor_contract, audit_v3_pacing
 
+# INTERNAL BENCHMARK RESEARCH ONLY — never publish this pipeline's output.
+# Isolated 2026-09-15 per docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md §6:
+# this pipeline reproduces another channel's specific video (verbatim narration, matched cut
+# timing, replicated branding) and must never feed a release/publish path. See
+# research/human_library_benchmark_internal_only/DO_NOT_PUBLISH.md.
 # Canonical Paths
 REPO_ROOT = SCRIPTS_DIR.parents[2]
-EP_DIR = SCRIPTS_DIR.parent / "runs" / "human_library_replica" / "rank2_forgotten_civilization"
+EP_DIR = SCRIPTS_DIR.parent / "research" / "human_library_benchmark_internal_only" / "rank2_forgotten_civilization"
 METADATA_DIR = EP_DIR / "metadata"
 SUBTITLES_DIR = EP_DIR / "subtitles"
 AUDIO_DIR = EP_DIR / "audio"
 IMAGES_DIR = EP_DIR / "images_2d_master"
 VIDEO_DIR = EP_DIR / "video"
-BRANDING_DIR = SCRIPTS_DIR.parent / "assets" / "branding"
+BRANDING_DIR = (SCRIPTS_DIR.parent / "research" / "human_library_benchmark_internal_only"
+                / "reference_assets_do_not_use_in_production")
 TOP3_DIR = REPO_ROOT / "scratch" / "human_library_top3"
 
 ORIGINAL_MP4 = TOP3_DIR / "original_rank2.mp4"

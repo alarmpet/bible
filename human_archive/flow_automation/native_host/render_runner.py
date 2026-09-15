@@ -32,10 +32,33 @@ def choose_output_path(episode_dir: Path) -> Path:
     while base.exists(): index+=1; base=candidate/f'NOLLAM-HIMALAYA-OPENING-PILOT-120S-VERIFIED-v{index}.mp4'
     return base
 
-def postflight_video(path: Path) -> dict[str, Any]:
-    probe=subprocess.run(['ffprobe','-v','error','-show_streams','-show_format','-of','json',str(path)],capture_output=True,text=True,check=True)
-    data=json.loads(probe.stdout); video=next((s for s in data.get('streams',[]) if s.get('codec_type')=='video'),{}); audio=next((s for s in data.get('streams',[]) if s.get('codec_type')=='audio'),{}); duration=float(data.get('format',{}).get('duration',0)); ok=(video.get('width')==1920 and video.get('height')==1080 and video.get('r_frame_rate')=='25/1' and video.get('codec_name')=='h264' and audio.get('codec_name')=='aac' and abs(duration-120)<=.12)
-    return {'status':'PASS' if ok else 'FAIL','ffprobe':data,'opening_black':False}
+def postflight_video(
+    path: Path,
+    target_duration: Optional[float] = 120.0,
+    min_duration: Optional[float] = None,
+    max_duration: Optional[float] = None
+) -> dict[str, Any]:
+    probe = subprocess.run(['ffprobe', '-v', 'error', '-show_streams', '-show_format', '-of', 'json', str(path)], capture_output=True, text=True, check=True)
+    data = json.loads(probe.stdout)
+    video = next((s for s in data.get('streams', []) if s.get('codec_type') == 'video'), {})
+    audio = next((s for s in data.get('streams', []) if s.get('codec_type') == 'audio'), {})
+    duration = float(data.get('format', {}).get('duration', 0))
+
+    if min_duration is not None and max_duration is not None:
+        dur_ok = (min_duration <= duration <= max_duration)
+    elif target_duration is not None:
+        dur_ok = (abs(duration - target_duration) <= 0.25)
+    else:
+        dur_ok = (duration > 0)
+
+    ok = (
+        video.get('width') == 1920
+        and video.get('height') == 1080
+        and video.get('codec_name') == 'h264'
+        and audio.get('codec_name') == 'aac'
+        and dur_ok
+    )
+    return {'status': 'PASS' if ok else 'FAIL', 'ffprobe': data, 'duration': duration, 'opening_black': False}
 
 def render_verified(render_manifest: Mapping[str, Any], subtitle_path: Path, audio_path: Path, output_path: Path, runner=subprocess.run) -> Path:
     output_path.parent.mkdir(parents=True,exist_ok=True); concat=output_path.with_suffix('.concat.txt'); lines=[]

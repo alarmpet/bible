@@ -15,7 +15,7 @@
       "narration": "하늘은 구름 한 점 없이 맑았습니다.",
       "claim_ids": [],
       "visual_mode": "atmosphere_cinematic",
-      "midjourney_prompt": "A serene tranquil Himalayan village valley bathed in bright morning sunlight, crystal clear blue sky, traditional stone houses, high altitude mountain valley Nepal, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "A serene tranquil Himalayan village valley bathed in bright morning sunlight, crystal clear blue sky, traditional stone houses, high altitude mountain valley Nepal, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "상황",
         "text": "2024년 히말라야"
@@ -34,7 +34,7 @@
         "CLM-GLOF-04"
       ],
       "visual_mode": "nature_phenomenon_simulation",
-      "midjourney_prompt": "A massive catastrophic wall of roaring mud, boulders, and glacial water rushing violently down a narrow mountain river gorge, Himalayan gorge flood disaster, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "A massive colossal wall of roaring mud, boulders, and glacial water rushing powerfully down a narrow mountain river gorge, Himalayan gorge flash flood event, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "돌발",
         "text": "무우(無雨) 홍수"
@@ -53,7 +53,7 @@
         "CLM-GLOF-04"
       ],
       "visual_mode": "atmosphere_cinematic",
-      "midjourney_prompt": "Empty sunny sky above towering snow-capped Himalayan peaks, stark contrast of calm weather with sudden disaster, Himalayan mountain ridge, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Empty sunny sky above towering snow-capped Himalayan peaks, stark contrast of calm weather with calm before the surge, Himalayan mountain ridge, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -67,7 +67,7 @@
       "narration": "마을 사람들은 도대체 어디서 물이 쏟아진 건지 알지 못했죠.",
       "claim_ids": [],
       "visual_mode": "character_action_cinematic",
-      "midjourney_prompt": "Local Sherpa residents standing on a high cliff edge looking down in utter shock and disbelief at the flooded valley, Nepalese mountain village, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Local Sherpa residents standing on a high cliff edge looking down in utter shock and disbelief at the flooded valley, Nepalese mountain village, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -83,7 +83,7 @@
         "CLM-GLOF-04"
       ],
       "visual_mode": "satellite_terrain_map",
-      "midjourney_prompt": "High angle drone view ascending rapidly from mountain valley up to 5000m high altitude glacial basin, vast scale, Himalayas altitude perspective, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "High angle drone view ascending rapidly from mountain valley up to 5000m high altitude glacial basin, vast scale, Himalayas altitude perspective, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "발원지",
         "text": "해발 5,000m 빙하"
@@ -102,7 +102,7 @@
         "CLM-GLOF-03"
       ],
       "visual_mode": "nature_phenomenon_simulation",
-      "midjourney_prompt": "A colossal turquoise high-altitude glacial lake enclosed by towering ice walls, sudden breach of natural dam wall, glacial lake outburst flood GLOF, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "A colossal turquoise high-altitude glacial lake enclosed by towering ice walls, sudden breach of natural dam wall, glacial lake outburst flood GLOF, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "현상",
         "text": "빙하호 붕괴(GLOF)"
@@ -121,7 +121,7 @@
         "CLM-GLOF-04"
       ],
       "visual_mode": "nature_phenomenon_simulation",
-      "midjourney_prompt": "Violent hydraulic torrent carrying massive boulders destroying a concrete bridge and riverbanks, hyper-realistic water physics, river valley flood devastation, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Mighty hydraulic torrent carrying massive boulders sweeping over a concrete bridge and riverbanks, hyper-realistic water physics, river valley flood erosion, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -137,7 +137,7 @@
         "CLM-GLOF-04"
       ],
       "visual_mode": "evidence_macro",
-      "midjourney_prompt": "Scientific digital seismograph graph overlay showing sharp seismic spikes caused by glacier collapse, research monitor closeup, geophysical laboratory screen, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Scientific digital seismograph graph overlay showing sharp seismic spikes caused by glacier collapse, research monitor closeup, geophysical laboratory screen, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "용어",
         "text": "GLOF (빙하호 붕괴 홍수)"
@@ -154,7 +154,7 @@
       "narration": "그런데 놀라운 것은, 이것이 단 한 번의 불운한 사고가 아니라는 점입니다.",
       "claim_ids": [],
       "visual_mode": "atmosphere_cinematic",
-      "midjourney_prompt": "Dramatic aerial panoramic view of dozens of interconnected frozen ridges and glacial tongues in the Himalayas, ominous mood, vast Himalayan mountain range, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Dramatic aerial panoramic view of dozens of interconnected frozen ridges and glacial tongues in the Himalayas, ominous mood, vast Himalayan mountain range, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -170,7 +170,7 @@
         "CLM-GLOF-03"
       ],
       "visual_mode": "satellite_terrain_map",
-      "midjourney_prompt": "Satellite topographic 3D map of the Hindu Kush Himalaya region with glowing red hazard dots marking dangerous glacial lakes, satellite data visualization, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Satellite topographic 3D map of the Hindu Kush Himalaya region with glowing red hazard dots marking dangerous glacial lakes, satellite data visualization, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "경고",
         "text": "25,000개 빙하호"
@@ -187,7 +187,7 @@
       "narration": "우리가 '지구의 지붕'이라 부르는 이곳에서, 지금 정확히 무슨 일이 벌어지고 있는 걸까요?",
       "claim_ids": [],
       "visual_mode": "atmosphere_cinematic",
-      "midjourney_prompt": "Epic sunrise over Everest and Kanchenjunga peaks, golden light breaking through deep morning mist, immense grandeur, Himalayan summit panorama, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Epic sunrise over Everest and Kanchenjunga peaks, golden light breaking through deep morning mist, immense grandeur, Himalayan summit panorama, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -201,7 +201,7 @@
       "narration": "왜 인공위성으로 감시해도 이 거대한 붕괴를 막지 못했던 걸까요?",
       "claim_ids": [],
       "visual_mode": "character_action_cinematic",
-      "midjourney_prompt": "Meteorologist looking closely at multi-spectral satellite imagery on computer monitors in a mountain observatory, high altitude research station, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Meteorologist looking closely at multi-spectral satellite imagery on computer monitors in a mountain observatory, high altitude research station, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -217,7 +217,7 @@
         "CLM-GLOF-01"
       ],
       "visual_mode": "satellite_terrain_map",
-      "midjourney_prompt": "3D globe animation highlighting Antarctica, Arctic, and the Tibetan Plateau Hindu Kush Himalayas as the Third Pole, global planetary perspective, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "3D globe animation highlighting Antarctica, Arctic, and the Tibetan Plateau Hindu Kush Himalayas as the Third Pole, global planetary perspective, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "학술 정의",
         "text": "지구 제3의 극지(Third Pole)"
@@ -236,7 +236,7 @@
         "CLM-GLOF-05"
       ],
       "visual_mode": "satellite_terrain_map",
-      "midjourney_prompt": "Topographic river network map branching from Tibetan plateau: Ganges, Indus, Yangtze, Mekong, Yellow River flowing across Asia, continental hydrology map, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Topographic river network map branching from Tibetan plateau: Ganges, Indus, Yangtze, Mekong, Yellow River flowing across Asia, continental hydrology map, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "수혜 인구",
         "text": "아시아 20억 명"
@@ -255,7 +255,7 @@
         "CLM-GLOF-02"
       ],
       "visual_mode": "nature_phenomenon_simulation",
-      "midjourney_prompt": "Massive glacier calving event, towering 50-meter blue ice cliff collapsing into glacial water with massive splash, Himalayan glacial terminal, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Massive glacier calving event, towering 50-meter blue ice cliff collapsing into glacial water with massive splash, Himalayan glacial terminal, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "융해 가속",
         "text": "이전 대비 65% 증가"
@@ -274,7 +274,7 @@
         "CLM-GLOF-03"
       ],
       "visual_mode": "satellite_terrain_map",
-      "midjourney_prompt": "High altitude drone photogrammetry capturing multiple milky-blue glacial lakes formed behind rocky ridges, glacial lake cluster Himalaya, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "High altitude drone photogrammetry capturing multiple milky-blue glacial lakes formed behind rocky ridges, glacial lake cluster Himalaya, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -290,7 +290,7 @@
         "CLM-GLOF-04"
       ],
       "visual_mode": "evidence_macro",
-      "midjourney_prompt": "Cross-section macro view of a moraine dam wall showing loose gravel, rocks, and embedded decaying core ice veins melting, geological cross-section, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Cross-section macro view of a moraine dam wall showing loose gravel, rocks, and embedded decaying core ice veins melting, geological cross-section, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "핵심 모순",
         "text": "얼음과 흙으로 된 댐"
@@ -307,7 +307,7 @@
       "narration": "그렇다면 이 불안정한 호수들은 언제, 어떻게 폭발하는 걸까요?",
       "claim_ids": [],
       "visual_mode": "atmosphere_cinematic",
-      "midjourney_prompt": "Ominous dark storm clouds gathering over an immense glacial lake at 4800m altitude, tension rising, mountain ridge lake, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Ominous dark storm clouds gathering over an immense glacial lake at 4800m altitude, tension rising, mountain ridge lake, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -321,7 +321,7 @@
       "narration": "오늘 놀람파일에서는 히말라야 5,000m 상공에서 벌어지는 시한폭탄의 과학적 메커니즘을 밝힙니다.",
       "claim_ids": [],
       "visual_mode": "satellite_terrain_map",
-      "midjourney_prompt": "3D flyover above Everest Khumbu icefall and surrounding glacier lakes with altitude markers, Himalayan flight path 3D, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "3D flyover above Everest Khumbu icefall and surrounding glacier lakes with altitude markers, Himalayan flight path 3D, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": null
     },
     {
@@ -337,7 +337,7 @@
         "CLM-GLOF-05"
       ],
       "visual_mode": "satellite_terrain_map",
-      "midjourney_prompt": "Cinematic pull-back from Himalayan peak to the vast populated plains of India and China, sunset haze, Asian continent satellite panorama, shot on 35mm lens, cinematic documentary lighting, National Geographic style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
+      "midjourney_prompt": "Cinematic pull-back from Himalayan peak to the vast populated plains of India and China, sunset haze, Asian continent satellite panorama, shot on 35mm lens, cinematic documentary lighting, award-winning nature documentary style, ultra-detailed textures, volumetric atmospheric fog, 8k resolution, photorealistic --ar 16:9 --style raw --v 6.0 --no text, letters, numerals, watermarks, cartoon, anime",
       "overlay_event": {
         "label": "본론 예고",
         "text": "빙하 피크아웃 위기"

@@ -1,0 +1,1 @@
+{"type":"object","required":["packet_id","candidate_id","claims","source_snapshots","claim_ledger","risk_gate","freshness_deadline_utc","profile_bundle_sha256"],"properties":{"claims":{"type":"array"},"source_snapshots":{"type":"array"},"claim_ledger":{"type":"array"},"profile_bundle_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}},"additionalProperties":true}

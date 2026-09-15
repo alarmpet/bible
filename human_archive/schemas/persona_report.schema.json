@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PersonaReport",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "persona",
+    "overall_status",
+    "timing_status",
+    "errors",
+    "beat_checks",
+    "voice_checks"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "persona": { "type": "string" },
+    "overall_status": { "type": "string", "enum": ["PASS", "REVIEW_REQUIRED", "FAIL"] },
+    "timing_status": { "type": "string", "enum": ["PASS", "REVIEW_REQUIRED", "FAIL"] },
+    "errors": { "type": "array", "items": { "type": "string" } },
+    "beat_checks": { "type": "object" },
+    "voice_checks": { "type": "object" }
+  }
+}

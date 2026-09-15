@@ -1,0 +1,1 @@
+{"type":"object","required":["profile_id","binding_scope","profile_bundle_sha256","policies"],"properties":{"profile_id":{"const":"nollam_file_v1"},"binding_scope":{"const":"trend_envelope_only"},"profile_bundle_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"policies":{"type":"object"}},"additionalProperties":true}

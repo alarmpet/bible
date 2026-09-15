@@ -1,0 +1,25 @@
+schema_version: 1
+providers:
+  offline_fixture:
+    required: true
+    role: DISCOVERY_ONLY
+  google_trends_official:
+    required: true
+    role: DISCOVERY_ONLY
+    endpoint: https://trends.google.com/trending/rss
+  google_news_human_verified:
+    required: true
+    role: DISCOVERY_ONLY
+    collection: human_verified_url
+  x:
+    required: false
+    role: DISCOVERY_ONLY
+  threads:
+    required: false
+    role: DISCOVERY_ONLY
+  reddit:
+    required: false
+    role: DISCOVERY_ONLY
+  youtube:
+    required: false
+    role: DISCOVERY_ONLY

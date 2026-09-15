@@ -1089,5 +1089,9 @@
       "wav_path": "D:\\module\\bible\\human_archive\\runs\\nollam_file\\2026-09-09\\iceage-neanderthal-sapiens-extinction\\audio\\sentences_v4\\SHOT_039.wav",
       "visual_prompt": "Authentic Ice Age cinematic documentary, 35mm film photography, 미디엄 샷. Subject: 샤니다르 동굴의 꽃가루와 고럼 동굴의 꺼진 불씨는, 지금도 우리에게 묻고 있습니다. 우리는 왜 그들을 멸종시켰는가.. High contrast chiaroscuro lighting, volumetric glacial fog, 25fps optical cadence, orbit_slow camera movement, no subtitles, no text overlays, keep bottom 18% clear."
     }
-  ]
+  ],
+  "schema_version": 3,
+  "release_schema_version": "HISTORICAL_PRODUCTION_RELEASE_V3",
+  "release_type": "HISTORICAL_PRODUCTION_RELEASE_V3",
+  "historical_provenance_note": "HISTORICAL RECORD: Reflects V3 release with bare-tip opening. Superseded by V4 (Visible-First 3-Cut FLOW opening) and V5 (Motion Hardening)."
 }

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EpisodeContractV2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "episode_id",
+    "title",
+    "format_profile",
+    "target_duration_sec",
+    "research_status",
+    "core_question"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 2 },
+    "episode_id": { "type": "string" },
+    "title": { "type": "string" },
+    "format_profile": { "type": "string", "enum": ["quick_3m", "standard_docu", "pilot"] },
+    "target_duration_sec": { "type": "integer" },
+    "slogan": { "type": "string" },
+    "research_status": { "type": "string", "enum": ["draft", "research_hypothesis", "approved", "blocked_missing_evidence"] },
+    "core_question": { "type": "string" },
+    "historical_period": { "type": "string" },
+    "location": { "type": "string" },
+    "opening_hooks": {
+      "type": "object",
+      "properties": {
+        "hook_15s": { "type": "string" },
+        "roadmap_45s": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["policy_id","schema_version","manual_operator_required","auto_post"],"properties":{"policy_id":{"const":"trend_safe_release_v1"},"schema_version":{"const":1},"manual_operator_required":{"const":true},"auto_post":{"const":false}},"additionalProperties":true}

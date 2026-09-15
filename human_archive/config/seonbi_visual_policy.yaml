@@ -1,0 +1,75 @@
+version: 2
+pipeline: "human_archive"
+persona: "ship_seonbi"
+
+character:
+  look: "gat + dopo + tablet_or_brush"
+  brand_layer_separation: true # 진행자 브랜드 레이어와 역사 재현 레이어 명확히 분리
+  render_mode: "canonical_overlay"
+  canonical_asset: "human_archive/assets/doodle_seonbi_v1.png"
+  canonical_costume: "white dopo with full torso, sleeves, collar, and waist tie"
+  canonical_anchor: "right_bottom"
+  reject_generated_variants:
+    - "bare stick body"
+    - "missing torso or sleeves"
+    - "realistic hanbok presenter"
+    - "different hat or costume color"
+  prohibited_elements:
+    - "워터마크"
+    - "서비스 마크"
+    - "역사적 재현 사실로 오인되는 현대 소품 배치"
+
+disclosure:
+  ai_reconstruction_label: "AI 역사 재현"
+  victim_dignity_respect: true
+
+visual_aesthetics:
+  profile_id: "doodle_seonbi_v1"
+  art_style: "hand_drawn_doodle_animation"
+  korean_history_art_style: "simple_black_ink_doodle_with_flat_pastel_accents"
+  lighting: "soft_flat_candlelight"
+  color_palette:
+    base_shadow: "#0A0D12" # Obsidian Dark / 먹색
+    warm_accent: "#D4AF37" # Amber Gold rim light / 촛불/달빛
+    cool_accent: "#1E3A4C" # Deep Teal / Slate Blue atmospheric depth
+    seal_accent: "#B22222" # Vermilion Red / 조선 선비 낙관 인장
+  depth_layers:
+    foreground: "volumetric_dust_particles_or_embers_or_candle_flame"
+    midground: "historical_subject_or_artifact_or_seonbi_silhouette"
+    background: "ancient_architecture_or_ruins_or_hanok_study"
+  prompt_master_prefix: "Korean history explainer doodle, simple black ink line, minimal flat pastel accents, clean off-white paper, wide landscape composition"
+  prompt_korean_history_prefix: "Joseon historical reconstruction doodle with simple architecture, objects, and restrained expressions"
+  prompt_negative: "photograph, live-action photo, 3d render, anime, realistic face, gradient, texture, poster layout, empty infographic panel, watermark, letters, numerals, captions, signage, seals, speech bubbles"
+
+profile_overrides:
+  human_archive_cinematic_v1:
+    art_style: "korean_historical_webtoon_master"
+    lighting: "dramatic_chiaroscuro_side_light"
+    prompt_master_prefix: "Korean historical webtoon documentary illustration with ink contours and traditional color wash"
+
+thumbnail_formula:
+  structure: "[Deep Obsidian Background] + [Extreme Close-up Face / Hero Relic] + [Dramatic Rim Light] + [Red Seal Badge]"
+  typography: "bold_calligraphy_or_serif_under_15_chars"
+  accent_glow: "amber_gold_or_blood_red"
+  signature_badge: "쉽선비 팩트체크 붉은 낙관 인장"
+
+
+pacing_and_motion:
+  pacing_curve: "progressive_slowdown" # 초반 빠른 이미지 회전 -> 순차적으로 조금씩 느린 회전
+  phase_durations:
+    opening_hook:
+      target_shot_duration_sec: [2.5, 4.0]
+      visual_turnover: "fast" # 초반 빠른 컷 전환으로 시청자 이탈 방지
+      motion_intensity: "dynamic_pan_zoom"
+    roadmap_and_context:
+      target_shot_duration_sec: [4.0, 6.0]
+      visual_turnover: "medium"
+      motion_intensity: "smooth_pan"
+    evidence_and_body:
+      target_shot_duration_sec: [6.0, 9.0]
+      visual_turnover: "steady_slow" # 사료 중계 및 설명 몰입
+      motion_intensity: "slow_push_in" # 1.0x to 1.15x slow push-in
+    insight_and_outro:
+      target_shot_duration_sec: [8.0, 12.0]
+      visual_turnover: "long_take" # 깊은 여운과 인문학적 성찰
+      motion_intensity: "subtle_drift"
