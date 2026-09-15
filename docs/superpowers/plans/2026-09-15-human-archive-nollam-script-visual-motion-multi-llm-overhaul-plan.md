@@ -296,7 +296,7 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 **의도적으로 다루지 않은 것:** `templates/nollam_script_prompt_v3.j2`가 문장별 `phase`로 지시하는 6개 값(`hook/roadmap/evidence/paradigm_shift/insight/philosophical_outro`)과 `config/script_policy_v3.yaml`의 `story_phases`가 선언하는 5단계(`phase_1_hook~phase_5_outro`) 명명이 서로 다르다 — 이번 Task는 "실제로 렌더링되는가"만 고쳤고, 두 아티팩트 간 phase 명명 불일치 자체는 후속 과제로 남긴다.
 
-### Task 2 — `D:\all-manage` 오케스트레이션 엔진을 human_archive로 포팅 (§5 설계 구현)
+### Task 2 — `D:\all-manage` 오케스트레이션 엔진을 human_archive로 포팅 (§5 설계 구현) — ✅ 완료 (2026-09-15, 커밋 `0f76273`; 핵심 포팅은 앞서 `bea9fa7`)
 
 **Port (신규 작성이 아니라 이식)**
 - `D:\all-manage\tools\orchestration\contract.py` → `human_archive/scripts/lib/orchestration/contract.py` (거의 그대로, `DESIGN_SECTION`/`SECTION` 정규식은 도메인 무관하므로 변경 최소화)
@@ -312,7 +312,11 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 **Quarantine**
 - `human_archive/scripts/tri_model_debate_engine.py`, `tri_model_llm_bridge.py` — §2에서 확인한 하드코딩 경로를 `run_consensus_round.py`로 완전히 교체한 뒤, 기존 Studio UI 이벤트 스트리밍만 재사용하도록 얇은 어댑터로 축소
 
-**완료 기준:** all-manage의 `tests/orchestration/`과 동등한 커버리지(contract 파싱, `has_contract`, `check_independence`, 재시도/transient 판정)가 human_archive에도 있고, API 키/CLI 부재 시 산출물에 `provenance: "simulated_fixture"`가 남아 release 게이트가 이를 차단한다(§5.3 규칙 4, all-manage에는 없는 human_archive 전용 추가 규칙).
+**완료 기준 검증 (2026-09-15, 커밋 `0f76273`, 나머지는 앞서 `bea9fa7`/`276ab76`):** all-manage의 `tests/orchestration/`과 동등한 커버리지 — `contract` 파싱·`has_contract`는 `tests/orchestration/test_contract.py`(16개), 재시도/transient 판정은 `tests/orchestration/test_run_consensus_round.py`, `check_independence`는 이번에 신설한 `tests/orchestration/test_independence.py`(7개, 실제 파일 mtime을 조작해 검증)로 모두 커버된다. `docs/orchestration/prompts/{proposer,adversary,replicator,designer,critic}.md` + `_preamble.md`, `docs/orchestration/HARD_GATES.md`(8개 게이트)도 이미 존재한다. `scripts/lib/orchestration/_run_gemini.py`를 §5.6 설계대로 `_run_codex`/`_run_grok`과 동일한 형태로 신설했다 — 단, `PARTICIPANTS`에는 아직 배선하지 않았다(이 PC에 실제 `agy`/`antigravity` 바이너리가 없어 호출·검증이 불가능하고, `escalate_claim()`의 "정확히 2자" 합의 판정 로직이 4자로 확장될 때 "2/N 성공"의 의미 자체를 다시 설계해야 하기 때문 — Task 3에서 이미 같은 이유로 보류된 결정과 동일).
+
+`provenance: "simulated_fixture"` 규칙(all-manage에는 없는 human_archive 전용 추가)도 구현했다 — `tri_model_debate_engine.py`의 `orchestrate_deep_tri_model_script()` Round 1(`p_38`/`p_37`/`p_36`, 실제 모델 호출 없는 하드코딩 dict)과 Round 2(하드코딩 `critiques`)가 여전히 §2가 진단한 "모델을 한 번도 안 부른 트라이모델 토론"이라는 사실을 매니페스트의 `metadata.provenance`에 정직하게 표기하고, `postflight_release.py`의 `verify_postflight()`가 이 라벨이 붙은 빌드를 release 차단하도록 배선했다(신규 테스트 5개).
+
+**의도적으로 미룬 것 (별도 작업 `task_fcf94ecb`로 분리):** "Quarantine" 항목이 원래 요구한 — Round 1/2를 `run_consensus_round.py`의 실제 라운드 호출로 완전히 교체하고 Studio GUI 이벤트 스트리밍 계약은 그대로 유지하는 — 리라이트 자체는 하지 않았다. Studio GUI(`studio_gui_server.py`)를 이 세션에서 직접 실행·검증할 방법이 없어, 프런트엔드가 소비하는 정확한 이벤트 형태를 깨뜨릴 위험을 감수하고 큰 리팩터를 강행하기보다 라벨링(provenance)과 release 게이트 차단까지만 이번에 완료하고 리라이트는 실제 GUI 검증이 가능한 세션으로 넘겼다.
 
 ### Task 3 — 팩트체크 이중화 (룰북 1차 + 2-vendor 합의 최종) — ✅ 완료 (2026-09-15, 커밋 `276ab76`)
 
