@@ -17,11 +17,49 @@ except ImportError:  # Direct script imports keep legacy PYTHONPATH execution wo
 
 
 def _zones(target_duration_sec: float) -> list[dict[str, Any]]:
-    """Resolve the seven policy zones, including the end-relative outro."""
+    """Resolve the seven policy zones, including the end-relative outro.
+
+    INTENTIONAL DIVERGENCE from config/visual_pacing_profiles.yaml's
+    `nollam_decay_20m.zones`: the YAML declares the first five zone
+    boundaries as fixed absolute seconds (0/15/60/120/300/600) and only
+    late_body/outro as end-relative (`end_offset_from_end_sec: 90`). Those
+    fixed seconds are calibrated for exactly the 1200s nominal target and do
+    not scale -- e.g. reused verbatim at a measured 900s runtime, the `body`
+    zone would still claim the fixed 300-600s window (33%-67% of a 900s
+    episode) and collide with a `late_body`/outro boundary that *does* scale
+    (900 - 90 = 810s), compressing late_body from 210s down to almost
+    nothing. This function's `build_pacing_schedule()` caller must instead
+    produce a sensible 7-zone shot/cut budget for any nominal target across
+    the documented 14-26 minute tolerance band (840-1560s -- see
+    tests/test_nollam_synthetic_e2e.py's 300/960/1200/1560s matrix and
+    tests/test_pacing_scheduler.py's runtime-ratio test), because it is
+    called from a *target* duration during budget planning, before the real
+    TTS audio -- and therefore the actual episode length -- is known. So
+    every boundary here is expressed as a ratio of target_duration_sec
+    instead. All seven ratios were derived to reproduce the YAML's absolute
+    seconds exactly at target=1200 (the shared calibration point both
+    implementations were tuned against); that agreement, and the intentional
+    divergence at other durations, are pinned by
+    tests/test_pacing_scheduler_zone_source_of_truth.py.
+
+    This is the same "same design, two independently-drifting
+    implementations" pattern flagged by the 2026-09-15 overhaul plan
+    (docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md).
+    Task 7 of that plan wired the real shot-timing entry point
+    (scripts/plan_narration_shots.py -> lib/shot_timing.py) to read the YAML
+    directly via `_resolve_nollam_decay_zones()`/`_zone_bounds_at()` rather
+    than through this function, specifically because the YAML is the more
+    faithful source for a *measured* episode (it captures the end-relative
+    late_body/outro shape) -- see that plan's Task 7 "참고(설계 결정)" note.
+    That note explicitly left this function's own duplicate reimplementation
+    out of Task 7's scope; consolidating the two into one shared source of
+    truth is not possible without breaking one of the two genuinely
+    different contracts (measured-duration zone resolution vs.
+    target-duration budget ratios), so the divergence is documented and
+    pinned with a regression test here instead of being silently left to
+    drift further.
+    """
     target = float(target_duration_sec)
-    # The 20-minute profile's 15/60/120/300/600/1110 boundaries are
-    # normalized to ratios so a measured 14–26 minute runtime keeps the same
-    # editorial shape instead of inheriting stale absolute timestamps.
     boundaries = [
         ("cold_open", 0.0, target * 0.0125),
         ("hook", target * 0.0125, target * 0.05),
