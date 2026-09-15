@@ -55,6 +55,34 @@ story_phases:
     time_range_pct: [90, 100]      # 90~100% (18~20분)
     signature_closing: true        # 브랜드 시그니처 멘트 필수
 
+# 문장 단위 phase 태그 ↔ story_phases 챕터 매핑
+# nollam_script_prompt_v3.j2 83행이 LLM에게 요구하는 문장별 phase 값은 6개
+# (hook/roadmap/evidence/paradigm_shift/insight/philosophical_outro)인데, 위
+# story_phases는 5단계(phase_1_hook~phase_5_outro)다. 이 둘은 같은 것을 다르게
+# 쓴 것이 아니라 서로 다른 축이다 — story_phases는 챕터/시간대 배분(컷 길이
+# 정책, 서브 챕터 수 등에 쓰는 굵은 단위)이고, 문장 phase는 그보다 세분화된
+# 수사적 태그다(하나의 챕터 안에서도 문장 역할이 다를 수 있다: hook 챕터의
+# 콜드오픈/첫 반전 문장 vs 로드맵 약속 문장, outro 챕터의 현대적 함의 문장 vs
+# 마무리 시그니처 문장). 둘을 하나의 enum으로 강제 통합하지 않고, 대신 아래에
+# 결정적 대응 관계를 명시해 둘 사이의 드리프트를 방지한다.
+# (2026-09-15 오버홀 플랜 Task 1 "의도적으로 다루지 않은 것"에서 남긴 후속
+# 과제 — docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-
+# motion-multi-llm-overhaul-plan.md 참고. 코드에서 쓰는 같은 표는
+# scripts/lib/phase_mapping.py의 SENTENCE_PHASE_TO_STORY_PHASES를 정본으로
+# 유지한다 — 이 YAML 블록이 있으면 그것을 우선 쓰고, 없거나 비어 있으면 그
+# 하드코딩된 표로 폴백한다.)
+sentence_phase_map:
+  hook: [phase_1_hook]
+  roadmap: [phase_1_hook]
+  # evidence 문장 태그는 phase_2_context(통념의 균열 & 배경)와
+  # phase_3_evidence(증거 심층 제시) 두 챕터에 걸쳐 재사용된다 — 템플릿에는
+  # phase_2 전용 문장 태그가 따로 없다(Phase 2 자체가 이미 "2019년 B대학
+  # 연구팀이..." 식으로 증거 인용 위주이기 때문).
+  evidence: [phase_2_context, phase_3_evidence]
+  paradigm_shift: [phase_4_paradigm_shift]
+  insight: [phase_5_outro]
+  philosophical_outro: [phase_5_outro]
+
 # 금지 패턴
 prohibited_patterns: &prohibited_patterns
   - "오늘 영상에서는"
