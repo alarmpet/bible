@@ -339,13 +339,15 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 **미완료(후속 과제로 명시):** `run_san_jose_full_pipeline.py`, `run_san_jose_20min_flow_production.py`, `run_neanderthal_full_pipeline.py` 3개 정당한 프로덕션 스크립트가 아직 `smooth_subpixel_motion_engine.py`를 직접 호출 중 — v3로 전환 필요. **흥미로운 발견**: `motion_engine_v3.py`/`build_motion_clips_v3.py`라는 이름의 파일이 이미 (다른 세션이) 만들어 두었으나, 내용을 열어보니 같은 버그 있는 `smooth_subpixel_motion_engine.py`로 그대로 포워딩하는 얇은 어댑터였고 `build_motion_clips_v3.py`는 여전히 `[idx % 3]` 라운드로빈과 비-무손실 H.264였다 — 이번 진단 전체를 관통하는 "이름은 v3인데 내용은 안 고쳐진" 패턴이 모션 엔진 자리에도 그대로 있었다. 이번 커밋으로 실제 수정본으로 교체했다.
 
-### Task 5 — `postflight_release.py`의 죽은 모션 게이트를 실제로 연결
+### Task 5 — `postflight_release.py`의 죽은 모션 게이트를 실제로 연결 — ✅ 완료 (2026-09-15, 커밋 `7587ed3`)
 
 **Modify**
 - `human_archive/scripts/postflight_release.py` — `check_decoded_stream_motion_mae()`를 `verify_postflight()` 본문에서 실제로 호출
 - `human_archive/scripts/lib/build_manifest.py`, `generate_release_manifest_v4/v5` — 실제 호출자 연결(현재 정의만 있고 호출 0건)
 
-**완료 기준:** motion QA 미실행 또는 stale이면 release가 차단된다(Aug26 Task 9와 동일한 완료 기준).
+**완료 기준 검증:** `check_decoded_stream_motion_mae()`와 동일한 루마·슬라이딩윈도우 MAE 수식을 스트리밍으로 재구현한 `measure_decoded_video_motion_diversity()`를 신설해 `verify_postflight()`가 모든 v4/v5 release에서 실제 디코드 영상으로 매번 새로 측정하도록 배선했다(메모리에 전체 프레임을 올리지 않고 윈도 크기만큼만 버퍼링 — 20분 릴리즈는 약 3만 프레임). 디코드 실패는 조용히 통과시키지 않고 즉시 fail-closed 처리한다. `generate_release_manifest_v4/v5`의 `motion_diversity_passed`도 무조건 `True` 기본값 대신 실측값을 기본값으로 사용하도록 바꿨다. 신규 테스트 4개(매니페스트가 거짓으로 PASS를 주장해도 실측이 release를 차단하는지, 측정이 통과하면 차단하지 않는지, 매니페스트 생성기가 더 이상 `True`를 무조건 찍지 않는지, 신규 스트리밍 구현이 실제 ffmpeg 인코딩 정지/모션 클립에서 기존에 검증된 배치 버전과 같은 방향으로 판정하는지) + 기존 postflight/motion 게이트 스위트 전체 통과.
+
+**부수 발견:** 검증 중 `test_human_library_exact_clone_gate_suite.py::test_gate_5_branding_and_hud_assets`가 이미 깨져 있는 것을 발견 — Task 9(88e4242)가 §6 결정에 따라 원본 채널 브랜딩 자산을 의도적으로 삭제했는데, 이 테스트는 여전히 그 자산이 존재해야 한다고 단언한다. Task 5와 무관해 별도 백그라운드 작업으로 분리했다(`task_ffaa66ff`).
 
 ### Task 6 — fps 정책 단일화
 
