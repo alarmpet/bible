@@ -1,5 +1,7 @@
 # Rank 2 Exact Master Forensic Remediation Implementation Plan
 
+> **⚠️ 2026-09-15 withdrawn/isolated:** This plan polishes an exact-replica of another channel's specific real video (verbatim narration, matched cut timing, replicated branding), which carries clear copyright/platform-policy risk. Its outputs are isolated under `human_archive/research/human_library_benchmark_internal_only/` (never published) per `docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md` §6, and release scripts now refuse paths under that directory. Do not execute this plan against a production/publish path.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Convert the current Rank 2 output into a clean-scope, independently verified master without treating container-level PASS as proof of visual 1:1 replication.

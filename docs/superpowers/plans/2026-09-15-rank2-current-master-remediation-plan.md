@@ -1,5 +1,7 @@
 # Rank 2 현재 마스터 시각 품질 정상화 실행 계획
 
+> **⚠️ 격리 고지(같은 날 작성):** 이 문서가 다루는 Rank 2 마스터는 다른 채널의 특정 실제 영상을 verbatim 복제한 산출물이다. 저작권 위험 때문에 `human_archive/research/human_library_benchmark_internal_only/`로 격리했고 발행 경로 코드 가드를 추가했다(`2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md` §6). 이 문서의 지시는 내부 벤치마크 학습 목적에서만 유효하며, 실제 발행을 목표로 실행하지 않는다.
+
 ## 목표
 
 `NOLLAM-HUMAN-LIBRARY-RANK2-EXACT-MASTER.mp4`의 컨테이너만 통과하는 상태를 종료하고, 대본·큐·주장·샷·이미지·모션·전환·자막이 실제 encoded frames에서 일치하는 clean candidate를 만든다. BGM, 채널 로고, HUD는 clean-scope에서 계속 제외한다.
