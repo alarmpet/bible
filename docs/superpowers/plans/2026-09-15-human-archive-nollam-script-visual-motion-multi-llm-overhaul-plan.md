@@ -375,12 +375,14 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 **Gemini 미배선:** Task 3와 동일한 사유(`agy` 바이너리 미설치)로 Gemini는 아직 4번째 참가자로 연결하지 않았다 — codex+grok 2자 교차검증만 실전 배선했다.
 
-### Task 9 — `human_library_replica` 격리 (§6 실행)
+### Task 9 — `human_library_replica` 격리 (§6 실행) — ✅ 완료 (2026-09-15, 커밋 `88e4242`)
 
 **작업**
 1. `runs/human_library_replica/` → `research/human_library_benchmark_internal_only/` 이동, `DO_NOT_PUBLISH.md` 추가
 2. `release_episode.py`, `postflight_release.py` 등 발행 관련 스크립트에 입력 경로 화이트리스트 가드 추가(이 디렉터리 경로가 인자로 들어오면 즉시 실패)
 3. 원본 채널 브랜딩 자산 삭제, rank1 TTS 산출물이 실제 발행 경로와 연결되지 않았는지 확인
+
+**완료 기준 검증:** `lib/production_path_guard.py`의 `assert_not_isolated_research_path()`가 `release_episode.py`와 `postflight_release.py` 양쪽 진입점에 실제로 배선돼 격리 경로가 인자로 들어오면 즉시 차단한다(직접 확인). `runs/human_library_replica/`는 더 이상 존재하지 않고 `research/human_library_benchmark_internal_only/DO_NOT_PUBLISH.md`가 실재한다. 원본 채널 브랜딩 자산(`assets/branding/*.png`)도 삭제 확인. 다만 이 삭제로 인해 낡은 `test_human_library_exact_clone_gate_suite.py::test_gate_5_branding_and_hud_assets`가 깨져 있는 것을 Task 5 검증 중 발견했다 — 별도 후속 작업(`task_ffaa66ff`)으로 분리했다.
 
 ---
 
