@@ -81,6 +81,10 @@ Topic Category: {{ contract.topic_category }}
 2. 모든 문장은 최대 45자 이내, 평균 26~32자로, TTS 4.5~5.0초 호흡을 유지하십시오.
 3. 모든 사실 문장은 segments 배열의 fact kind에 claim_id와 evidence_span_ids를 포함하십시오.
 4. 모든 문장은 phase (hook, roadmap, evidence, paradigm_shift, insight, philosophical_outro)를 명시하십시오.
+   이 6개 문장 phase는 위 [5단계 스토리텔링 아키텍처]의 5단계보다 더 세분화된 문장 단위 태그이며, 다음과 같이 대응합니다:
+   hook/roadmap → Phase 1(0~10%), evidence → Phase 2~3(10~70%, 통념의 균열 및 증거 제시 문장 모두 evidence로 표기),
+   paradigm_shift → Phase 4(70~90%), insight/philosophical_outro → Phase 5(90~100%, 현대적 함의는 insight, 마무리 시그니처 멘트는 philosophical_outro).
+   순서상 hook/roadmap 문장이 가장 먼저, philosophical_outro 문장이 가장 마지막에 오도록 하십시오. (정본 대응표: config/script_policy_v3.yaml의 sentence_phase_map)
 5. 각 씬에 visual_mode와 midjourney_prompt 필드를 포함하십시오.
 6. 40초 질문 룰: 40초마다 최소 1개의 의문문이 포함되었는지 자체 검증 후 반환하십시오.
 7. 어투 비율: 격식체(~습니다) 60% : 친근체(~해요/~죠) 40% 비율을 자체 계수하여 검증하십시오.
