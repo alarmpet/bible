@@ -6,8 +6,9 @@ Orchestrates multi-modal documentary video editing:
 2. [Inviolable Rule 2] 6-Vector kinetic rotation preventing consecutive identical motions (Anti-Monotony).
 3. [Inviolable Rule 3] Subpixel bicubic Ken Burns with Cosine S-curve easing (0-Pixel Judder).
 4. [Inviolable Rule 4] Theme-aware canvas padding (e.g. 0xF5EBD7) eliminating letterbox contrast mismatch.
-5. [Inviolable Rule 5] Concat demuxer with 1080p 30fps normalization, SSOT 52pt 36-char 2-line ASS subtitles,
-   and 48kHz lossless master audio lock.
+5. [Inviolable Rule 5] Concat demuxer with 1080p channel-profile fps normalization (25fps for
+   nollam_file_v1 -- see config/channel_profiles.yaml, not a hardcoded value here), SSOT 52pt
+   36-char 2-line ASS subtitles, and 48kHz lossless master audio lock.
 """
 from __future__ import annotations
 
@@ -41,6 +42,30 @@ except ImportError:
 
 DEFAULT_THEME_COLOR = "0xF5EBD7"
 DEFAULT_DARK_THEME_COLOR = "0x070A12"
+
+CHANNEL_PROFILES_PATH = SCRIPTS_DIR.parent / "config" / "channel_profiles.yaml"
+
+
+def _resolve_default_fps(profile_id: Optional[str] = None) -> int:
+    """Read the canonical fps for a channel profile from channel_profiles.yaml
+    instead of hardcoding it here independently of the config every other part
+    of the pipeline (postflight_release.py, build_motion_clips_v3.py) actually
+    reads. Falls back to 25 (the D1-canonical fps for nollam_file_v1, per
+    docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md
+    Task 6) if the config can't be read, rather than silently defaulting to a
+    different fps than the rest of the pipeline.
+    """
+    try:
+        import yaml
+        data = yaml.safe_load(CHANNEL_PROFILES_PATH.read_text(encoding="utf-8")) or {}
+        profiles = data.get("profiles", {})
+        pid = profile_id or data.get("default_profile_id")
+        fps = (profiles.get(pid, {}).get("visual", {}) or {}).get("fps")
+        if isinstance(fps, int) and fps > 0:
+            return fps
+    except Exception:
+        pass
+    return 25
 
 MOTION_CYCLE = [
     "subpixel_push_in",
@@ -176,11 +201,12 @@ class CinematicEditingDirector:
     def __init__(
         self,
         theme_color: str = DEFAULT_THEME_COLOR,
-        default_fps: int = 30,
+        default_fps: Optional[int] = None,
+        profile_id: Optional[str] = None,
         planner: Optional[Any] = None,
     ):
         self.theme_color = theme_color
-        self.default_fps = default_fps
+        self.default_fps = default_fps if default_fps is not None else _resolve_default_fps(profile_id)
         self.planner = planner or (CinematicEffectPlanner() if CinematicEffectPlanner else None)
 
     def plan_scene_effects(
@@ -526,7 +552,8 @@ class CinematicEditingDirector:
         theme_color: Optional[str] = None,
         fps: Optional[int] = None
     ) -> Path:
-        """Normalize any clip to standard 1920x1080 30fps H.264 video with exact duration."""
+        """Normalize any clip to standard 1920x1080 H.264 video at the director's
+        channel-profile fps (default 25 for nollam_file_v1) with exact duration."""
         assert raw_clip.exists(), f"Raw clip does not exist: {raw_clip}"
         assert raw_clip.stat().st_size > 0, f"Raw clip is 0 bytes: {raw_clip}"
 

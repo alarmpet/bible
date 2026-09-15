@@ -63,7 +63,7 @@ def main():
     parser = argparse.ArgumentParser(description="Cinematic Hybrid Master Assembly Pipeline")
     parser.add_argument("--ep-dir", type=str, default=None, help="Episode workspace directory")
     parser.add_argument("--theme-color", type=str, default="0xF5EBD7", help="Theme canvas padding color")
-    parser.add_argument("--fps", type=int, default=30, help="Standard output FPS")
+    parser.add_argument("--fps", type=int, default=25, help="Standard output FPS (25 = nollam_file_v1 canonical, see config/channel_profiles.yaml)")
     args = parser.parse_args()
 
     ep_dir = resolve_active_workspace(args.ep_dir)
