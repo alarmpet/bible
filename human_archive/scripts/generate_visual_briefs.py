@@ -14,6 +14,10 @@ from jinja2 import Environment, StrictUndefined
 from lib.aligned_prompt_compiler import compile_aligned_prompt
 from lib.fact_review_approval import validate_fact_review_gate
 from lib.provenance import compute_file_sha256
+from lib.visual_brief_cross_validation import (
+    critique_visual_briefs,
+    summarize_critique_results,
+)
 from lib.visual_brief_provider import (
     AntigravityCliVisualBriefProvider,
     CodexCliVisualBriefProvider,
@@ -388,6 +392,22 @@ def main() -> None:
     parser.add_argument("--codex-reasoning")
     parser.add_argument("--host-ratio", type=float, default=0.10)
     parser.add_argument("--host-min-non-host-gap", type=int, default=7)
+    parser.add_argument(
+        "--cross-validate-scene-ids",
+        default=None,
+        help="Comma-separated shot_ids to cross-validate against codex+grok "
+        "(escalate_claim) instead of the Studio path's 40-char narration "
+        "truncation. Off by default: a full episode is 100-180 shots and this "
+        "is a real 2-participant LLM round per shot (plan §5.5 cost guardrail).",
+    )
+    parser.add_argument(
+        "--cross-validate-sample",
+        type=int,
+        default=0,
+        help="If set and --cross-validate-scene-ids is not, cross-validate an "
+        "evenly-spaced deterministic sample of this many shots instead of all.",
+    )
+    parser.add_argument("--cross-validate-timeout", type=int, default=480)
     args = parser.parse_args()
 
     fact_gate = validate_fact_review_gate(
@@ -468,6 +488,30 @@ def main() -> None:
             sentence_texts=sentence_texts,
         )
 
+    cross_validate_scene_ids = (
+        [s.strip() for s in args.cross_validate_scene_ids.split(",") if s.strip()]
+        if args.cross_validate_scene_ids
+        else None
+    )
+    cross_validation_summary: dict[str, Any] = {}
+    if cross_validate_scene_ids or args.cross_validate_sample:
+        narration_by_shot = {si["shot_id"]: si["narration_digest"] for si in shot_inputs}
+        results = critique_visual_briefs(
+            briefs,
+            narration_by_shot,
+            scene_ids=cross_validate_scene_ids,
+            sample_size=args.cross_validate_sample,
+            timeout=args.cross_validate_timeout,
+            round_dir_root=(args.output.parent / "cross_validation") if args.output else None,
+        )
+        cross_validation_summary = summarize_critique_results(results)
+        flagged = [sid for sid, r in cross_validation_summary.items() if r["status"] != "PASS"]
+        if flagged:
+            print(
+                f"Cross-validation flagged {len(flagged)}/{len(cross_validation_summary)} "
+                f"reviewed shot(s) as REVIEW_REQUIRED: {', '.join(flagged)}"
+            )
+
     brief_hash = hashlib.sha256(
         json.dumps(briefs, sort_keys=True, ensure_ascii=False).encode("utf-8")
     ).hexdigest()
@@ -482,6 +526,7 @@ def main() -> None:
         "model": model_name,
         "brief_manifest_sha256": brief_hash,
         "briefs": briefs,
+        "cross_validation": cross_validation_summary,
     }
     requests = [compile_aligned_prompt(brief) for brief in briefs]
     prompt_manifest = {
