@@ -1,5 +1,20 @@
 # -*- coding: utf-8 -*-
-"""Smooth Subpixel Motion Engine (Ken Burns Overhaul).
+"""DEPRECATED 2026-09-15 -- do not use for new builds. Quarantined per
+docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md
+Task 4: despite the docstring below claiming "zero pixel judder," `compute_trajectory()`'s
+basic motions (push_in/pull_out/pan_*/tilt_*) apply a single cosine ease across the WHOLE
+shot duration -- the exact defect measured at 78-84% near-duplicate frames elsewhere in
+this repository, never actually measured here. Use `motion_engine_v3.py`
+(scripts/build_motion_clips_v3.py for the CLI entrypoint) instead, which fixes the
+trajectory math (short eased ramps at each end, constant velocity in between) and is
+covered by an empirical cadence test (tests/test_motion_cadence.py: 0-3% near-duplicate
+on the same ffmpeg mpdecimate measurement this repo's Aug26 diagnosis used). Kept here
+read-only for audit/rollback (and because 3 legitimate production scripts --
+run_san_jose_full_pipeline.py, run_san_jose_20min_flow_production.py,
+run_neanderthal_full_pipeline.py -- still import it; migrating those call sites is a
+follow-up, not yet done as of this notice).
+
+Smooth Subpixel Motion Engine (Ken Burns Overhaul).
 
 Eliminates 1-pixel stair-step judder and jerky linear movement:
 1. Scales source image to a 2304x1296 (120% overscan) canvas using Lanczos.

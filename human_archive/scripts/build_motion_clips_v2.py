@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Render smooth 1080p 25fps square-pixel motion clips using subpixel floating-point Bicubic resampling to eliminate FFmpeg crop jitter."""
+"""DEPRECATED 2026-09-15 -- do not use for new builds. Quarantined per
+docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md
+Task 4: this file applies a single cosine ease across the WHOLE shot duration (near-zero
+motion for most of a long shot, measured 78-84% near-duplicate frames), keys its motion
+map by shot IDs that don't match real builds (100% fallback to an index%4 rotation), has
+three differently-named presets computing the identical formula, and a `tilt_up` preset
+whose crop offset reverses direction mid-shot (0 -> peak -> 0). Use
+`build_motion_clips_v3.py` (scripts/lib/motion_engine_v3.py) instead -- same
+--build/--limit CLI, empirically verified (tests/test_motion_cadence.py) to bring the
+near-duplicate rate down to 0-3% on the same measurement technique. Kept here read-only
+for audit/rollback, not for production use.
+
+Render smooth 1080p 25fps square-pixel motion clips using subpixel floating-point Bicubic resampling to eliminate FFmpeg crop jitter."""
 from __future__ import annotations
 
 import argparse

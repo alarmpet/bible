@@ -115,19 +115,37 @@ def render_build(build_dir: Path, output_file: Path | None = None) -> Path:
     else:
         ep_id = "HA001"
 
-    # 1. Assemble motion clips
+    # 1. Assemble motion clips. Prefer the v3 lossless (.mkv/FFV1) clips
+    # (scripts/lib/motion_engine_v3.py) over legacy (.mp4/H.264) ones -- concatenating
+    # with `-c:v copy` only re-encodes zero times if the segments are already lossless.
+    # A build mixing the two formats is refused rather than silently concatenated,
+    # since stream-copy concat across different codecs produces a broken or
+    # unpredictable result.
     concat_list_file = work_dir / "motion_concat.txt"
     motion_files = []
     for s in shots:
         sid = s["shot_id"]
-        m_path = motion_dir / f"{sid}_motion.mp4"
-        if not m_path.exists():
-            raise SystemExit(f"Missing motion clip: {m_path}")
-        motion_files.append(m_path)
+        mkv_path = motion_dir / f"{sid}_motion.mkv"
+        mp4_path = motion_dir / f"{sid}_motion.mp4"
+        if mkv_path.exists():
+            motion_files.append(mkv_path)
+        elif mp4_path.exists():
+            motion_files.append(mp4_path)
+        else:
+            raise SystemExit(f"Missing motion clip: {mkv_path} (or legacy {mp4_path})")
+
+    formats = {p.suffix for p in motion_files}
+    if len(formats) > 1:
+        raise SystemExit(
+            f"Mixed motion clip formats in {motion_dir}: {sorted(formats)}. Stream-copy "
+            "concat cannot mix FFV1 (.mkv, motion_engine_v3) and H.264 (.mp4, legacy) "
+            "segments -- re-render the whole episode's motion clips with one engine."
+        )
+    lossless = ".mkv" in formats
 
     concat_list_file.write_text("\n".join(f"file '{p.as_posix()}'" for p in motion_files), encoding="utf-8")
 
-    visual_assembled = work_dir / "visual_assembled.mp4"
+    visual_assembled = work_dir / ("visual_assembled.mkv" if lossless else "visual_assembled.mp4")
     subprocess.run([
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
         "-f", "concat", "-safe", "0", "-i", str(concat_list_file),

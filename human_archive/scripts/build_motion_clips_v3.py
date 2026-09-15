@@ -1,66 +1,136 @@
 # -*- coding: utf-8 -*-
-"""Render overscanned, frame-exact motion clips for pilot builds."""
+"""Render motion clips for a build using motion_engine_v3 (content-aware trajectory,
+lossless FFV1/MKV intermediate). Drop-in replacement for build_motion_clips_v2.py with
+the same --build/--limit CLI.
+
+Motion selection: uses `item["motion_intent"]` when present (the field
+docs/superpowers/plans/2026-08-26-human-archive-script-image-motion-upgrade.md's
+`episode_visual_contract.scenes[]` design calls for). That contract is not yet produced
+by the current pipeline (Task 1/7/8 of the 2026-09-15 overhaul plan), so this script
+also accepts `item["display_text"]`/`item["narration"]` and falls back to a small
+keyword classifier -- and, when nothing matches, to `static` rather than a round-robin
+preset. `static` is a normal, intended profile (Aug26 principle), not a failure mode, so
+this fallback cannot reproduce the "100% of shots hit an arbitrary preset" defect the
+legacy `SHOT_MOTION_MAP` id-mismatch bug caused.
+"""
 from __future__ import annotations
 
 import argparse
 import json
-import subprocess
-from pathlib import Path
 import sys
-from PIL import Image
+from pathlib import Path
 
-SCRIPTS = Path(__file__).resolve().parent
-if str(SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS))
-from lib.motion_engine_v3 import trajectory
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+_LIB_DIR = _SCRIPTS_DIR / "lib"
+for p in (_SCRIPTS_DIR, _LIB_DIR):
+    if str(p) not in sys.path:
+        sys.path.insert(0, str(p))
 
+from motion_engine_v3 import render_motion_clip_v3, MOTION_INTENTS  # noqa: E402
+from verify_visual_assets import verify_visual_build  # noqa: E402
 
-def render_clip(image_path: Path, output: Path, duration: float, motion: str = "push_in", fps: int = 25) -> Path:
-    output.parent.mkdir(parents=True, exist_ok=True)
-    frames = max(1, round(duration * fps))
-    with Image.open(image_path) as image:
-        src = image.convert("RGB")
-        src.thumbnail((2304, 1296), Image.Resampling.LANCZOS)
-        canvas = Image.new("RGB", (2304, 1296), (0, 0, 0))
-        canvas.paste(src, ((2304 - src.width) // 2, (1296 - src.height) // 2))
-    proc = subprocess.Popen(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", "1920x1080", "-r", str(fps), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", str(output)], stdin=subprocess.PIPE)
-    assert proc.stdin is not None
-    for frame in range(frames):
-        zoom, x, y = trajectory(frame, frames, motion)
-        crop_w, crop_h = 1920 / zoom, 1080 / zoom
-        left = (2304 - crop_w) * x
-        top = (1296 - crop_h) * y
-        rendered = canvas.resize((1920, 1080), Image.Resampling.BICUBIC, (left, top, left + crop_w, top + crop_h))
-        proc.stdin.write(rendered.tobytes())
-    proc.stdin.close()
-    if proc.wait() != 0:
-        raise RuntimeError(f"ffmpeg failed for {image_path}")
-    return output
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+# Interim content classifier -- only used when no explicit motion_intent is present.
+# Deliberately small and conservative: an unmatched sentence gets "static", never a
+# guess dressed up as a decision.
+_KEYWORD_INTENTS: list[tuple[tuple[str, ...], str]] = [
+    (("솟구", "화산", "분연", "치솟", "번개", "화쇄류", "충격파"), "tilt_up"),
+    (("눈빛", "초상", "얼굴", "표정", "클로즈업", "마크로", "유물", "증거"), "detail_crop"),
+    (("도시", "전경", "거리", "시장", "포럼", "항구", "해안", "성문", "군중"), "pan_right"),
+    (("폐허", "매몰", "묻혀", "붕괴", "무너", "사라"), "pull_out"),
+]
 
 
-def build_pilot(build_dir: Path, output_dir: Path, limit: int = 3) -> list[Path]:
-    manifest = json.loads((build_dir / "asset_manifest.json").read_text(encoding="utf-8"))
-    audio = json.loads((build_dir / "scene_audio_manifest.json").read_text(encoding="utf-8"))
-    starts = {item["shot_id"]: item["startSeconds"] for item in audio.get("shots", [])}
-    total = float(audio.get("total_duration_sec", 0.0))
-    assets = manifest.get("assets", [])[:limit]
-    results = []
-    for idx, asset in enumerate(assets):
-        sid = asset["shot_id"]
-        next_start = total
-        if idx + 1 < len(manifest.get("assets", [])):
-            next_id = manifest["assets"][idx + 1]["shot_id"]
-            next_start = starts.get(next_id, next_start)
-        duration = max(0.5, next_start - starts.get(sid, 0.0))
-        image = build_dir / "images" / asset["file_path"]
-        results.append(render_clip(image, output_dir / f"{sid}_motion.mp4", duration, ["push_in", "pan_right", "static"][idx % 3]))
-    return results
+def classify_motion_intent(item: dict) -> str:
+    explicit = item.get("motion_intent")
+    if explicit in MOTION_INTENTS:
+        return explicit
+    text = (item.get("display_text") or item.get("narration") or item.get("tts_text") or "").lower()
+    for keywords, intent in _KEYWORD_INTENTS:
+        if any(k in text for k in keywords):
+            return intent
+    return "static"
+
+
+def build_motion_clips_v3(build_dir: Path, limit: int | None = None,
+                           lossless: bool = True) -> list[Path]:
+    build_dir = Path(build_dir).resolve()
+    visual_ok, visual_errors = verify_visual_build(build_dir=build_dir)
+    if not visual_ok:
+        detail = "; ".join(visual_errors[:5])
+        raise SystemExit(f"Visual QA gate failed before motion rendering: {detail}")
+
+    manifest_path = build_dir / "asset_manifest.json"
+    if not manifest_path.exists():
+        raise SystemExit(f"Manifest not found: {manifest_path}")
+    manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assets = manifest_data.get("assets", [])
+
+    audio_manifest_path = build_dir / "scene_audio_manifest.json"
+    audio_durations: dict[str, float] = {}
+    if audio_manifest_path.exists():
+        audio_data = json.loads(audio_manifest_path.read_text(encoding="utf-8"))
+        st_list = audio_data.get("shots", [])
+        total_dur = audio_data.get("total_duration_sec", 0.0)
+        for i, st in enumerate(st_list):
+            if i + 1 < len(st_list):
+                shot_dur = round(st_list[i + 1]["startSeconds"] - st["startSeconds"], 3)
+            else:
+                shot_dur = round(total_dur - st["startSeconds"], 3)
+            audio_durations[st["shot_id"]] = max(0.5, shot_dur)
+
+    images_dir = build_dir / "images"
+    clips_dir = build_dir / "motion_clips"
+    clips_dir.mkdir(parents=True, exist_ok=True)
+
+    rendered_clips = []
+    fps = 25
+    ext = ".mkv" if lossless else ".mp4"
+
+    for idx, item in enumerate(assets):
+        if limit and idx >= limit:
+            break
+
+        shot_id = item["shot_id"]
+        img_path = images_dir / item["file_path"]
+        out_clip = clips_dir / f"{shot_id}_motion{ext}"
+
+        if not img_path.exists():
+            print(f"[WARN] image missing for {shot_id}, skipping")
+            continue
+
+        motion_intent = classify_motion_intent(item)
+        duration_sec = audio_durations.get(shot_id, 6.0)
+
+        render_motion_clip_v3(
+            image_path=img_path,
+            output_path=out_clip,
+            duration_sec=duration_sec,
+            motion_intent=motion_intent,
+            fps=fps,
+            lossless=lossless,
+        )
+        rendered_clips.append(out_clip)
+        print(f"[{idx + 1:03d}/{len(assets)}] rendered {out_clip.name} "
+              f"({duration_sec:.2f}s, motion_intent={motion_intent})")
+
+    print(f"\nRendered {len(rendered_clips)} v3 motion clips in {clips_dir}")
+    return rendered_clips
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--build", required=True, type=Path)
+    parser.add_argument("--limit", type=int)
+    parser.add_argument("--no-lossless", action="store_true",
+                         help="write H.264 CRF18 instead of FFV1/MKV -- previews only, "
+                              "never for a build that will ship (reintroduces the extra "
+                              "lossy encode this engine exists to remove)")
+    args = parser.parse_args()
+    build_motion_clips_v3(args.build, limit=args.limit, lossless=not args.no_lossless)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--build", type=Path, required=True)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--limit", type=int, default=3)
-    args = parser.parse_args()
-    build_pilot(args.build, args.output_dir, args.limit)
+    main()

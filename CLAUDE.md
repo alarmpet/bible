@@ -212,13 +212,15 @@ python human_archive/scripts/verify_visual_assets.py --build $build
 
 ```powershell
 python human_archive/scripts/verify_visual_assets.py --build $build
-python human_archive/scripts/build_motion_clips_v2.py --build $build
+python human_archive/scripts/build_motion_clips_v3.py --build $build
 python human_archive/scripts/build_subtitles_v2.py --build $build
 python human_archive/scripts/render_episode_v2.py --build $build --output "$build/candidate/HA002-full-v6-001.mp4"
 python human_archive/scripts/postflight_release.py --input "$build/candidate/HA002-full-v6-001.mp4" --report "$build/release_report.json" --duration-mode full
 ```
 
 모션은 정확한 25 CFR 프레임 수를 사용하고, 자막은 같은 빌드의 실제 문장 시작·종료 시각에서 생성한다. 최종 렌더는 fixture 음성, stale 승인, 누락된 전체 평가, 타이밍 해시 불일치 중 하나라도 있으면 중단한다.
+
+**2026-09-15: `build_motion_clips_v2.py` → `build_motion_clips_v3.py`로 정본 교체.** v2는 전체 구간 cosine easing(근접중복 78~84% 실측)과 `tilt_up` 방향 역전 버그가 있어 격리됐다. v3(`scripts/lib/motion_engine_v3.py`)는 시작/끝 짧은 ramp + 등속 구간 궤적과 FFV1/MKV 무손실 중간 포맷을 쓰며, `tests/test_motion_cadence.py`로 실측 검증됐다(같은 측정 기법으로 근접중복 0~3%). `render_episode_v2.py`는 `.mkv`(무손실)와 `.mp4`(레거시) 모션 클립을 모두 인식하되 한 빌드 안에서 섞이면 실패한다. **v3는 아직 실제 전체 에피소드 빌드로 검증된 적이 없다** — v3로 만든 첫 실제 빌드는 콜드오픈 파일럿 단계에서 평소보다 주의 깊게 사람이 재생 확인한다. 자세한 배경: `docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md` Task 4.
 
 ### v5/v6 상태·계보 판정
 
