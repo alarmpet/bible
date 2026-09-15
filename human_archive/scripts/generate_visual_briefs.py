@@ -108,6 +108,33 @@ def resolve_image_prompt_compiler_id(channel_profile_id: str | None) -> str:
         return "aligned"
 
 
+_DEFAULT_HOST_RATIO = 0.10
+
+
+def resolve_host_ratio(channel_profile_id: str | None) -> float:
+    """Opt-in, matching resolve_image_prompt_compiler_id()'s pattern: without an
+    explicit channel_profile_id this returns the historical hardcoded 0.10
+    default unchanged. With one given, reads channel_profiles.yaml's
+    visual.host_ratio (a plain float, or a [min, max] list -- the midpoint is
+    used) and falls back to 0.10 only if the profile declares no host_ratio
+    at all (an unknown/legacy profile), never if it explicitly declares 0.0."""
+    if not channel_profile_id:
+        return _DEFAULT_HOST_RATIO
+    try:
+        import yaml
+
+        data = yaml.safe_load(_CHANNEL_PROFILES_PATH.read_text(encoding="utf-8")) or {}
+        profile = (data.get("profiles") or {}).get(channel_profile_id, {})
+        raw = (profile.get("visual") or {}).get("host_ratio")
+        if raw is None:
+            return _DEFAULT_HOST_RATIO
+        if isinstance(raw, (list, tuple)) and len(raw) == 2:
+            return (float(raw[0]) + float(raw[1])) / 2.0
+        return float(raw)
+    except Exception:
+        return _DEFAULT_HOST_RATIO
+
+
 def _brief_to_nollam_request_fields(
     brief: dict[str, Any],
     shot_inputs_by_id: dict[str, dict[str, Any]],
@@ -151,7 +178,20 @@ def select_host_shot_ids(
     ratio: float = 0.10,
     min_non_host_gap: int = 7,
 ) -> set[str]:
+    """The 8-12% floor/cap band below is doodle_seonbi_v1's own host_ratio range
+    (config/channel_profiles.yaml), not a universal minimum -- ratio<=0.0 (e.g.
+    nollam_file_v1's host_ratio_min/max: 0.0, "호스트 아바타 완전 배제") must
+    return zero host shots, not silently floor to `max(1, ceil(count*0.08))`
+    like every other ratio does. Found live: a real codex+grok
+    escalate_claim() smoke test (2026-09-16, audit/orchestration/
+    2026-09-16-engine-smoke-test-codex-grok/) flagged that this function
+    ignored a 0.0 ratio and always scheduled at least one host_chapter_hinge
+    shot -- exactly the failure mode this competitive-verification engine
+    exists to catch before it reaches a real nollam_file_v1 build.
+    """
     if not shots:
+        return set()
+    if ratio <= 0.0:
         return set()
     count = len(shots)
     minimum = max(1, math.ceil(count * 0.08))
@@ -443,7 +483,18 @@ def main() -> None:
     parser.add_argument("--model")
     parser.add_argument("--codex-model")
     parser.add_argument("--codex-reasoning")
-    parser.add_argument("--host-ratio", type=float, default=0.10)
+    parser.add_argument(
+        "--host-ratio",
+        type=float,
+        default=None,
+        help="Fraction of shots forced to host_chapter_hinge. Opt-in: omitting it, "
+        "with no --channel-profile given, keeps the historical 0.10 default "
+        "unchanged. With --channel-profile given, resolves from that profile's "
+        "channel_profiles.yaml visual.host_ratio (a plain float, or a [min, max] "
+        "list -- the midpoint is used) -- e.g. nollam_file_v1 declares 0.0 "
+        "(\"호스트 아바타 완전 배제\"), which select_host_shot_ids() now honors as "
+        "genuinely zero host shots instead of flooring to at least one.",
+    )
     parser.add_argument("--host-min-non-host-gap", type=int, default=7)
     parser.add_argument(
         "--cross-validate-scene-ids",
@@ -488,9 +539,10 @@ def main() -> None:
         for sentence in script.get("sentences", [])
     }
     shots = timing["shots"]
+    host_ratio = args.host_ratio if args.host_ratio is not None else resolve_host_ratio(args.channel_profile)
     host_shot_ids = select_host_shot_ids(
         shots,
-        ratio=args.host_ratio,
+        ratio=host_ratio,
         min_non_host_gap=args.host_min_non_host_gap,
     )
     shot_inputs = _build_shot_inputs(shots, sentence_texts, host_shot_ids)

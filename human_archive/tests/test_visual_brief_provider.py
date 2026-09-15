@@ -9,7 +9,7 @@ from lib.visual_brief_provider import (
     JsonFileVisualBriefProvider,
     build_fallback_brief,
 )
-from generate_visual_briefs import select_host_shot_ids, validate_brief_sequence
+from generate_visual_briefs import resolve_host_ratio, select_host_shot_ids, validate_brief_sequence
 
 
 def _write_provider_schema(tmp_path):
@@ -81,6 +81,37 @@ def test_host_selector_scales_with_dynamic_shot_count_and_keeps_spacing():
 
     assert 0.08 <= len(selected) / len(shots) <= 0.12
     assert all(right - left >= 8 for left, right in zip(positions, positions[1:]))
+
+
+def test_host_selector_honors_a_genuinely_zero_ratio():
+    """Found live by a real codex+grok escalate_claim() smoke test
+    (2026-09-16): ratio=0.0 (nollam_file_v1's declared host_ratio, "호스트
+    아바타 완전 배제") used to still floor to max(1, ceil(count*0.08)) -- at
+    least one host shot no matter what. nollam_file_v1 must get zero."""
+    shots = [{"shot_id": f"S{i:03d}"} for i in range(1, 113)]
+    assert select_host_shot_ids(shots, ratio=0.0) == set()
+
+
+def test_host_selector_treats_negative_ratio_as_zero_too():
+    shots = [{"shot_id": f"S{i:03d}"} for i in range(1, 20)]
+    assert select_host_shot_ids(shots, ratio=-0.01) == set()
+
+
+def test_resolve_host_ratio_reads_nollam_file_v1_zero_from_config():
+    assert resolve_host_ratio("nollam_file_v1") == 0.0
+
+
+def test_resolve_host_ratio_reads_doodle_seonbi_v1_range_midpoint():
+    # doodle_seonbi_v1 declares visual.host_ratio: [0.15, 0.25]
+    assert resolve_host_ratio("doodle_seonbi_v1") == pytest.approx(0.20)
+
+
+def test_resolve_host_ratio_keeps_the_historical_default_when_no_profile_given():
+    assert resolve_host_ratio(None) == 0.10
+
+
+def test_resolve_host_ratio_falls_back_for_an_unknown_profile():
+    assert resolve_host_ratio("no_such_profile") == 0.10
 
 
 def test_brief_sequence_must_exactly_match_timing_order():

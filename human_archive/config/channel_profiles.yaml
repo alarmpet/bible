@@ -9,6 +9,7 @@ profiles:
       forbidden: [flat_doodle_only, generated_caption, fake_ui, unlicensed_logo, watermark, host_avatar_overlay]
       aspect_ratio: "16:9"
       fps: 25
+      host_ratio: 0.0
       base_image_text_policy: "no letters, numerals, captions, signage, or logos"
     narration:
       language: ko
