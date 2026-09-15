@@ -113,3 +113,17 @@ def test_does_not_split_after_eun_adnominal():
         ln.rstrip(".,!?。").endswith("높은") for ln in lines
     )
     assert any("높은 산이" in ln for ln in lines)
+
+
+def test_layout_preserves_spaces_around_standalone_one_syllable_tokens():
+    """Keeping a josa with its neighbor must not delete source whitespace."""
+    texts = [
+        "그러므로 이 대본은 이용자가 볼 수 있다.",
+        "중요한 것은 이 여름의 상태다.",
+        "인용한 이 일대에서 이틀 동안 비가 왔다.",
+    ]
+
+    for text in texts:
+        blocks = split_korean_caption(text, target_min=18, target_max=24, hard_max=28)
+        rendered = " ".join(line for block in blocks for line in block.lines)
+        assert rendered == text

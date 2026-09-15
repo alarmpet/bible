@@ -15,13 +15,23 @@ VERSES = DATA / "verses"
 RUNS = BH_ROOT / "runs"
 PROMPTS = BH_ROOT / "prompts"
 
-TTS_ROOT = Path(
-    os.environ.get("HERMES_TTS_ROOT")
-    or r"C:\Users\amd\supertonic3-local-tts-20260517-r4\supertonic3-local-tts"
-)
+def _find_tts_root() -> Path:
+    if "HERMES_TTS_ROOT" in os.environ:
+        return Path(os.environ["HERMES_TTS_ROOT"])
+    home_candidate = Path.home() / "supertonic3-local-tts-20260517-r4" / "supertonic3-local-tts"
+    if home_candidate.exists():
+        return home_candidate
+    legacy = Path(r"C:\Users\amd\supertonic3-local-tts-20260517-r4\supertonic3-local-tts")
+    if legacy.exists():
+        return legacy
+    return home_candidate
+
+
+TTS_ROOT = _find_tts_root()
 TTS_PYTHON = Path(
     os.environ.get("HERMES_TTS_PYTHON") or TTS_ROOT / ".venv-win" / "Scripts" / "python.exe"
 )
+
 
 
 def episode_dir(episode_id: str) -> Path:

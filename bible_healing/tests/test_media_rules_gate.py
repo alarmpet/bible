@@ -28,15 +28,14 @@ def _lock(**overrides) -> dict:
         "version": 2,
         "voice": {
             "narrator": {
-                "voice": "F5",
+                "voice": "M2",
                 "speed": 0.95,
-                "total_step": 8,
-                "silence_seconds": 0.24,
-                "pitch": -4,
+                "total_step": 10,
+                "silence_seconds": 0.25,
+                "pitch": 0,
                 "audio_filter": (
-                    "asetrate=24000*0.96,aresample=24000,"
-                    "highpass=f=60,lowpass=f=6000,equalizer=f=180:t=q:w=1:g=3.0,"
-                    "equalizer=f=120:t=q:w=1:g=2.0"
+                    "highpass=f=50,lowpass=f=7500,equalizer=f=160:t=q:w=1:g=2.5,"
+                    "equalizer=f=3000:t=q:w=1:g=1.2"
                 ),
             },
             "scripture": {
@@ -107,7 +106,7 @@ def _voice_map(
     scripture_step: int = 10,
     max_chunk: int = 90,
     audio_filter: str | None = None,
-    narrator_voice: str = "F5",
+    narrator_voice: str = "M2",
     narrator_speed: float = 0.95,
 ) -> dict:
     if audio_filter is None:
@@ -117,8 +116,8 @@ def _voice_map(
             "narrator": {
                 "voice": narrator_voice,
                 "speed": narrator_speed,
-                "total_step": 8,
-                "silence_duration": 0.24,
+                "total_step": 10,
+                "silence_duration": 0.25,
                 "audio_filter": "",
             },
             "scripture": {
@@ -212,9 +211,9 @@ def make_job(
         pieces = [
             {
                 "speaker": "narrator",
-                "voice": "F5",
+                "voice": "M2",
                 "speed": 0.95,
-                "total_step": 8,
+                "total_step": 10,
                 "max_chunk": 130,
                 "text": CLEAN_NARRATION,
                 "text_sha256": "a" * 64,

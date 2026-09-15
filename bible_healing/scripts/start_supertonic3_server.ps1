@@ -1,7 +1,15 @@
 # Start the existing SuperTonic3 HTTP server so ONNX loads once.
 # Does not install CosyVoice or any new TTS.
 $ErrorActionPreference = "Stop"
-$Root = "C:\Users\amd\supertonic3-local-tts-20260517-r4\supertonic3-local-tts"
+$Root = if ($env:HERMES_TTS_ROOT -and (Test-Path $env:HERMES_TTS_ROOT)) {
+    $env:HERMES_TTS_ROOT
+} elseif (Test-Path "$HOME\supertonic3-local-tts-20260517-r4\supertonic3-local-tts") {
+    "$HOME\supertonic3-local-tts-20260517-r4\supertonic3-local-tts"
+} elseif (Test-Path "C:\Users\amd\supertonic3-local-tts-20260517-r4\supertonic3-local-tts") {
+    "C:\Users\amd\supertonic3-local-tts-20260517-r4\supertonic3-local-tts"
+} else {
+    "$HOME\supertonic3-local-tts-20260517-r4\supertonic3-local-tts"
+}
 $Py = Join-Path $Root ".venv-win\Scripts\python.exe"
 if (-not (Test-Path $Py)) {
     throw "SuperTonic venv python missing: $Py"

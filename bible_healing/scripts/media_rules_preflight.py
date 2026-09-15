@@ -315,7 +315,7 @@ def check_preflight_config(lock: dict, root: Path | None = None) -> list[str]:
         if sid not in allowed:
             errors.append(f"lock: extra speaker {sid}")
 
-    expected_voice = {"narrator": "F5", "scripture": "M4"}
+    expected_voice = {"narrator": "M2", "scripture": "M4"}
     expected_speed = {"narrator": 0.95, "scripture": 0.86}
     voice = lock.get("voice") or {}
     for sid in allowed:

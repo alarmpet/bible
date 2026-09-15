@@ -73,8 +73,8 @@ def _merge_standalone_josa(eojels: list[str]) -> list[str]:
     for tok in eojels:
         bare = _strip_trail_punct(tok)
         if out and bare in _JOSA:
-            # Keep trailing punct on the merged unit.
-            out[-1] = out[-1] + tok
+            # Keep it in the same split unit without deleting source whitespace.
+            out[-1] = out[-1] + " " + tok
         else:
             out.append(tok)
     return out

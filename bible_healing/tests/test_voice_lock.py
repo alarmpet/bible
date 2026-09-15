@@ -257,6 +257,6 @@ def test_preview_path_applies_narrator_less_thin_filter():
         lock=lock,
         speakers={"narrator": {}, "scripture": {}},
     )
-    assert req["voice"] == "F5"
+    assert req["voice"] == "M2"
     assert req["apply_filter"] is True
-    assert req["pitch"] == -4
+    assert req["pitch"] == 0

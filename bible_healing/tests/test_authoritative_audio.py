@@ -34,14 +34,14 @@ def _piece(
     path: str | None = None,
 ) -> dict:
     if voice is None:
-        voice = "M4" if speaker == "scripture" else "F5"
+        voice = "M4" if speaker == "scripture" else "M2"
     if filter_applied is None:
         filter_applied = speaker == "scripture"
     return {
         "speaker": speaker,
         "voice": voice,
         "speed": 0.72 if speaker == "scripture" else 0.95,
-        "total_step": 10 if speaker == "scripture" else 8,
+        "total_step": 10,
         "max_chunk": 90 if speaker == "scripture" else 130,
         "text": text,
         "text_sha256": _sha(text),
