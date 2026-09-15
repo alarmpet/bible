@@ -287,6 +287,34 @@ def verify_postflight(
                         pass
     checks["subtitle_timeline"] = {"status": "PASS" if sub_ok else "FAIL"}
 
+    # 6b. Simulated/fixture provenance gate (2026-09-15 overhaul plan §5.3 rule 4).
+    # tri_model_debate_engine.py's orchestrate_deep_tri_model_script() labels its own
+    # output honestly when Round 1/2 are static templated dicts rather than live model
+    # calls (metadata.provenance == "simulated_fixture"). A build whose generation
+    # manifest carries that label must never pass release verification -- checking it
+    # here, not just trusting the label was checked upstream, is what makes it a gate
+    # rather than documentation.
+    simulated_fixture_ok = True
+    if build_dir:
+        for candidate_name in ("generation/master_1200s_manifest.json", "audit/final_consensus_manifest.json"):
+            candidate_path = build_dir / candidate_name
+            if not candidate_path.exists():
+                continue
+            try:
+                gen_manifest = json.loads(candidate_path.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            provenance = str((gen_manifest.get("metadata") or {}).get("provenance", ""))
+            if provenance == "simulated_fixture":
+                simulated_fixture_ok = False
+                detail = (gen_manifest.get("metadata") or {}).get("provenance_detail", "")
+                errors.append(
+                    f"Simulated/fixture provenance in {candidate_name}: this build's "
+                    f"generation manifest is labeled simulated_fixture and cannot be released. {detail}"
+                )
+                break
+    checks["simulated_fixture_provenance"] = {"status": "PASS" if simulated_fixture_ok else "FAIL"}
+
     # 7. Release Manifest Verification
     manifest_target = None
     if build_dir:

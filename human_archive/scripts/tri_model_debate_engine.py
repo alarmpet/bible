@@ -13,6 +13,10 @@ docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-mult
   on the default (non-`GEMINI_API_KEY`) path, and even when a Gemini key is configured, the
   script-generation path never actually calls it (only `execute_topic_debate()`'s Round 1
   proposals do). Not yet rewired to the real orchestration engine.
+- `orchestrate_deep_tri_model_script()`'s output manifest now labels itself honestly
+  (`metadata.provenance == "simulated_fixture"`) for exactly this reason, and
+  `postflight_release.py`'s `verify_postflight()` refuses to release any build whose
+  generation manifest carries that label (Task 2, §5.3 rule 4).
 Persists audit trails to audit/ and streams live events to Studio GUI."""
 from __future__ import annotations
 
@@ -1362,6 +1366,19 @@ class TriModelDebateEngine:
                 "modern_lesson": parallel_match["modern_lesson"],
                 "primary_sources": parallel_match.get("primary_sources", []),
                 "orchestration_type": "DEEP_TRI_MODEL_5_ROUNDS",
+                # Round 1 (p_38/p_37/p_36 proposals) and Round 2 (cross-critique) below are
+                # static templated dicts, not live model calls -- see tri_model_llm_bridge.py's
+                # HYBRID_ARCHIVAL_ENGINE fallback and the 2026-09-15 overhaul plan §2/§5.3 rule 4.
+                # Round 3's fact grades come from a real regex rule engine
+                # (SentenceHistoricalFactChecker), not an LLM either. Labeled honestly here so a
+                # release gate can refuse to treat this manifest as real multi-model output
+                # (see postflight_release.py's simulated-fixture provenance check).
+                "provenance": "simulated_fixture",
+                "provenance_detail": (
+                    "Round 1/2 proposals and cross-critique are static templated text, not "
+                    "live Gemini/Codex/Grok calls. Do not present this manifest's "
+                    "orchestration_type as evidence of real multi-model debate."
+                ),
                 "factcheck_stats": fact_stats,
                 "shot_scale_stats": shot_scale_counts,
                 "generated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
