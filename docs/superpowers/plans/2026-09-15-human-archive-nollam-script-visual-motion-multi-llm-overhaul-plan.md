@@ -349,11 +349,13 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 **부수 발견:** 검증 중 `test_human_library_exact_clone_gate_suite.py::test_gate_5_branding_and_hud_assets`가 이미 깨져 있는 것을 발견 — Task 9(88e4242)가 §6 결정에 따라 원본 채널 브랜딩 자산을 의도적으로 삭제했는데, 이 테스트는 여전히 그 자산이 존재해야 한다고 단언한다. Task 5와 무관해 별도 백그라운드 작업으로 분리했다(`task_ffaa66ff`).
 
-### Task 6 — fps 정책 단일화
+### Task 6 — fps 정책 단일화 — ✅ 완료 (2026-09-15, 커밋 `222d747`)
 
 **Modify**
 - `human_archive/scripts/lib/cinematic_editing_director.py:9` — "30fps normalization" 선언을 채널 프로필에서 읽도록 변경
 - 25fps(Human Archive)와 30fps(향후 별도 profile 실험) 중 무엇이 nollam_file_v1의 정본인지 §8 D1로 확정
+
+**완료 기준 검증:** `config/channel_profiles.yaml`은 이미 3개 프로필(`nollam_file_v1`/`doodle_seonbi_v1`/`human_archive_cinematic_v1`) 전부 `fps: 25`로 선언돼 있었고 "30fps 실험 프로필"은 애초에 존재하지 않았다 — D1 확정대로 25fps가 유일한 정본. `cinematic_editing_director.py`의 `default_fps=30` 하드코딩만 이 설정과 독립적으로 어긋나 있었는데, 단순 주석이 아니라 `normalize_clip()`의 실제 ffmpeg `-vf fps=` 필터에 그대로 들어가는 진짜 인코딩 파라미터였다(`run_neanderthal_full_pipeline.py` 등 정당한 프로덕션 스크립트가 기본값으로 30fps 인코딩 중이었음). `_resolve_default_fps()`를 신설해 `channel_profiles.yaml`에서 읽게 하고 읽기 실패 시에만 25로 폴백하도록 수정. `build_cinematic_master_pipeline.py`의 `--fps` CLI 기본값도 30→25로 정정. 신규 테스트 5개 통과.
 
 ### Task 7 — pacing_scheduler.py 실배선
 
