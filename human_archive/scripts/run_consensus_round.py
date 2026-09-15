@@ -138,6 +138,23 @@ def grok_cmd(prompt_file: Path, exe: str = "grok") -> list[str]:
     ]
 
 
+_MODEL_BANNER = re.compile(r"^model:\s*(\S+)", re.MULTILINE)
+
+
+def check_model_drift(stderr: str) -> str:
+    """Codex's `-m` flag is not always honored (400s on some ChatGPT-account/model
+    combinations silently fall back to whatever `~/.codex/config.toml` says). A round
+    on this machine drifted from the intended `gpt-5.6-luna` to `gpt-6-astra` for four
+    rounds on 2026-09-15 before anyone noticed, because the config was trusted instead
+    of the banner. Trust the banner in stderr over our own `-m` flag; returns a warning
+    string if they disagree, else "".
+    """
+    m = _MODEL_BANNER.search(stderr or "")
+    if m and m.group(1) != CODEX_MODEL:
+        return f"MODEL DRIFT: requested {CODEX_MODEL}, banner reports {m.group(1)}"
+    return ""
+
+
 def _run_codex(prompt: str, out_file: Path, timeout: int) -> Run:
     """Codex reads the prompt on stdin; passing it as an argument breaks on the leading
     '#' and the '--' sequences inside, which the arg parser reads as flags."""
@@ -147,7 +164,8 @@ def _run_codex(prompt: str, out_file: Path, timeout: int) -> Run:
     text = out_file.read_text(encoding="utf-8") if out_file.exists() else ""
     if not text.strip():
         return Run(False, "", f"exit {proc.returncode}; no output", proc.stderr)
-    return Run(True, text, "", proc.stderr)
+    drift = check_model_drift(proc.stderr)
+    return Run(True, text, drift, proc.stderr)
 
 
 def _run_grok(prompt: str, prompt_file: Path, timeout: int) -> Run:
@@ -275,8 +293,9 @@ def start(args: argparse.Namespace) -> int:
         if outcome.ok:
             parsed = parse(outcome.text)
             flag = f" [malformed: {'; '.join(parsed.malformed)}]" if parsed.malformed else ""
+            drift = f" [{outcome.detail}]" if outcome.detail else ""
             say(f"  {outcome.participant:<8} {outcome.seconds:>6.1f}s  "
-                f"{parsed.verdict or '?':<16} {len(parsed.real_findings)} findings{flag}")
+                f"{parsed.verdict or '?':<16} {len(parsed.real_findings)} findings{flag}{drift}")
         else:
             first = outcome.detail.splitlines()[-1] if outcome.detail else "unknown"
             say(f"  {outcome.participant:<8} {outcome.seconds:>6.1f}s  FAILED: {first}")
@@ -346,6 +365,84 @@ def check_independence(round_dir: Path, stem: str) -> list[str]:
     say(f"      {order}")
     say("      Treat agreement between these answers as unverified, not as evidence.")
     return exposed
+
+
+# ---------------------------------------------------------------------------------
+# Programmatic escalation (for unattended production callers, e.g.
+# tri_model_debate_engine.py's execute_fact_check()). Claude cannot be a seat here: an
+# unattended pipeline run has no session to pick up "_proposer.claude.prompt.md" and
+# write an answer. This is the "team lead delegates to staff, staff work without the
+# lead in the loop for the routine case" shape -- Claude/the orchestrating session only
+# gets pulled in when `escalate_claim` reports disagreement (REVIEW_REQUIRED).
+# ---------------------------------------------------------------------------------
+
+@dataclass
+class EscalationResult:
+    round_dir: Path
+    ok: bool                     # True only if both participants answered and parsed cleanly
+    agreed: bool                 # True only if both answered AND their verdicts match
+    verdict: str | None          # the agreed verdict, or None if not agreed/not ok
+    answers: dict[str, Answer]   # participant -> parsed Answer, only for those that succeeded
+    outcomes: list[Outcome]      # raw outcomes, including failures, for the audit trail
+
+
+def escalate_claim(topic: str, spec_text: str, timeout: int = 480,
+                    round_dir: Path | None = None,
+                    roles: tuple[str, str] = ("proposer", "adversary")) -> EscalationResult:
+    """Two-participant (codex, grok) escalation round for a single claim/finding that a
+    fast rule-based first pass could not confidently classify. No majority vote and no
+    silent merge: two answers that verify each other is corroboration, two answers that
+    disagree is a REVIEW_REQUIRED, and one participant failing is an incomplete round,
+    not a 1-0 decision (docs/orchestration/HARD_GATES.md gate 7).
+    """
+    stamp = dt.date.today().isoformat()
+    rd = round_dir or (ROUNDS / f"{stamp}-{topic}")
+    rd.mkdir(parents=True, exist_ok=True)
+    (rd / "spec.md").write_text(spec_text, encoding="utf-8")
+
+    subs = [p for p in PARTICIPANTS if p != "claude"][:2]
+    pair_roles = dict(zip(subs, roles))
+
+    results: list[Outcome] = []
+    with futures.ThreadPoolExecutor(max_workers=max(1, len(subs))) as pool:
+        pending = {
+            pool.submit(_invoke, p, pair_roles[p], assemble(pair_roles[p], spec_text), rd,
+                        timeout): p
+            for p in subs
+        }
+        for future in futures.as_completed(pending):
+            results.append(future.result())
+    ordered = sorted(results, key=lambda o: o.participant)
+
+    answers: dict[str, Answer] = {}
+    for outcome in ordered:
+        target = rd / f"{outcome.role}.{outcome.participant}.md"
+        if outcome.stderr.strip():
+            (rd / f"_{outcome.role}.{outcome.participant}.stderr.txt").write_text(
+                outcome.stderr, encoding="utf-8")
+        if outcome.ok:
+            target.write_text(outcome.text, encoding="utf-8")
+            parsed = parse(outcome.text)
+            if not parsed.malformed:
+                answers[outcome.participant] = parsed
+        else:
+            body = outcome.detail
+            if outcome.text.strip():
+                body += f"\n\n--- captured output ({len(outcome.text)} chars) ---\n{outcome.text}"
+            target.with_suffix(".FAILED.md").write_text(body, encoding="utf-8")
+
+    (rd / "assignment.json").write_text(json.dumps({
+        "topic": topic, "date": stamp, "roles": pair_roles, "timeout_seconds": timeout,
+        "results": [{"participant": o.participant, "role": o.role, "ok": o.ok,
+                     "seconds": round(o.seconds, 1), "detail": o.detail} for o in ordered],
+    }, indent=2), encoding="utf-8")
+
+    ok = len(answers) == len(subs)
+    verdicts = {a.verdict for a in answers.values() if a.verdict}
+    agreed = ok and len(verdicts) == 1
+    verdict = next(iter(verdicts)) if agreed else None
+    return EscalationResult(round_dir=rd, ok=ok, agreed=agreed, verdict=verdict,
+                             answers=answers, outcomes=ordered)
 
 
 def propose(args: argparse.Namespace) -> int:

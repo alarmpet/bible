@@ -63,3 +63,7 @@ human_archive/research/human_library_benchmark_internal_only/
 human_archive/**/*.sqlite3
 human_archive/**/*.sqlite
 
+# gemini-cli/bkit extension state files (created wherever it's invoked from)
+.bkit-memory.json
+.pdca-status.json
+

@@ -24,8 +24,8 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 import run_consensus_round as run_round  # noqa: E402
 from run_consensus_round import (  # noqa: E402
-    PARTICIPANTS, Run, _attempt, _invoke, assign, codex_cmd, diverge, grok_cmd,
-    is_transient, say,
+    PARTICIPANTS, Outcome, Run, _attempt, _invoke, assign, check_model_drift, codex_cmd,
+    diverge, escalate_claim, grok_cmd, is_transient, say,
 )
 
 SOUND = """## VERDICT
@@ -289,3 +289,92 @@ def test_malformed_answer_is_surfaced_not_counted_clean(tmp_path: Path) -> None:
     text = (d / "divergence.md").read_text(encoding="utf-8")
     assert "(unparsed)" in text
     assert "no '## SECTION' headings found" in text
+
+
+# --- check_model_drift -----------------------------------------------------------
+
+def test_matching_model_banner_is_not_drift() -> None:
+    assert check_model_drift("some log\nmodel: gpt-5.6-luna\nmore log") == ""
+
+
+def test_mismatched_model_banner_is_reported() -> None:
+    """On this machine (2026-09-15) codex silently served gpt-6-astra for four whole
+    rounds when the intended gpt-5.6-luna wasn't honored, per
+    C:\\Users\\shs\\Downloads\\tf\\portable-setup.md section 3 -- nobody noticed until the
+    user asked. That is exactly the failure this check exists to catch immediately."""
+    warning = check_model_drift("model: gpt-6-astra\n")
+    assert "MODEL DRIFT" in warning
+    assert "gpt-5.6-luna" in warning
+    assert "gpt-6-astra" in warning
+
+
+def test_no_banner_at_all_is_not_flagged_as_drift() -> None:
+    """codex's `-o file` capture doesn't always carry the banner (only seen on stderr in
+    some runs); absence of the banner is not itself evidence of drift."""
+    assert check_model_drift("no banner here") == ""
+
+
+# --- escalate_claim (mocked -- no real codex/grok invocation) ---------------------
+
+def test_escalate_claim_agrees_when_both_verdicts_match(tmp_path: Path, monkeypatch) -> None:
+    def fake_invoke(participant, role, prompt, round_dir, timeout):
+        return Outcome(participant, role, True, SOUND, 1.0)
+
+    monkeypatch.setattr(run_round, "_invoke", fake_invoke)
+    result = escalate_claim("test-claim", "spec text", round_dir=tmp_path)
+    assert result.ok
+    assert result.agreed
+    assert result.verdict == "SOUND"
+    assert set(result.answers) == {"codex", "grok"}
+
+
+def test_escalate_claim_does_not_agree_on_verdict_mismatch(tmp_path: Path, monkeypatch) -> None:
+    def fake_invoke(participant, role, prompt, round_dir, timeout):
+        text = SOUND if participant == "codex" else DEFECTIVE
+        return Outcome(participant, role, True, text, 1.0)
+
+    monkeypatch.setattr(run_round, "_invoke", fake_invoke)
+    result = escalate_claim("test-claim", "spec text", round_dir=tmp_path)
+    assert result.ok, "both participants answered, so the round itself is complete"
+    assert not result.agreed, "disagreeing verdicts must never be silently resolved"
+    assert result.verdict is None
+
+
+def test_escalate_claim_is_incomplete_when_one_participant_fails(tmp_path: Path, monkeypatch) -> None:
+    def fake_invoke(participant, role, prompt, round_dir, timeout):
+        if participant == "grok":
+            return Outcome(participant, role, False, "", 1.0, detail="timed out after 480s")
+        return Outcome(participant, role, True, SOUND, 1.0)
+
+    monkeypatch.setattr(run_round, "_invoke", fake_invoke)
+    result = escalate_claim("test-claim", "spec text", round_dir=tmp_path)
+    assert not result.ok, "a round without the adversary is not adversarial"
+    assert not result.agreed
+    assert "codex" in result.answers
+    assert "grok" not in result.answers
+
+
+def test_escalate_claim_rejects_a_malformed_answer_as_disagreement(tmp_path: Path, monkeypatch) -> None:
+    """A malformed answer must not silently count as a SOUND vote just because it parsed
+    to an empty verdict alongside a real one."""
+    def fake_invoke(participant, role, prompt, round_dir, timeout):
+        text = SOUND if participant == "codex" else "I looked at it and it's fine."
+        return Outcome(participant, role, True, text, 1.0)
+
+    monkeypatch.setattr(run_round, "_invoke", fake_invoke)
+    result = escalate_claim("test-claim", "spec text", round_dir=tmp_path)
+    assert not result.ok
+    assert not result.agreed
+    assert "grok" not in result.answers, "a malformed answer must not be counted as a vote"
+
+
+def test_escalate_claim_persists_assignment_and_answer_files(tmp_path: Path, monkeypatch) -> None:
+    def fake_invoke(participant, role, prompt, round_dir, timeout):
+        return Outcome(participant, role, True, SOUND, 1.0)
+
+    monkeypatch.setattr(run_round, "_invoke", fake_invoke)
+    result = escalate_claim("test-claim", "spec text", round_dir=tmp_path)
+    assert (tmp_path / "assignment.json").exists()
+    assert (tmp_path / "spec.md").read_text(encoding="utf-8") == "spec text"
+    assert any(tmp_path.glob("*.codex.md"))
+    assert any(tmp_path.glob("*.grok.md"))

@@ -1,7 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Tri-Model Creative & Fact-Checking Debate Engine:
-Orchestrates autonomous proposals, cross-critiques, and consensus synthesis
-between Gemini 3.8 (Architect), Gemini 3.7 (Director), and Gemini 3.6 (Fact-Checker).
+"""Tri-Model Creative & Fact-Checking Debate Engine.
+
+Status as of 2026-09-15 (see
+docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md):
+- `execute_fact_check()` is real. It escalates any sentence the rule-based
+  `SentenceHistoricalFactChecker` cannot confidently classify (its silent "VERIFIED_FACT"
+  default) to an actual codex+grok cross-check via `run_consensus_round.escalate_claim()`.
+  Disagreement or a failed participant becomes REVIEW_REQUIRED, never a silent pass.
+- `execute_topic_debate()`, `orchestrate_deep_tri_model_script()`, and the "Gemini
+  3.8/3.7/3.6" persona framing elsewhere in this file are the ORIGINAL, still-hollow
+  implementation the diagnosis found: templated proposals/critiques, no live model calls
+  on the default (non-`GEMINI_API_KEY`) path, and even when a Gemini key is configured, the
+  script-generation path never actually calls it (only `execute_topic_debate()`'s Round 1
+  proposals do). Not yet rewired to the real orchestration engine.
 Persists audit trails to audit/ and streams live events to Studio GUI."""
 from __future__ import annotations
 
@@ -241,11 +252,29 @@ class TriModelDebateEngine:
         emit({"type": "stage_start", "stage": "proposal", "message": f"1단계: 대본 {len(target_shots)}개 문장 1차 사료 전수 대조 및 팩트체크"})
 
         from sentence_fact_checker import SentenceHistoricalFactChecker
+        from run_consensus_round import escalate_claim
         checker = SentenceHistoricalFactChecker()
 
+        # Persist updated manifest if active files exist. Resolved before the loop so
+        # escalation rounds (below) can write into this episode's own audit dir.
+        try:
+            from workspace_manager import workspace_mgr
+            active_ep = workspace_mgr.current_ep_dir
+        except Exception:
+            active_ep = self.ep_dir
+        escalation_root = active_ep / "audit" / "factcheck_escalations" / check_id
+
         findings = []
-        fact_stats = {"A": 0, "B": 0, "C": 0, "D": 0}
+        fact_stats = {"A": 0, "B": 0, "C": 0, "D": 0, "REVIEW_REQUIRED": 0}
         revised_shots = []
+        # Escalation is expensive (a real codex+grok round per unique claim, ~2-6 min
+        # each) -- run it at most once per distinct claim, not once per shot that cites
+        # it. See docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md
+        # Task 3.
+        escalation_cache: Dict[str, Any] = {}
+        escalated_count = 0
+        escalation_agreed_count = 0
+        escalation_review_required_count = 0
 
         for idx, s in enumerate(target_shots):
             claim_text = s.get("narration") or s.get("display_text") or s.get("tts_text") or ""
@@ -253,6 +282,60 @@ class TriModelDebateEngine:
 
             audit_res = checker.audit_sentence(claim_text)
             grade = audit_res["grade"]
+
+            # "VERIFIED_FACT" is the rule-based checker's silent default -- it means no
+            # curated pattern matched, not that anything was actually verified (see Hard
+            # Gate 1: "never fabricate a structured answer to look complete"). Escalate
+            # exactly that case to a real two-party (codex+grok) cross-check instead of
+            # rubber-stamping Grade A.
+            if audit_res.get("status") == "VERIFIED_FACT":
+                claim_ids = s.get("claim_ids")
+                claim_id = s.get("claim_id") or (claim_ids[0] if isinstance(claim_ids, list) and claim_ids else None)
+                escalation_key = claim_id or f"TEXT:{abs(hash(claim_text.strip()))}"
+
+                if escalation_key not in escalation_cache:
+                    spec_text = (
+                        f"## Claim to grade\n\n"
+                        f"Narration sentence (shot `{shot_id}`): \"{claim_text}\"\n\n"
+                        f"This sentence was not matched by any curated fact-check pattern in "
+                        f"`scripts/sentence_fact_checker.py`, so it has no established grade yet. "
+                        f"Grade it A (verified/uncontested), B (contested record), C (lore/later "
+                        f"interpretation presented as fact), or D (unsubstantiated myth), citing "
+                        f"whatever primary-source or claim-inventory evidence is available in the "
+                        f"repository for this episode. If no supporting evidence exists in the "
+                        f"repository at all, say so explicitly rather than assuming the claim is fine."
+                    )
+                    escalation_cache[escalation_key] = escalate_claim(
+                        topic=f"factcheck-{check_id}-{idx:03d}",
+                        spec_text=spec_text,
+                        round_dir=escalation_root / re.sub(r"[^A-Za-z0-9_-]+", "_", escalation_key),
+                    )
+                    escalated_count += 1
+                    result = escalation_cache[escalation_key]
+                    emit({"type": "escalation", "data": {
+                        "claim_key": escalation_key, "shot_id": shot_id, "ok": result.ok,
+                        "agreed": result.agreed, "verdict": result.verdict,
+                        "round_dir": str(result.round_dir),
+                    }})
+
+                result = escalation_cache[escalation_key]
+                audit_res = dict(audit_res)
+                if result.agreed and result.verdict == "SOUND":
+                    escalation_agreed_count += 1
+                    audit_res["status"] = "VERIFIED_FACT_CONSENSUS"
+                    audit_res["explanation"] = "codex+grok 독립 교차검증 합의(SOUND) -- 규칙 기반 기본값이 아니라 실제 검증됨"
+                else:
+                    escalation_review_required_count += 1
+                    grade = "REVIEW_REQUIRED"
+                    if not result.ok:
+                        audit_res["explanation"] = "codex/grok 교차검증 라운드 불완전(참가자 실패) -- 사람 검토 필요"
+                    elif not result.agreed:
+                        audit_res["explanation"] = f"codex/grok 교차검증 불일치 -- 사람 검토 필요"
+                    else:
+                        audit_res["explanation"] = f"codex+grok 합의 판정: {result.verdict} -- 사람 검토 필요"
+                    audit_res["status"] = "REVIEW_REQUIRED"
+                    audit_res["escalation_round_dir"] = str(result.round_dir)
+
             fact_stats[grade] = fact_stats.get(grade, 0) + 1
 
             if grade == "A":
@@ -261,9 +344,14 @@ class TriModelDebateEngine:
                 verdict = "CONTESTED_RECORD"
             elif grade == "C":
                 verdict = "LORE_ADAPTED"
+            elif grade == "REVIEW_REQUIRED":
+                verdict = "ESCALATED_REVIEW_REQUIRED"
             else:
                 verdict = "REVISED_CORRECTION"
 
+            # REVIEW_REQUIRED is never auto-rewritten: two AI reviewers disagreeing (or
+            # one failing) is grounds to flag the sentence, not grounds for the machine
+            # to pick a replacement on its own.
             revised_text = claim_text
             if grade in ["B", "C"]:
                 revised_text = audit_res.get("revised_text") or claim_text
@@ -278,7 +366,10 @@ class TriModelDebateEngine:
                 "grade": grade,
                 "revised_text": revised_text,
                 "primary_source": audit_res.get("primary_source", "공인 1차 사료"),
-                "confidence": 99.5 if grade == "A" else (96.5 if grade == "B" else (94.0 if grade == "C" else 92.0))
+                "confidence": (
+                    50.0 if grade == "REVIEW_REQUIRED" else
+                    99.5 if grade == "A" else (96.5 if grade == "B" else (94.0 if grade == "C" else 92.0))
+                )
             }
             findings.append(f)
 
@@ -293,24 +384,43 @@ class TriModelDebateEngine:
             revised_shots.append(s_copy)
 
             # Stream up to 8 representative findings to GUI to avoid event congestion
-            if idx < 8 or grade in ["C", "D"]:
+            if idx < 8 or grade in ["C", "D", "REVIEW_REQUIRED"]:
                 emit({"type": "fact_finding", "data": f})
                 time.sleep(0.08)
 
-        # Stage 2: Critiques
-        emit({"type": "stage_start", "stage": "critique", "message": "2단계: 인과관계 역전 및 허구/낭설(Grade C/D) 교정 비판"})
-        time.sleep(0.3)
-        critique_msg = {
-            "critic": "Gemini 3.6 (엔지니어)",
-            "target": "Gemini 3.7 (디렉터)",
-            "flaw_caught": f"총 {len(findings)}문장 중 Grade C(야사) {fact_stats['C']}건, Grade D(허구) {fact_stats['D']}건 적발! '전해집니다' 결합 및 정사 교정 완료.",
-            "status": "CORRECTED"
-        }
+        # Stage 2: report what escalation actually found -- no canned critique text.
+        emit({"type": "stage_start", "stage": "critique", "message": "2단계: 규칙 기반 팩트체커의 무검증 기본값(VERIFIED_FACT) 문장을 codex+grok 교차검증으로 승격"})
+        time.sleep(0.1)
+        if escalated_count:
+            critique_msg = {
+                "source": "escalate_claim (codex+grok, run_consensus_round.py)",
+                "escalated_claims": escalated_count,
+                "agreed_sound": escalation_agreed_count,
+                "review_required": escalation_review_required_count,
+                "note": (
+                    f"규칙 기반 체커가 무검증으로 통과시키려던 {escalated_count}건의 고유 claim을 "
+                    f"실제 codex+grok 교차검증으로 승격했다. {escalation_agreed_count}건은 합의(SOUND), "
+                    f"{escalation_review_required_count}건은 불일치/실패로 사람 검토 대기."
+                ),
+            }
+        else:
+            critique_msg = {
+                "source": "escalate_claim (codex+grok, run_consensus_round.py)",
+                "escalated_claims": 0,
+                "note": "모든 문장이 curated 규칙 패턴(4개 전용 소재 또는 극적 질문/서사 프레이밍)에 매칭되어 이번 실행에서는 교차검증 라운드가 필요하지 않았다.",
+            }
         emit({"type": "critique", "data": critique_msg})
 
         # Stage 3: Synthesis Report
-        emit({"type": "stage_start", "stage": "synthesis", "message": "3단계: 최종 팩트체크 리포트 및 학술 검증서 발급"})
-        time.sleep(0.4)
+        emit({"type": "stage_start", "stage": "synthesis", "message": "3단계: 최종 팩트체크 리포트 발급"})
+        time.sleep(0.1)
+
+        if fact_stats["REVIEW_REQUIRED"] > 0:
+            final_grade = f"REVIEW_REQUIRED ({fact_stats['REVIEW_REQUIRED']}건 사람 검토 대기)"
+        elif fact_stats["D"] > 0:
+            final_grade = f"허구/낭설 {fact_stats['D']}건 교정 완료"
+        else:
+            final_grade = "규칙 기반 매칭 + 교차검증 합의로 통과 (사람 검토 대기 0건)"
 
         summary = {
             "check_id": check_id,
@@ -319,16 +429,12 @@ class TriModelDebateEngine:
             "contested_count": fact_stats["B"],
             "lore_count": fact_stats["C"],
             "revised_count": fact_stats["D"],
+            "review_required_count": fact_stats["REVIEW_REQUIRED"],
+            "escalated_claims": escalated_count,
+            "escalation_agreed_count": escalation_agreed_count,
             "academic_sources": list(set([f["primary_source"] for f in findings if f.get("primary_source")]))[:5],
-            "final_grade": "A+ (학술적 엄밀성 완벽 검증)" if fact_stats["D"] == 0 else "A- (허구 사료 전수 교정 완료)"
+            "final_grade": final_grade,
         }
-
-        # Persist updated manifest if active files exist
-        try:
-            from workspace_manager import workspace_mgr
-            active_ep = workspace_mgr.current_ep_dir
-        except Exception:
-            active_ep = self.ep_dir
 
         src_v2 = active_ep / "source" / "scene_script_manifest_v2.json"
         if src_v2.exists():
@@ -347,10 +453,12 @@ class TriModelDebateEngine:
 - **일시**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 - **최종 판정**: {summary['final_grade']}
 - **통계**:
-  - Grade A (공인 사실): {fact_stats['A']}건
+  - Grade A (공인 사실 또는 codex+grok 합의 SOUND): {fact_stats['A']}건
   - Grade B (기록 충돌/판본 이견): {fact_stats['B']}건
   - Grade C (야사/전승 보정): {fact_stats['C']}건
   - Grade D (허구/낭설 대체): {fact_stats['D']}건
+  - REVIEW_REQUIRED (codex/grok 불일치 또는 라운드 실패 -- 사람 검토 필요): {fact_stats['REVIEW_REQUIRED']}건
+- **교차검증 에스컬레이션**: 고유 claim {escalated_count}건 중 {escalation_agreed_count}건 합의, {escalation_review_required_count}건 사람 검토 대기
 
 ---
 
