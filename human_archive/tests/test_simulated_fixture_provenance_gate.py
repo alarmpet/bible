@@ -88,14 +88,35 @@ def test_verify_postflight_checks_the_audit_consensus_manifest_too(tmp_path: Pat
     assert report["checks"]["simulated_fixture_provenance"]["status"] == "FAIL"
 
 
-def test_orchestrate_deep_tri_model_script_source_labels_its_manifest_as_simulated_fixture():
+def test_orchestrate_deep_tri_model_script_source_resolves_provenance_from_the_real_debate_round():
     """A lightweight source-level check rather than a full integration test:
     orchestrate_deep_tri_model_script() is a large, GUI-event-streaming-coupled
     function (HistoricalParallelEngine, SentenceHistoricalFactChecker,
     SemanticSubtitleEngine, multiple file writes) that this session did not
-    build the fixtures to run end-to-end. This pins that the honest label this
-    test file's gate tests depend on is actually present in the source, so a
-    future edit that silently drops it is caught."""
+    build the fixtures to run end-to-end.
+
+    Task 2's Quarantine follow-up (2026-09-15 overhaul plan §7, task_fcf94ecb)
+    replaced Round 1/2's static templated dicts with a real
+    run_consensus_round.escalate_claim() round
+    (lib/tri_model_real_debate.py), so `provenance` is no longer a literal
+    "simulated_fixture" constant in this file -- it is computed by
+    `resolve_provenance()` from whether that round actually completed. This
+    pins that the manifest still gets its provenance from that real resolution
+    (not a re-hardcoded literal), and that the fail-closed
+    "simulated_fixture" label this test file's gate tests depend on still
+    lives somewhere reachable -- in `lib/tri_model_real_debate.py`'s
+    `resolve_provenance()`, verified directly by
+    test_tri_model_real_debate.py -- so a future edit that silently drops
+    either the wiring or the fallback label is caught."""
     source = (_SCRIPTS_DIR / "tri_model_debate_engine.py").read_text(encoding="utf-8")
-    assert '"provenance": "simulated_fixture"' in source
     assert "final_manifest" in source
+    assert '"provenance": debate_provenance' in source, (
+        "final_manifest['metadata']['provenance'] must come from resolve_provenance(), "
+        "not a re-hardcoded literal")
+    assert "resolve_provenance" in source and "run_structure_debate" in source
+
+    lib_source = (_SCRIPTS_DIR / "lib" / "tri_model_real_debate.py").read_text(encoding="utf-8")
+    assert '"simulated_fixture"' in lib_source, (
+        "the fail-closed label postflight_release.py gates on must still exist as the "
+        "fallback when the real debate round is incomplete")
+    assert '"live_orchestration"' in lib_source
