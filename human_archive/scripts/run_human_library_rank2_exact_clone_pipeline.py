@@ -44,7 +44,7 @@ from lib.exact_release_verifier import (
     validate_plate_manifest,
     validate_video_probe,
 )
-from lib.rank2_visual_contract import audit_plate_directory
+from lib.rank2_visual_contract import audit_plate_directory, audit_visual_anchor_contract, audit_v3_pacing
 
 # Canonical Paths
 REPO_ROOT = SCRIPTS_DIR.parents[2]
@@ -401,6 +401,13 @@ def step_4_verify_postflight(
     assert subcut_data.get("lineage", {}).get("cut_lineage_complete") is True, (
         "Cut lineage is incomplete; refusing visual release"
     )
+    anchor_check = audit_visual_anchor_contract(subcut_data.get("cuts", []))
+    assert anchor_check["status"] == "PASS", "; ".join(anchor_check["errors"])
+    if subcut_data.get("pacing") == "v3_calm":
+        pacing_check = audit_v3_pacing(subcut_data.get("cuts", []))
+        assert pacing_check["status"] == "PASS", "; ".join(pacing_check["errors"])
+    else:
+        pacing_check = None
 
     wav_sample_frames = count_wav_sample_frames(audio_path)
     assert wav_sample_frames == MASTER_AUDIO_SAMPLES, (
@@ -427,6 +434,8 @@ def step_4_verify_postflight(
         "visual_plate_metrics": visual_plate_check,
         "subcut_montage_metrics": subcut_check,
         "lineage_metrics": subcut_data.get("lineage", {}),
+        "semantic_anchor_metrics": anchor_check,
+        "pacing_metrics": pacing_check,
     }
 
 
@@ -587,9 +596,25 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Human Library Rank 2 Exact Clone Pipeline Runner")
     parser.add_argument("--with-branding", action="store_true", help="Enable optional channel branding overlays")
     parser.add_argument("--candidate-v2", action="store_true", help="Render isolated clean-scope candidate V2")
+    parser.add_argument("--candidate-v3", action="store_true", help="Render isolated calm-pacing semantic candidate V3")
     args = parser.parse_args()
 
-    if args.candidate_v2:
+    if args.candidate_v3:
+        candidate_output = REPO_ROOT / "output" / "NOLLAM-HUMAN-LIBRARY-RANK2-EXACT-MASTER-V3-CANDIDATE.mp4"
+        run_pipeline(
+            include_branding=False,
+            plan_path=METADATA_DIR / "rank2_candidate_v3_subcut_montage_plan.json",
+            plates_dir=EP_DIR / "images_2d_candidate_v3",
+            ass_path=SUBTITLES_DIR / "rank2_candidate_v3_subtitles.ass",
+            montage_path=VIDEO_DIR / "rank2_candidate_v3_montage_raw.mp4",
+            output_mp4=candidate_output,
+            manifest_path=METADATA_DIR / "rank2_candidate_v3_release_manifest.json",
+            release_id="HL-RANK2-EXACT-CANDIDATE-V3",
+            release_status="CANDIDATE",
+            expected_min_cuts=420,
+            expected_max_cuts=480,
+        )
+    elif args.candidate_v2:
         candidate_output = REPO_ROOT / "output" / "NOLLAM-HUMAN-LIBRARY-RANK2-EXACT-MASTER-V2-CANDIDATE.mp4"
         run_pipeline(
             include_branding=False,

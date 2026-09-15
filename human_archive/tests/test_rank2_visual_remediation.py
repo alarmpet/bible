@@ -12,8 +12,11 @@ import pytest
 from lib.rank2_visual_contract import (
     annotate_cut_contract,
     audit_plate_directory,
+    audit_visual_anchor_contract,
+    audit_v3_pacing,
     blend_transition_frame,
     build_rank2_lineage,
+    build_v3_pacing_policy,
     choose_motion_profile,
     detect_baked_in_plate_artifacts,
     prepare_clean_plate_set,
@@ -22,6 +25,7 @@ from lib.rank2_visual_contract import (
 from lib.exact_release_verifier import audit_subcut_montage_plan
 from lib.subcut_montage_engine import SubcutPlan
 from build_rank2_clean_subtitles import build_rank2_clean_ass
+from build_rank2_semantic_subcut_plan import build_v3_cut_counts
 
 
 def test_rank2_lineage_binds_shot_to_sentence_cue_and_claim():
@@ -127,10 +131,14 @@ def test_subcut_plan_accepts_edit_graph_metadata():
         visual_beat="context",
         motion_profile={"motion_family": "push"},
         transition_in={"type": "hard_cut", "frames": 0},
+        semantic_anchors={"place": "Nile", "subject": "pyramid", "action": "establish", "era": "ancient", "evidence_role": "context"},
+        semantic_match_status="METADATA_ALIGNED_REVIEW_REQUIRED",
     )
 
     assert plan.claim_ids == ["CLAIM_007"]
     assert plan.transition_in["type"] == "hard_cut"
+    assert plan.semantic_anchors["subject"] == "pyramid"
+    assert plan.semantic_match_status == "METADATA_ALIGNED_REVIEW_REQUIRED"
 
 
 def test_rank2_subtitle_style_is_large_boxed_and_safe_area_bound(tmp_path: Path):
@@ -186,3 +194,111 @@ def test_clean_plate_set_uses_a_16_by_9_source_crop_without_touching_source(tmp_
     assert Image.open(source / "SHOT_001_A.jpg").size == (2304, 1296)
     assert Image.open(target / "SHOT_001_A.jpg").size == (2304, 1296)
     assert result["method"] == "top_safe_crop_16x9"
+
+
+def test_v3_pacing_policy_separates_fast_hook_from_calm_body():
+    policy = build_v3_pacing_policy()
+
+    assert policy["visible_cut_budget"] == (420, 480)
+    assert policy["first_10s_max_cuts"] == 4
+    assert policy["first_30s_max_cuts"] == 10
+    assert policy["hook_motion_per_cut"] == 1
+    assert policy["body_duration_sec"] == (3.0, 5.0)
+
+
+def test_v3_motion_profile_allows_one_dominant_transform_only():
+    profile = choose_motion_profile(0, 0, 3, pacing="v3_calm")
+
+    active = [
+        abs(profile["end_zoom"] - profile["start_zoom"]) > 1e-6,
+        abs(profile["end_cx"] - profile["start_cx"]) > 1e-6,
+        abs(profile["end_cy"] - profile["start_cy"]) > 1e-6,
+        abs(profile["end_rotation"] - profile["start_rotation"]) > 1e-6,
+    ]
+    assert sum(active) == 1
+    assert profile["max_zoom_delta"] <= 0.08
+    assert profile["max_pan_delta"] <= 0.10
+
+
+def test_semantic_anchor_contract_rejects_missing_must_show_fields():
+    records = [
+        {
+            "shot_id": "SHOT_001",
+            "plate_id": "SHOT_001_A",
+            "sentence_ids": ["SENT_001"],
+            "claim_ids": ["CLAIM_001"],
+            "semantic_anchors": {
+                "place": "Nile",
+                "subject": "pyramid",
+                "action": "establish",
+            },
+        },
+    ]
+
+    result = audit_visual_anchor_contract(records)
+
+    assert result["status"] == "FAIL"
+    assert any("era" in error for error in result["errors"])
+
+
+def test_semantic_anchor_contract_accepts_complete_record():
+    records = [
+        {
+            "shot_id": "SHOT_001",
+            "plate_id": "SHOT_001_A",
+            "sentence_ids": ["SENT_001"],
+            "claim_ids": ["CLAIM_001"],
+            "semantic_anchors": {
+                "place": "Nile",
+                "subject": "pyramid",
+                "action": "establish",
+                "era": "ancient Egypt",
+                "evidence_role": "context",
+            },
+        },
+    ]
+
+    assert audit_visual_anchor_contract(records)["status"] == "PASS"
+
+
+def test_v3_cut_counts_are_duration_weighted_and_hook_capped():
+    shots = [
+        {"start_sec": 0.0, "end_sec": 3.5, "duration_sec": 3.5},
+        {"start_sec": 3.5, "end_sec": 7.5, "duration_sec": 4.0},
+        {"start_sec": 7.5, "end_sec": 12.0, "duration_sec": 4.5},
+        {"start_sec": 12.0, "end_sec": 30.0, "duration_sec": 18.0},
+        {"start_sec": 30.0, "end_sec": 1440.0, "duration_sec": 1410.0},
+    ]
+
+    counts = build_v3_cut_counts(shots, target_visible_cuts=455)
+
+    assert sum(counts) == 455
+    assert counts[0] >= 1
+    assert sum(counts[:3]) <= 4
+    assert sum(counts[:4]) <= 10
+
+
+def test_v3_pacing_audit_rejects_overloaded_motion_and_hook_density():
+    calm_profile = {
+        "start_zoom": 1.02,
+        "end_zoom": 1.04,
+        "start_cx": 0.5,
+        "end_cx": 0.5,
+        "start_cy": 0.45,
+        "end_cy": 0.45,
+        "start_rotation": 0.0,
+        "end_rotation": 0.0,
+        "max_zoom_delta": 0.02,
+        "max_pan_delta": 0.0,
+        "max_rotation_delta": 0.0,
+    }
+    cuts = [
+        {"start_sec": index * 3.2, "motion_profile": calm_profile}
+        for index in range(455)
+    ]
+
+    result = audit_v3_pacing(cuts)
+
+    assert result["status"] == "PASS"
+    assert result["first_10s_cuts"] <= 4
+    assert result["first_30s_cuts"] <= 10

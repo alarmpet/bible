@@ -89,6 +89,105 @@ MOTION_GRAMMAR: tuple[dict[str, Any], ...] = (
 )
 
 
+V3_CALM_MOTION_GRAMMAR: tuple[dict[str, Any], ...] = (
+    {
+        "motion_family": "calm_establish",
+        "transformation": "wide_establishing",
+        "start_zoom": 1.02,
+        "end_zoom": 1.04,
+        "start_cx": 0.50,
+        "end_cx": 0.50,
+        "start_cy": 0.46,
+        "end_cy": 0.46,
+        "start_rotation": 0.0,
+        "end_rotation": 0.0,
+    },
+    {
+        "motion_family": "calm_push",
+        "transformation": "push_in",
+        "start_zoom": 1.04,
+        "end_zoom": 1.10,
+        "start_cx": 0.50,
+        "end_cx": 0.50,
+        "start_cy": 0.45,
+        "end_cy": 0.45,
+        "start_rotation": 0.0,
+        "end_rotation": 0.0,
+    },
+    {
+        "motion_family": "calm_pan_right",
+        "transformation": "pan_right",
+        "start_zoom": 1.06,
+        "end_zoom": 1.06,
+        "start_cx": 0.46,
+        "end_cx": 0.54,
+        "start_cy": 0.45,
+        "end_cy": 0.45,
+        "start_rotation": 0.0,
+        "end_rotation": 0.0,
+    },
+    {
+        "motion_family": "calm_evidence",
+        "transformation": "macro_detail",
+        "start_zoom": 1.08,
+        "end_zoom": 1.15,
+        "start_cx": 0.50,
+        "end_cx": 0.50,
+        "start_cy": 0.44,
+        "end_cy": 0.44,
+        "start_rotation": 0.0,
+        "end_rotation": 0.0,
+    },
+    {
+        "motion_family": "calm_pull",
+        "transformation": "pull_out",
+        "start_zoom": 1.10,
+        "end_zoom": 1.05,
+        "start_cx": 0.50,
+        "end_cx": 0.50,
+        "start_cy": 0.45,
+        "end_cy": 0.45,
+        "start_rotation": 0.0,
+        "end_rotation": 0.0,
+    },
+    {
+        "motion_family": "calm_pan_left",
+        "transformation": "pan_left",
+        "start_zoom": 1.06,
+        "end_zoom": 1.06,
+        "start_cx": 0.54,
+        "end_cx": 0.46,
+        "start_cy": 0.45,
+        "end_cy": 0.45,
+        "start_rotation": 0.0,
+        "end_rotation": 0.0,
+    },
+)
+
+
+V3_PACING_POLICY: dict[str, Any] = {
+    "visible_cut_budget": (420, 480),
+    "first_10s_max_cuts": 4,
+    "first_30s_max_cuts": 10,
+    "hook_motion_per_cut": 1,
+    "hook_duration_sec": (1.4, 2.5),
+    # 455 visible cuts over 1,440 seconds imply a ~3.16s median. Longer
+    # explanatory holds are represented as internal reframes, not extra cuts.
+    "body_duration_sec": (3.0, 5.0),
+    "max_zoom_delta": 0.08,
+    "max_pan_delta": 0.10,
+    "max_rotation_delta": 0.20,
+}
+
+
+def build_v3_pacing_policy() -> dict[str, Any]:
+    """Return an immutable-by-copy pacing policy for the calm V3 candidate."""
+    return {
+        key: (tuple(value) if isinstance(value, tuple) else value)
+        for key, value in V3_PACING_POLICY.items()
+    }
+
+
 def annotate_cut_contract(
     cut: Mapping[str, Any],
     lineage: Mapping[str, Sequence[str]],
@@ -180,7 +279,11 @@ def build_rank2_lineage(
 
 
 def choose_motion_profile(
-    *, shot_index: int, cut_index: int, cut_count: int
+    shot_index: int,
+    cut_index: int,
+    cut_count: int,
+    *,
+    pacing: str = "v2",
 ) -> dict[str, Any]:
     """Choose a deterministic shot-local profile with a visible trajectory.
 
@@ -190,27 +293,137 @@ def choose_motion_profile(
     """
     if shot_index < 0 or cut_index < 0 or cut_count <= 0 or cut_index >= cut_count:
         raise ValueError("invalid shot-local motion coordinates")
-    profile = dict(MOTION_GRAMMAR[(shot_index + cut_index) % len(MOTION_GRAMMAR)])
+    if pacing not in {"v2", "v3_calm"}:
+        raise ValueError(f"unknown pacing policy: {pacing}")
+    grammar = V3_CALM_MOTION_GRAMMAR if pacing == "v3_calm" else MOTION_GRAMMAR
+    profile = dict(grammar[(shot_index + cut_index) % len(grammar)])
     profile["easing"] = "cosine_s"
     profile["visual_beat"] = "context" if cut_index == 0 else "evidence"
     profile["local_cut_index"] = cut_index
     profile["local_cut_count"] = cut_count
+    profile["pacing"] = pacing
+    profile["max_zoom_delta"] = round(abs(profile["end_zoom"] - profile["start_zoom"]), 6)
+    profile["max_pan_delta"] = round(
+        max(
+            abs(profile["end_cx"] - profile["start_cx"]),
+            abs(profile["end_cy"] - profile["start_cy"]),
+        ),
+        6,
+    )
+    profile["max_rotation_delta"] = round(
+        abs(profile["end_rotation"] - profile["start_rotation"]), 6
+    )
     return profile
 
 
 def transition_for_boundary(
-    *, previous_shot: str, next_shot: str, previous_index: int
+    *, previous_shot: str, next_shot: str, previous_index: int, pacing: str = "v2"
 ) -> dict[str, Any]:
     """Return a bounded transition policy for one encoded boundary."""
     if previous_shot == next_shot:
         return {"type": "hard_cut", "frames": 0}
-    choices = (
-        {"type": "match_cut", "frames": 4},
-        {"type": "dissolve", "frames": 8},
-        {"type": "whip_pan", "frames": 6},
-        {"type": "hard_cut", "frames": 0},
-    )
+    if pacing == "v3_calm":
+        # One restrained transition roughly every fifth shot boundary.  The
+        # rest remain clean hard cuts so the transition itself never becomes
+        # the subject of the documentary.
+        choices = (
+            {"type": "hard_cut", "frames": 0},
+            {"type": "hard_cut", "frames": 0},
+            {"type": "hard_cut", "frames": 0},
+            {"type": "hard_cut", "frames": 0},
+            {"type": "dissolve", "frames": 6},
+        )
+    elif pacing == "v2":
+        choices = (
+            {"type": "match_cut", "frames": 4},
+            {"type": "dissolve", "frames": 8},
+            {"type": "whip_pan", "frames": 6},
+            {"type": "hard_cut", "frames": 0},
+        )
+    else:
+        raise ValueError(f"unknown pacing policy: {pacing}")
     return dict(choices[previous_index % len(choices)])
+
+
+def audit_visual_anchor_contract(
+    records: Sequence[Mapping[str, Any]],
+    *,
+    required_fields: Sequence[str] = ("place", "subject", "action", "era", "evidence_role"),
+) -> dict[str, Any]:
+    """Fail closed when a cut has no explicit semantic visual anchors.
+
+    This is a metadata/asset contract, not a claim of pixel-level semantic
+    understanding.  Human preview or an approved vision model remains
+    required for the final correspondence decision.
+    """
+    errors: list[str] = []
+    reviewed = 0
+    for record in records:
+        cut_id = str(record.get("cut_id") or record.get("plate_id") or record.get("shot_id") or "<unknown>")
+        anchors = record.get("semantic_anchors")
+        if not isinstance(anchors, Mapping):
+            errors.append(f"{cut_id}: semantic_anchors missing")
+            continue
+        missing = [field for field in required_fields if not str(anchors.get(field, "")).strip()]
+        if missing:
+            errors.append(f"{cut_id}: missing semantic anchors {missing}")
+        if not record.get("sentence_ids"):
+            errors.append(f"{cut_id}: sentence lineage missing")
+        if not record.get("claim_ids"):
+            errors.append(f"{cut_id}: claim lineage missing")
+        reviewed += 1
+    return {
+        "status": "PASS" if not errors else "FAIL",
+        "record_count": len(records),
+        "reviewed_count": reviewed,
+        "pixel_semantic_verification_required": True,
+        "errors": errors,
+    }
+
+
+def audit_v3_pacing(cuts: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Audit visible-cut density and single-axis motion for the V3 candidate."""
+    policy = build_v3_pacing_policy()
+    errors: list[str] = []
+    first_10 = sum(float(c.get("start_sec", 0.0)) < 10.0 for c in cuts)
+    first_30 = sum(float(c.get("start_sec", 0.0)) < 30.0 for c in cuts)
+    if not (policy["visible_cut_budget"][0] <= len(cuts) <= policy["visible_cut_budget"][1]):
+        errors.append(f"visible cut count {len(cuts)} outside {policy['visible_cut_budget']}")
+    if first_10 > policy["first_10s_max_cuts"]:
+        errors.append(f"first 10s has {first_10} cuts")
+    if first_30 > policy["first_30s_max_cuts"]:
+        errors.append(f"first 30s has {first_30} cuts")
+
+    overloaded: list[str] = []
+    for cut in cuts:
+        profile = cut.get("motion_profile", {})
+        active = sum(
+            abs(float(profile.get(end, 0.0)) - float(profile.get(start, 0.0))) > 1e-6
+            for start, end in (
+                ("start_zoom", "end_zoom"),
+                ("start_cx", "end_cx"),
+                ("start_cy", "end_cy"),
+                ("start_rotation", "end_rotation"),
+            )
+        )
+        if active > policy["hook_motion_per_cut"]:
+            overloaded.append(str(cut.get("cut_id", "<unknown>")))
+        if float(profile.get("max_zoom_delta", 0.0)) > policy["max_zoom_delta"] + 1e-6:
+            errors.append(f"{cut.get('cut_id', '<unknown>')}: zoom delta exceeds V3 limit")
+        if float(profile.get("max_pan_delta", 0.0)) > policy["max_pan_delta"] + 1e-6:
+            errors.append(f"{cut.get('cut_id', '<unknown>')}: pan delta exceeds V3 limit")
+        if float(profile.get("max_rotation_delta", 0.0)) > policy["max_rotation_delta"] + 1e-6:
+            errors.append(f"{cut.get('cut_id', '<unknown>')}: rotation delta exceeds V3 limit")
+    if overloaded:
+        errors.append(f"multi-transform cuts: {overloaded[:8]}")
+    return {
+        "status": "PASS" if not errors else "FAIL",
+        "cut_count": len(cuts),
+        "first_10s_cuts": first_10,
+        "first_30s_cuts": first_30,
+        "multi_transform_count": len(overloaded),
+        "errors": errors,
+    }
 
 
 def detect_baked_in_plate_artifacts(path: str | Path) -> dict[str, Any]:

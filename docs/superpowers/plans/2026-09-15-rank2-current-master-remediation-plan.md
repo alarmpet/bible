@@ -13,6 +13,22 @@
 - provider watermark, 생성 텍스트, baked-in subtitle band가 있으면 clean export 또는 재생성 전에는 승격하지 않는다.
 - 모션 효과 이름만 기록하지 말고 실제 encoded frame에서 효과와 경계를 검증한다.
 
+## V3 재설계 결정 — semantic match + calm pacing
+
+- [x] 기존 V2의 600개 visible cut 전부를 빠른 컷으로 사용하지 않고 V3 목표를 420~480 visible hard cuts로 낮춘다.
+- [x] 첫 10초 최대 4컷, 첫 30초 최대 10컷, cut당 dominant transform 1개를 적용한다.
+- [x] 455컷/1,440초의 평균이 약 3.16초이므로 본문 visible cut은 3~5초를 기본으로 하고 긴 설명은 내부 reframe/hold로 처리한다.
+- [x] 각 cut에 `semantic_anchors`와 `semantic_match_status`를 추가한다. ID lineage는 실제 이미지 의미 일치의 증명이 아니므로 pixel/human review를 별도 요구한다.
+
+### V3 후보 실행 결과 (2026-09-15)
+
+- [x] `NOLLAM-HUMAN-LIBRARY-RANK2-EXACT-MASTER-V3-CANDIDATE.mp4`를 별도 경로에 렌더하고 SHA-256 체인을 동결했다.
+- [x] 물리 결과: 1,440.000초, 43,200 frames, AV delta 0.0000초, 전체 decode PASS, Gate 0~5 PASS.
+- [x] 실제 encoded-frame 결과: boundary diff median 28.152, internal diff median 0.708, internal diff<1.0 75.30%, direction reversal 132건.
+- [x] V3 의미 결과: 455/455 metadata anchor audit PASS이지만 `pixel_semantic_verification_required=true`를 유지한다.
+- [ ] hard boundary 450건의 encoded transition 품질을 shot boundary/same-shot cut별로 분리 검수한다.
+- [ ] source↔candidate 동시각 이미지 의미 검수와 preview 승인 전에는 기존 output을 교체하지 않는다.
+
 ## Task 1 — SSOT와 데이터 계보 재결합
 
 **대상:** `master_script_clean.json`, canonical cue manifest, `shot_composition_plan.json`, `master_plates_composition_plan.json`, `subcut_montage_plan.json`
@@ -27,7 +43,7 @@
 
 **대상:** 128개 Flow plate prompt와 `images_2d_master/`
 
-- [ ] A=상황·전경·공간, B=증거·인물 행동·유물 디테일처럼 의미가 분리된 prompt를 작성한다.
+- [ ] A=상황·전경·공간, B=증거·인물 행동·유물 디테일처럼 의미가 분리된 prompt를 작성한다. V3 현재 후보는 기존 master plate 파생본이므로 이 항목은 아직 완료로 보지 않는다.
 - [ ] 단순 `angle A`/`angle B` 차이를 금지하고, 두 prompt의 semantic anchor가 실제로 달라지는지 검사한다.
 - [x] provider watermark, generated text, logo, persistent band를 candidate plate audit로 탐지한다.
 - [ ] 문제가 있는 plate는 라이선스가 허용하는 clean export 또는 Flow 재생성으로 교체한다. 제거 권한이 없는 표식은 inpaint로 숨기지 않는다.
@@ -78,12 +94,12 @@
 
 **대상:** `exact_release_verifier.py`, Rank 2 physical release tests, 새 candidate MP4
 
-- [ ] 계획 경계와 encoded frame boundary의 1:1 일치를 검사한다.
+- [ ] 계획 경계와 encoded frame boundary의 1:1 일치를 검사한다. 현재 전체 decode는 PASS이나 hard boundary 품질의 독립 검수는 남아 있다.
 - [ ] 각 비-strobe 컷의 실제 내부 motion, motion axis, direction, focal anchor를 측정한다.
 - [ ] 경계 diff가 내부 motion을 압도하는 경우 transition 또는 motion profile을 재검토한다.
 - [ ] A/B 반복 0뿐 아니라 semantic novelty, 동일 구도 반복, 무근거 방향 역전도 검사한다.
-- [ ] subtitle glyph/box와 provider/band/OCR 검사를 통과한 candidate만 manifest에 기록한다.
-- [ ] 전체 decode, frame count, AV parity, SHA chain은 마지막에 다시 실행한다.
+- [x] subtitle glyph/box와 provider/band 기본 검사를 통과한 V3 candidate를 manifest에 기록했다. OCR/시청용 glyph parity는 추가 승인 대상이다.
+- [x] 전체 decode, frame count, AV parity, SHA chain을 V3 candidate에서 다시 실행했다.
 - [ ] 모든 Gate PASS와 시청용 preview 승인 전에는 `output` mirror를 교체하지 않는다.
 
 ## 완료 기준

@@ -48,6 +48,8 @@ class SubcutPlan:
     visual_beat: str = ""
     motion_profile: Dict[str, Any] = field(default_factory=dict)
     transition_in: Dict[str, Any] = field(default_factory=lambda: {"type": "hard_cut", "frames": 0})
+    semantic_anchors: Dict[str, str] = field(default_factory=dict)
+    semantic_match_status: str = ""
 
 
 def compute_saliency_center(img: Image.Image) -> Tuple[float, float]:
