@@ -1,81 +1,199 @@
-# 구약 힐링 첫 1분 훅·진성 엠비언트 조사 노트
+# 프로젝트 종합 기술 분석 및 연구 보고서 (Repository Deep-Dive Analysis)
 
-> 조사일: 2026-08-11  
-> 용도: `계획서_구약힐링_첫1분훅_진성엠비언트.md` 개정 근거  
-> 주의: 커뮤니티 글은 사용자 언어를 이해하기 위한 정성 자료이며 일반화 가능한 효과 근거가 아니다.
+> **문서 버전:** v3.0 (human_archive 파이프라인 반영 및 전면 갱신)
+> **최종 갱신일:** 2026-09-15
+> **대상 저장소:** `https://github.com/alarmpet/bible.git` (`d:/module/bible`)
+> **이전 버전(v2.0, 2026-08-18) 대비 변경:** bible_healing의 보이스·배경 속도 락이 바뀌었고(M2/0.1배속), v2.0에는 없던 **human_archive**(현재 저장소에서 가장 활발히 개발되는 파이프라인)를 새로 추가했다. v2.0의 수치는 대부분 이 시점 기준으로 stale하다.
 
-## 1. 저장소 실측
+---
 
-`bible_healing/runs/ep01_anxious_night/hermes_jobs/full/scene_audio_manifest.json`과 `scenes.json`을 대조했다.
+## 1. 프로젝트 개요 및 핵심 목표 (Executive Summary)
 
-| 구간 | 실제 시간 |
-|---|---:|
-| `open_01` | 0.00–21.76초 |
-| `open_02` | 21.76–48.20초 |
-| `u01_n0` 공감·말씀 안내 | 48.20–90.68초 |
-| 첫 성경 낭독 `u01_s0` | **90.68초 시작** |
+본 저장소는 YouTube 플랫폼에 최적화된 장편 롱폼 영상 콘텐츠를 자동화·반자동화 파이프라인으로 제작·검증·렌더링하는 통합 미디어 생성 시스템이다. 서로 독립적으로 발전해 온 **세 개의 파이프라인**이 한 저장소를 공유한다.
 
-현재 첫 48.2초는 채널 성격 설명과 호흡 안내가 중심이고, “불을 껐는데 머릿속만 환한 밤”이라는 구체 공감은 48초 이후에 나온다. 첫 말씀까지 1분 30.68초가 걸린다.
+```
+                              bible/ (저장소 루트)
+                                     │
+        ┌────────────────────────────┼────────────────────────────┐
+        ▼                            ▼                            ▼
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────────────┐
+│  bible_healing/       │  │  modern/              │  │  human_archive/               │
+│  구약 힐링 성경 낭독   │  │  현대 드라마 대본      │  │  놀람파일 / 쉽선비 다큐멘터리   │
+├──────────────────────┤  ├──────────────────────┤  ├──────────────────────────────┤
+│ • KRV 성경 원문 파싱  │  │ • 5개 콘텐츠 레인     │  │ • nollam_file_v1(주) /         │
+│ • 2-Voice TTS         │  │   (검증실화/합성허구/  │  │   doodle_seonbi_v1(레거시)     │
+│   (M2 나레이터+M4 낭독)│  │   반전/멜로/실험)     │  │   프로필 이원화                │
+│ • 0.1배속 핑퐁 루프   │  │ • 반복·패딩 차단      │  │ • CLI v5/v6 10단계 제작 파이프라인│
+│   앰비언트 비디오     │  │   품질 감사 엔진       │  │ • Claude/Codex/Grok 실측       │
+│ • EPISODE_LEDGER 기반 │  │ • 캐릭터 일관성 시트   │  │   교차검증 오케스트레이션       │
+│   중복 방지           │  │                       │  │ • "선언-실행 괴리" 자동 감사 게이트│
+│ • 10단계 오케스트레이션│  │                       │  │                                │
+│   릴리즈 게이트       │  │                       │  │                                │
+└──────────────────────┘  └──────────────────────┘  └──────────────────────────────┘
+```
 
-## 2. YouTube 공식 근거
+과거 조선 시대 야담 파이프라인(`대본 sonnet/`)은 읽기 전용 레거시로 보관되며, 신규 기능은 위 세 파이프라인에서만 확장된다.
 
-- YouTube는 Intro 지표를 **첫 30초 후에도 남아 있는 시청자의 비율**로 정의한다. 높은 Intro 비율은 첫 30초가 제목·썸네일의 기대와 맞고 관심을 유지했을 가능성을 뜻한다. 첫 30초 스타일을 실험하라고 권한다.  
-  출처: [Measure key moments for audience retention](https://support.google.com/youtube/answer/9314415)
-- 추천 시스템 설명에서도 초기 몇 초에 시청자가 머물지 결정하며, 인트로가 제목·썸네일의 약속을 즉시 전달하고 곧바로 가치를 제공해야 한다고 안내한다.  
-  출처: [Understand your content performance for YouTube’s recommendation system](https://support.google.com/youtube/answer/16559650)
+---
 
-설계 해석: 이 영상의 클릭 약속이 “불안한 밤을 위한 말씀·위로”라면 채널 소개보다 먼저 불안한 밤을 구체적으로 비추고, 곧 말씀을 들을 수 있다는 확신을 줘야 한다.
+## 2. 전체 시스템 디렉토리 구조 (주요 항목)
 
-## 3. 불안·수면·공감 언어 근거
+```
+bible/
+├── CLAUDE.md                    # human_archive(놀람파일) 운영 매뉴얼 — 저장소 루트를 차지
+├── bible_healing/CLAUDE.md      # bible_healing 전용 매뉴얼 (2026-09-15, 루트 CLAUDE.md와 분리)
+├── manual.md, research.md       # 크로스 프로젝트 운영 노트
+├── pytest.ini                   # bible_healing/modern/human_archive 테스트를 모두 수집
+├── requirements.txt
+│
+├── bible_healing/                # [파이프라인 A] 구약 힐링 성경 낭독 시스템
+│   ├── assets/movie-sample/pingpong-1min/   # 1분 앰비언트 배경 12종
+│   ├── config/media_rules_lock.json         # 보이스·자막·배경 락(정본)
+│   ├── data/                                # 성경 원문 OSIS XML 및 파싱 JSON
+│   ├── scripts/                             # 오케스트레이션·TTS·자막·렌더링·QA 스크립트
+│   └── tests/
+│
+├── modern/                       # [파이프라인 B] 현대 드라마 대본 시스템
+│   ├── config/content_lanes.yaml            # 5개 레인 정의(L1_TRUE~L5_ROTATION)
+│   ├── story_quality.py                     # 반복/패딩/단서-회수 감사 규칙 본체
+│   ├── scripts/audit_story_quality.py       # 위 규칙을 호출하는 CLI 래퍼
+│   └── tests/
+│
+├── human_archive/                # [파이프라인 C] 놀람파일 / 쉽선비 다큐멘터리 시스템
+│   ├── config/channel_profiles.yaml         # nollam_file_v1(기본) / doodle_seonbi_v1(레거시) 등
+│   ├── scripts/                             # 대본·이미지·모션·릴리즈 CLI 전체
+│   │   ├── lib/orchestration/               # Claude/Codex/Grok 교차검증 엔진(all-manage 포팅)
+│   │   ├── audit_declared_vs_wired.py       # "선언-실행 괴리" 정적 감사 게이트
+│   │   └── postflight_release.py            # 릴리즈 최종 검증(모션·provenance 게이트 포함)
+│   ├── templates/, schemas/, docs/orchestration/
+│   └── tests/                               # 프로젝트 내 최대 규모 테스트 스위트
+│
+└── docs/superpowers/plans/       # 3개 파이프라인 공통 작업계획·감사 문서 보관소
+```
 
-- 불면 모델 연구에서는 걱정과 반추 같은 반복적 부정 사고가 수면 문제와 연관된 주요 인지 각성으로 다뤄진다.  
-  출처: [Cognitive factors and processes in models of insomnia: a systematic review](https://pmc.ncbi.nlm.nih.gov/articles/PMC10909484/)
-- 감정을 말로 붙이는 affect labeling은 부정 정서를 조절하는 전략으로 연구돼 왔다. 이는 “당신은 불안합니다”라고 진단하라는 뜻이 아니라, 시청자가 이미 경험하는 장면과 감정을 짧고 구체적으로 비추는 설계를 지지한다.  
-  출처: [Feelings Into Words: Contributions of Language to Exposure Therapy](https://pmc.ncbi.nlm.nih.gov/articles/PMC4721564/), [Putting feelings into words](https://pubmed.ncbi.nlm.nih.gov/17576282/)
-- NHS는 밤의 걱정을 무조건 멈추라고 강요하기보다 걱정을 알아차리고 현재로 돌아오는 전략, 호흡·마음챙김 같은 선택지를 소개한다. 수면 자체를 목표로 압박하면 긴장과 불안이 커질 수 있다고 설명한다.  
-  출처: [Tackling your worries](https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/tackling-your-worries/), [Worrying about sleep](https://oxfordhealth.nhs.uk/camhs/self-care/sleep/anxiety-worry/worrying-about-sleep/)
-- 느린 호흡 연구는 이완·자율신경 변화 가능성을 지지하지만 개인차가 있고 임상적 치료 효과를 보장하지 않는다. 따라서 오프닝의 호흡은 명령형이 아니라 선택형이어야 한다.  
-  출처: [The physiological effects of slow breathing in the healthy human](https://pmc.ncbi.nlm.nih.gov/articles/PMC5709795/), [Breathwork interventions for diagnosed anxiety disorders](https://pmc.ncbi.nlm.nih.gov/articles/PMC9954474/)
+---
 
-## 4. Reddit 정성 자료
+## 3. 파이프라인 A: 구약 힐링 성경 낭독 시스템 (`bible_healing`)
 
-다음 표현이 여러 불안·수면 게시물에서 반복됐다.
+### 3.1 기획 의도
+- 타깃: 밤에 불안·불면·번아웃으로 힘들어하는 시청자.
+- 구조: 공감 오프닝 훅 → 구약 성경 낭독(시편·잠언 등) → 묵상/위로.
+- 목표 분량: 약 100분(±20%).
 
-- 피곤하지만 머리가 멈추지 않음
-- 내일 할 일과 과거 실수를 반복해서 생각함
-- 심장이 빨리 뛰거나 몸이 긴장함
-- 혼자 깨어 있다는 고립감
-- 화면을 보기보다 편안한 말이나 소리를 틀어 놓음
+### 3.2 10단계 오케스트레이션 파이프라인 (`run_full_media_pipeline.py`)
 
-참고 스레드:
+단일 진입점을 통해 다음 순서를 통과해야 배포본으로 승인된다: `media_rules_preflight` → `build_full_job` → `tts_multi_voice` → `verify_voice_provenance` → `rebuild_authoritative_full_audio` → `verify_authoritative_audio` → `build_full_audio_aligned_ass` → `qa_ass` → `render_authoritative_full` → `media_rules_postflight`.
 
-- [When anxiety prevents you from falling asleep at night](https://www.reddit.com/r/Anxiety/comments/1mhp3pg)
-- [Anxious night](https://www.reddit.com/r/Anxiety/comments/114932l)
-- [What do you do when you can’t sleep due to anxiety?](https://www.reddit.com/r/Anxiety/comments/17tbmsu/)
-- [I hate how my brain never shuts off at night](https://www.reddit.com/r/Anxiety/comments/1nq3ien/)
+### 3.3 음성 규격 (`config/media_rules_lock.json`, 2026-09-15 기준 실측)
 
-설계 해석: “불안은 실패가 아니다” 같은 설명보다 “불을 껐는데 머릿속은 아직 환한 밤”처럼 경험을 먼저 비추는 편이 시청자의 자기 인식을 빠르게 만든다. 이는 정성적 가설이며 업로드 후 유지율로 검증해야 한다.
+| 구분 | 나레이터(`narrator`) | 성경 낭독(`scripture`) |
+|---|---|---|
+| 보이스 | **M2** (2026-09-15 이전엔 F5였다) | M4 |
+| 속도 | 0.95 | 0.86 |
+| 피치 | **0%** (F5 시절의 -4% asetrate 피치시프트 제거, highpass/lowpass/EQ 체인으로 대체) | -10% (`asetrate=24000*0.90`) |
+| total_step | 10 | 10 |
+| 쉼(silence) | 0.25s | 0.35s |
+| 합성 단위 | 장면 단위 | 절 단위 1회, `max_chunk` 90자 |
 
-## 5. GitHub·FFmpeg 기술 조사
+값의 원본은 `media_rules_lock.json`이며, 문서와 다르면 이 파일을 기준으로 삼고 문서도 함께 수정한다.
 
-- FFmpeg는 반복 입력, 복합 필터, `xfade` 등으로 루프 영상과 전환을 구성할 수 있다.  
-  출처: [FFmpeg 공식 문서](https://ffmpeg.org/ffmpeg-all.html)
-- GitHub 공개 예제에서는 `-stream_loop -1`을 이용한 무한 반복과 정방향·역방향을 붙이는 bounce loop가 사용된다.  
-  참고: [Create a bounce loop using ffmpeg](https://gist.github.com/drikusroor/80970258181c548249f2fd34c1b9d4b7), [Infinite looping stream example](https://gist.github.com/shinroo/84a206b4e9e8971db542e2243c7f5a20)
+### 3.4 자막·챕터 표시
+- 본문 자막: 최대 2줄, 한 줄 14~18자(hard 20자), 1080p 기준 본문 96px/성경 100px.
+- 우측 상단 챕터 라벨: 현재 읽는 성경 권/장/절 또는 주제를 지속 표시, 하단 자막 크기의 약 70%(70px).
+- 자막은 실제 오디오 세그먼트 타임코드를 따르며 오차 허용은 0.5초 이내.
 
-설계 해석: 단순 반복은 가능하지만, 불꽃·빗방울처럼 방향성이 있는 영상에 bounce loop를 쓰면 역재생이 눈에 띌 수 있다. 에셋 자체의 seamless 여부를 먼저 검사하고, 플레이트 경계 전환은 오디오를 건드리지 않는 별도 영상 필터로 처리해야 한다.
+### 3.5 배경 영상
+- 소스: `assets/movie-sample/pingpong-1min/*.mp4` 12종, 핑퐁(정/역방향) 루프.
+- 재생 속도: `setpts=10*PTS` — **0.1배속 초슬로우 모션** (2026-09-15 이전엔 `setpts=3*PTS`, 0.333배속이었다).
+- 전환 주기: 정확히 60초마다 다음 샘플로 순환.
 
-## 6. Threads 조사 상태
+### 3.6 에피소드 원장(EPISODE_LEDGER)
+완성된 에피소드는 로컬에 영구 보존하고 `EPISODE_LEDGER.md`에 기록한다. 다음 에피소드 기획 시 직전 에피소드와 겹치지 않도록 시편·잠언·전도서·이사야/선지서·모세오경 등 성경 권을 순환 배치한다(중복률 0% 원칙).
 
-Threads의 공개 게시물은 검색엔진에서 안정적으로 색인·검증되는 관련 결과를 확보하지 못했다. 출처를 채우기 위해 인용하지 않는다. 추후 사용자가 제공한 Threads URL 또는 접근 가능한 게시물 묶음이 있을 때 별도 정성 분석한다.
+> **2026-09-15 저장소 구조 변경:** 저장소 루트 `CLAUDE.md`는 원래 이 bible_healing 매뉴얼이었으나, human_archive 작업이 같은 경로를 자체 매뉴얼로 대체하며 충돌했다. 이후 루트는 human_archive가 쓰고, bible_healing 고유 지침은 `bible_healing/CLAUDE.md`로 분리했다.
 
-## 7. 조사에서 도출한 결정
+---
 
-1. 훅의 중심은 자극·공포가 아니라 **정확한 감정 미러링**이다.
-2. 흐름은 **공감받음 → 혼자가 아님 → 지금 해결하지 않아도 됨 → 첫 말씀**으로 한다.
-3. 첫 성경 낭독은 현재 90.68초에서 **45–55초**로 앞당긴다.
-4. 첫 30초에는 채널 설명·저작권·구독 요청·효과 보장을 넣지 않는다.
-5. 호흡 안내는 “가능하다면/편하다면”으로 선택권을 주고 1회만 둔다.
-6. “치유된다·잠들게 한다”는 결과 약속 대신 “말씀을 천천히 듣는 자리”를 약속한다.
-7. 성과는 30초 유지율, 첫 말씀 진입 유지율, 60초 유지율과 시청자 피드백으로 검증한다.
+## 4. 파이프라인 B: 현대 드라마 대본·영상 시스템 (`modern`)
 
+### 4.1 기획 의도
+2015~2026년 현대 한국을 배경으로 한 드라마 대본을 AI 생성 특유의 반복·개연성 붕괴·캐릭터 어색함을 시스템적으로 차단하며 제작한다.
+
+### 4.2 콘텐츠 레인 (`config/content_lanes.yaml`, 2026-09-15 기준 실측)
+
+이전 버전 문서(v2.0)가 설명한 "L1 약자 통쾌 역전극 / L2 가족 파탄 회복 / L3 범죄·사기 추적 / L4 직업 현장 갈등 / L5 시대 이슈" 레인 구성은 **더 이상 실제 설정과 일치하지 않는다.** 현재 정의는 다음과 같다.
+
+| 레인 | 라벨 | truth_modes |
+|---|---|---|
+| `L1_TRUE` | 검증 실화 | TRUE_VERIFIED, TRUE_PERMISSIONED |
+| `L2_HEART` | 감동 합성허구 | INSPIRED_COMPOSITE, FICTION_REALISTIC |
+| `L3_TWIST` | 공정 반전 | FICTION_REALISTIC, FICTION_HEIGHTENED |
+| `L4_MAKJANG` | 고밀도 멜로·복수 | FICTION_HEIGHTENED |
+| `L5_ROTATION` | 실험 회차 | INSPIRED_COMPOSITE, FICTION_REALISTIC, FICTION_HEIGHTENED |
+
+채널 약속(`channel_promise`): "감정적으로 선명하고 인과가 납득되며 끝난 뒤 한 장면이 남는 한국형 드라마". 포트폴리오 규칙(`portfolio`)은 최근 20편 창(`recent_window`) 안에서 레인당 최소 1편~최대 3편을 강제해 한 레인 편중을 막는다.
+
+### 4.3 스토리 품질 감사 엔진
+
+규칙 본체는 `modern/story_quality.py`에 있고(CLI 래퍼는 `modern/scripts/audit_story_quality.py`), 실측 확인된 감사 항목은 다음과 같다.
+
+- `check_filler_repetition()`: 동일 문장 반복 시 `FILLER_REPEAT_BLOCK`, 3문장 블록 재등장 시 `REPEATED_BLOCK`.
+- `require_story_material()`: 분량 미달 시 `InsufficientStoryMaterial` 예외.
+- `validate_clue_ledger()`: 미스터리/반전 계열 레인의 단서 회수 여부 검증.
+- `validate_project_contract()` / `validate_topic_cards()`: 프로젝트 계약서·주제 카드 스키마 검증.
+- `audit_portfolio()`: 위 포트폴리오 레인 분산 규칙 검증.
+
+### 4.4 캐릭터 일관성
+`참고_캐릭터_일관성_시트.md` 등 캐릭터 참조 시트를 두어 회차 간 인물 묘사 드리프트를 막는다(구체적 다각도 턴어라운드 체계의 세부 절차는 이번 갱신에서 재확인하지 못했다 — 필요 시 `modern/README.md`/`modern/HANDOFF.md`를 직접 확인할 것).
+
+---
+
+## 5. 파이프라인 C: 놀람파일 / 쉽선비 / Human Archive 다큐멘터리 시스템 (`human_archive`)
+
+v2.0에서 다루지 않았던 섹션이다. 저장소에서 가장 크고(테스트 스위트 기준 최대 규모), 가장 활발히 개발되는 파이프라인이며, 2026-09-15 하루 동안 `docs/superpowers/plans/2026-09-15-human-archive-nollam-script-visual-motion-multi-llm-overhaul-plan.md`의 Task 0~9(정적 감사 게이트, 대본/이미지 프롬프트 파이프라인 수렴, 오케스트레이션 엔진 완성, 모션 엔진 교체, 모션 QA 릴리즈 게이트, fps/페이싱 정책 통일, 시각 브리프 교차검증, human_library_replica 격리)가 전부 완료됐다.
+
+### 5.1 채널 프로필 이원화 (`config/channel_profiles.yaml`)
+
+- **`nollam_file_v1` (1순위, 기본값)** — "놀람파일": 포토리얼리스틱 시네마틱 다큐(인류의 서재 벤치마크), 호스트 아바타 **0%**(완전 배제), 배송 프로필 `trend_explainer_20m`(목표 1200초, 14~26분 허용), 시간 감쇠 페이싱 곡선 `nollam_decay_20m`(Cold Open 4.0초 → Outro 12.5초, 7구간), 대본은 `config/script_policy_v3.yaml` + `templates/nollam_script_prompt_v3.j2`, 내레이터 보이스는 SuperTonic3 `M2_WARM`.
+- **`doodle_seonbi_v1` (2순위, 레거시)** — "쉽선비": 조선 역사 두들 일러스트, 호스트 캐릭터 8~12%(최소 7샷 간격)로 제한.
+
+### 5.2 CLI v5/v6 제작 파이프라인 (10단계)
+
+`CLAUDE.md`에 문서화된 정본 순서: 1차 사료·Claim 인벤토리 → 대본 생성 → 팩트·페르소나 검증 게이트 → SuperTonic3 문장 TTS·실측 타임라인 → 샷 타이밍·의미 브리프·Flow 이미지 요청 → 콜드오픈+커버리지 이중 파일럿 → 전체 이미지 생성 → 전체 QA·사람 승인 → 모션·자막·최종 렌더 → 포스트플라이트·릴리즈 승격.
+
+### 5.3 Claude/Codex/Grok 교차검증 오케스트레이션 (`scripts/lib/orchestration/`)
+
+`D:\all-manage`에서 실전 검증된 엔진을 포팅했다(`run_consensus_round.py`). 핵심 원칙: "합의는 증거가 아니다"(propose → critique → diverge, 병합·점수화 금지), `has_contract()`(정해진 헤딩 없는 응답은 실패로 집계), `check_independence()`(한 참가자가 다른 참가자 작업 중 파일을 읽었을 가능성을 mtime으로 검출), 역할 로테이션. 현재 실제로 연결된 것은 **codex+grok** 2자 실시간 교차검증(`escalate_claim()`)이며, 문장 팩트체크·씬 시각 브리프 비평·대본 구조 토론(`tri_model_debate_engine.py`) 세 곳에 실전 배선돼 있다. Gemini(agy CLI)는 이 PC에 실제 바이너리가 없어 어댑터(`lib/orchestration/_run_gemini.py`)만 준비된 미배선 확장점이다.
+
+### 5.4 "선언-실행 괴리" 방지 게이트 (`scripts/audit_declared_vs_wired.py`)
+
+이번 조사에서 반복적으로 발견된 패턴 — YAML/스키마에는 정교한 설계가 선언돼 있는데 실제로 그걸 호출하는 production 코드가 없는 것 — 을 정적으로 검사하는 큐레이티드 레지스트리 기반 게이트. `--strict` 플래그로 CI 하드게이트 전환이 가능하며, 알려진 미해결 항목(예: `generate_release_manifest_v4/v5`가 아직 실제 호출자 없음, Sep2 마스터플랜의 4-Step Claude 체인이 아직 config 선언에만 존재)은 `accepted=True`로 정직하게 추적한다.
+
+### 5.5 모션 엔진과 릴리즈 게이트
+
+기존 두 모션 엔진(`build_motion_clips_v2.py`, `smooth_subpixel_motion_engine.py`)은 전체 구간 cosine easing으로 근접중복률 78~84%가 실측돼 격리됐다. `motion_engine_v3.py`(시작/끝 짧은 ramp + 등속 cruise 궤적)로 교체해 같은 측정 기법으로 근접중복률 0~3%를 실측 검증했다. `postflight_release.py`의 `verify_postflight()`는 이제 실제 디코드된 프레임에서 모션 다양성을 재측정해 릴리즈를 차단할 수 있고(매니페스트가 자체 신고하는 boolean을 더 이상 그대로 신뢰하지 않음), `orchestrate_deep_tri_model_script()`의 아직 실측화되지 않은 라운드가 있으면 `provenance: "simulated_fixture"`로 정직하게 표기해 같은 게이트가 자동 차단한다.
+
+---
+
+## 6. 외부 인프라 및 기술 스택
+
+| 컴포넌트 | 기술 | 비고 |
+|---|---|---|
+| Python 환경 | 3.13.5 | 저장소 루트 `pytest.ini`가 `bible_healing/tests`, `modern/tests`, `human_archive/tests` 세 곳을 모두 수집 (2026-09-15 이전에는 human_archive가 루트 실행 시 빠졌다) |
+| TTS 엔진 | SuperTonic3 로컬 HTTP 서버(`http://127.0.0.1:3093`) | bible_healing·human_archive 공통 사용, 보이스 락은 프로젝트별로 다름(M2/M4 vs M2_WARM) |
+| 영상 합성 | FFmpeg/ffprobe | 세 파이프라인 공통 |
+| Google Flow (ImageFX) | Playwright CDP 브라우저 제어 | human_archive 전용, 이미지 생성 |
+| 교차검증 LLM CLI | `codex`, `grok` (subprocess) | human_archive 오케스트레이션 엔진에서 실사용; Gemini(`agy`)는 미설치 |
+| Node.js 오케스트레이터 | Hermes(`render-youtube-with-tts.mjs`) | bible_healing·modern 공통 |
+
+---
+
+## 7. 현재 상태 (2026-09-15 기준)
+
+- **bible_healing**: 보이스/배경 속도 락 갱신(M2·0.1배속) 완료, EPISODE_LEDGER 기반 성경 권 순환 시스템 도입.
+- **modern**: 콘텐츠 레인 5종(L1_TRUE~L5_ROTATION) 및 포트폴리오 분산 규칙 가동 중.
+- **human_archive**: 2026-09-15 오버홀 플랜의 Task 0~9(정적 감사 게이트, 대본/이미지 파이프라인 수렴, 오케스트레이션 엔진, 모션 엔진 교체, 릴리즈 게이트, fps/페이싱 통일, 시각 브리프 교차검증, replica 격리) 전부 완료. 남은 후속 과제(리트로스펙티브에서 발견): `pacing_scheduler.py`의 남은 중복 구현 정리, nollam 스크립트 phase 명명 체계의 일부 잔여 불일치, `tri_model_llm_bridge.py`의 "Gemini 3.8/3.7/3.6" 페르소나 프레이밍 등은 각각 별도 후속 세션으로 분리돼 있다.
+- **저장소 전체**: 저장소 루트에서 `pytest --collect-only` 실행 시 세 파이프라인 합쳐 약 975개 테스트가 수집된다(사전에 알려진, 무관한 collection error 1건 — `human_archive/tests/test_biphasic_motion.py`의 stale import — 제외). 이 숫자는 활발히 변하므로 특정 시점의 스냅샷으로만 취급할 것.
+
+---
+*이 문서는 2026-09-15 시점에 실제 설정 파일(`media_rules_lock.json`, `content_lanes.yaml`, `channel_profiles.yaml` 등)과 코드를 직접 대조해 검증한 내용만 반영했다. 검증하지 못한 세부사항은 추정하지 않고 "재확인 필요"로 명시했다.*
