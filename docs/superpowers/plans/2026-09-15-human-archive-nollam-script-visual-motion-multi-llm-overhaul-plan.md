@@ -321,21 +321,23 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 **추가 발견(사용자 제공 `C:\Users\shs\Downloads\tf\portable-setup.md` 반영):** codex의 `-m` 플래그가 항상 존중되지 않아 `~/.codex/config.toml`의 값으로 조용히 대체될 수 있다는 실전 사례(같은 날 4개 라운드가 의도한 `gpt-5.6-luna` 대신 `gpt-6-astra`로 돎)를 반영해 `check_model_drift()`를 추가, stderr의 실제 모델 배너를 신뢰하도록 했다. agy(진짜 Antigravity CLI, `~/AppData/Local/agy/bin/agy.exe`)는 이 PC에 설치돼 있지 않아(npm의 구버전 `gemini-cli` 래퍼만 있고 무료 티어가 폐지됨) 사용자 결정에 따라 당분간 배선하지 않음 — `_run_gemini` 확장 지점은 코드에 남겨둠.
 
-### Task 4 — 모션 엔진 근본 수정 (Aug26 Task 8 설계를 현재 파일 2곳에 동시 적용)
+### Task 4 — 모션 엔진 근본 수정 (Aug26 Task 8 설계를 현재 파일 2곳에 동시 적용) — ✅ 핵심 완료 (2026-09-15, 커밋 `4c138fc`)
 
 **Create**
-- `human_archive/scripts/lib/motion_engine_v3.py` (Aug26 Task 8 설계 그대로: start/end crop을 normalized float로, 시작/끝 0.2~0.4초 ramp만 easing, 나머지 구간은 등속, px/sec 기준 계산)
-- `human_archive/tests/test_motion_cadence.py` (실제 고주파 테스트 이미지 렌더 후 ffprobe mpdecimate 근접중복률 자동 측정, 임계값 실패 시 FAIL)
+- `human_archive/scripts/lib/motion_engine_v3.py` — `ease_ramp_cruise()`(시작/끝 15% ramp + 등속 cruise, velocity-continuous), `motion_intent` 기반 단일 트라젝토리 공식(named preset 완전 폐기), duration-aware 확대폭, 원본 해상도 그대로 샘플링, FFV1/MKV 무손실 기본값
+- `human_archive/scripts/build_motion_clips_v3.py` — v2와 동일한 `--build`/`--limit` CLI, `motion_intent` 필드 우선·키워드 분류기·`static` 폴백(라운드로빈 완전 제거)
+- `human_archive/tests/test_motion_cadence.py` — **실제** 고주파 체커보드 이미지를 렌더링해 ffmpeg `mpdecimate`로 근접중복률 실측(mock 아님)
 
 **Modify**
-- shot_id 네이밍을 `ha002_v6_shot_NNN`, `SHOT_NNN` 등 실제 형식과 일치시키거나, motion map 자체를 폐기하고 콘텐츠 인식 방식(Aug26 §8.2)으로 전환
-- `render_episode_v2.py` — 모션 클립 lossless 중간 포맷(FFV1 등)으로 전환, 최종 H.264는 1회만
+- motion map(ID 키 매칭) 자체를 폐기하고 `motion_intent` 필드 기반으로 전환(Aug26 §8.2 방식 채택)
+- `render_episode_v2.py` — 모션 클립이 `.mkv`(FFV1 무손실)면 그대로 concat, `.mp4`(레거시)와 섞이면 즉시 실패. 최종 mux가 유일한 손실 인코딩이 됨
 
 **Quarantine**
-- `human_archive/scripts/build_motion_clips_v2.py`
-- `human_archive/scripts/smooth_subpixel_motion_engine.py` — 이 파일도 같은 안티패턴을 재구현했으므로 **v3로 교체 대상에 포함**, `run_human_library_full_production.py` 등 호출자 8곳을 v3로 전환
+- `human_archive/scripts/build_motion_clips_v2.py`, `human_archive/scripts/smooth_subpixel_motion_engine.py` — 상단에 폐기 고지 추가, 코드는 감사용으로 보존
 
-**완료 기준:** 두 legacy 엔진 모두 격리되고, v3로 렌더링한 샘플의 mpdecimate 근접중복률이 Aug26 최종 합격 기준(중앙값 ≤80ms 변화 간격 등)을 충족한다. `tilt_up` 방향 역전이 unit test로 재발 방지된다.
+**완료 기준 검증:** 26개 단위 테스트(단조성, 방향역전 회귀, preset 중복 회귀, duration-aware 확대폭) + 4개 실측 테스트, 116/116 통과. **실측 근접중복률**: push_in 2.7%, pan_right/tilt_up 0.0% (레거시 실측 78~84% 대비). `tilt_up` 방향 역전은 축이 두 고정값 사이 단조 보간으로만 정의되어 구조적으로 재발 불가능.
+
+**미완료(후속 과제로 명시):** `run_san_jose_full_pipeline.py`, `run_san_jose_20min_flow_production.py`, `run_neanderthal_full_pipeline.py` 3개 정당한 프로덕션 스크립트가 아직 `smooth_subpixel_motion_engine.py`를 직접 호출 중 — v3로 전환 필요. **흥미로운 발견**: `motion_engine_v3.py`/`build_motion_clips_v3.py`라는 이름의 파일이 이미 (다른 세션이) 만들어 두었으나, 내용을 열어보니 같은 버그 있는 `smooth_subpixel_motion_engine.py`로 그대로 포워딩하는 얇은 어댑터였고 `build_motion_clips_v3.py`는 여전히 `[idx % 3]` 라운드로빈과 비-무손실 H.264였다 — 이번 진단 전체를 관통하는 "이름은 v3인데 내용은 안 고쳐진" 패턴이 모션 엔진 자리에도 그대로 있었다. 이번 커밋으로 실제 수정본으로 교체했다.
 
 ### Task 5 — `postflight_release.py`의 죽은 모션 게이트를 실제로 연결
 
