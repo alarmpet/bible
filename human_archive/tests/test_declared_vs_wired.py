@@ -146,6 +146,23 @@ def test_every_accepted_entry_has_an_explanatory_note():
             assert check.notes.strip(), f"{check.name} is accepted but has no notes explaining why"
 
 
+def test_no_accepted_entry_silently_reports_as_wired():
+    """accepted=True means "known, tracked, currently-unwired gap" -- if one
+    starts reporting PASS, either it was actually fixed (drop accepted=True,
+    update the notes) or the scanner has a false positive (e.g. the
+    declared_in file's own docstring mentioning the capability's name
+    followed by "(" in prose, which happened once for
+    validate_script_contract and was fixed by rewording the docstring rather
+    than leaving the registry silently lying about what's wired). Either way
+    this must never pass quietly -- a human has to look at it."""
+    results = audit()
+    wrongly_passing = [r for r in results if r.check.accepted and r.status == "PASS"]
+    assert wrongly_passing == [], (
+        "accepted entries reporting PASS (fix the registry or the false positive): "
+        + ", ".join(r.check.name for r in wrongly_passing)
+    )
+
+
 def test_main_exits_zero_without_strict_even_with_accepted_failures(capsys):
     assert main([]) == 0
 

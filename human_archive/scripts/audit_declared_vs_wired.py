@@ -285,6 +285,21 @@ REGISTRY: tuple[CapabilityCheck, ...] = (
         "def/class regex as the others; this entry exists to keep the gap "
         "visible, not to be mechanically checkable the same way.",
     ),
+    CapabilityCheck(
+        name="validate_script_contract",
+        description="script_contract.py's fail-closed nollam script validator has a real production caller",
+        declared_in="scripts/lib/script_contract.py",
+        accepted=True,
+        notes="Found while resolving the nollam phase-naming mismatch: a THIRD, "
+        "independent phase vocabulary for the same 5-stage nollam structure "
+        "(phase_1_hook/phase_2_mechanism/phase_3_crisis/phase_4_discovery/"
+        "phase_5_reflection), plus REQUIRED_FIELDS (spoken_text, fact_grade, "
+        "visual_intent) that don't match what generate_script_candidate() "
+        "actually produces (validated against trend_verified_script_v1.schema.json "
+        "instead). Only ever called from its own test "
+        "(tests/test_script_contract_nollam.py). Left unwired rather than "
+        "cosmetically patched -- see the module's own docstring for why.",
+    ),
 )
 
 
