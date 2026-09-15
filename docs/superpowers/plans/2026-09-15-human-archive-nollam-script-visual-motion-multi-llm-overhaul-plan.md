@@ -357,12 +357,14 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 **완료 기준 검증:** `config/channel_profiles.yaml`은 이미 3개 프로필(`nollam_file_v1`/`doodle_seonbi_v1`/`human_archive_cinematic_v1`) 전부 `fps: 25`로 선언돼 있었고 "30fps 실험 프로필"은 애초에 존재하지 않았다 — D1 확정대로 25fps가 유일한 정본. `cinematic_editing_director.py`의 `default_fps=30` 하드코딩만 이 설정과 독립적으로 어긋나 있었는데, 단순 주석이 아니라 `normalize_clip()`의 실제 ffmpeg `-vf fps=` 필터에 그대로 들어가는 진짜 인코딩 파라미터였다(`run_neanderthal_full_pipeline.py` 등 정당한 프로덕션 스크립트가 기본값으로 30fps 인코딩 중이었음). `_resolve_default_fps()`를 신설해 `channel_profiles.yaml`에서 읽게 하고 읽기 실패 시에만 25로 폴백하도록 수정. `build_cinematic_master_pipeline.py`의 `--fps` CLI 기본값도 30→25로 정정. 신규 테스트 5개 통과.
 
-### Task 7 — pacing_scheduler.py 실배선
+### Task 7 — pacing_scheduler.py 실배선 — ✅ 완료 (2026-09-15, 커밋 `fb2a22d`)
 
 **Modify**
 - `human_archive/scripts/plan_narration_shots.py`, `human_archive/scripts/lib/shot_timing.py` — `narration_aligned_hybrid_v1` 하드코딩을 제거하고 채널 프로필의 `pacing_profile_id`(`nollam_decay_20m` 등)를 읽어 `pacing_scheduler.py`를 호출
 
-**완료 기준:** nollam_file_v1 빌드의 실제 샷 길이 분포가 Sep2 §4의 7구간 감쇠 곡선과 일치한다(현재는 테스트에서만 확인 가능).
+**완료 기준 검증:** `channel_profiles.yaml`에 `pacing_profile_id` 필드를 신설(`nollam_file_v1`→`nollam_decay_20m`, 레거시 두 프로필→`narration_aligned_hybrid_v1`)하고, `plan_narration_shots.py`의 `--profile` 기본값이 이를 읽도록 배선했다(명시적 `--profile`은 여전히 우선 — CLAUDE.md의 EP02 재현 커맨드는 그대로 동작). `shot_timing.py`에 `NollamDecayTimingProfile`을 신설해 `plan_shot_timing()`이 샷마다 실제 시작 시각 기준으로 7구간 중 맞는 구간의 bounds를 적용하도록 했다(late_body/outro는 1200초 고정이 아니라 실측 총 길이 기준 상대 경계). 출력의 `profile_id`도 항상 `"narration_aligned_hybrid_v1"`로 찍던 거짓 하드코딩을 제거하고 실제 사용된 프로필을 반영한다. 신규 테스트 10개로 "같은 에피소드 안에서 cold_open(1문장/샷)과 body(2문장/샷) 구간이 실제로 다르게 그룹핑되는지"까지 직접 검증했고, `plan_narration_shots.py` CLI를 실제로 실행해 기본값이 `nollam_decay_20m`으로 resolve되는 것과 레거시 오버라이드가 둘 다 동작하는 것을 수동 확인했다.
+
+**참고(설계 결정):** `pacing_scheduler.py`의 `_zones()`는 동일한 7구간 수치를 비율 기반으로 독립 재구현한 것이었는데(`config/visual_pacing_profiles.yaml`의 절대초 방식과 다른 계산법 — 이 자체가 "같은 설계, 두 개의 독립 구현" 패턴의 또 다른 사례), `plan_shot_timing()`은 `pacing_scheduler.py`를 통하지 않고 `visual_pacing_profiles.yaml`을 직접 읽어 zone을 해석한다 — YAML이 `late_body`/`outro`의 실측-상대 경계(`end_offset_from_end_sec`)까지 포함한 더 원본에 가까운 소스이고, `pacing_scheduler.py`의 `_zones()`는 이 필드를 다루지 않기 때문이다. `pacing_scheduler.py` 자체의 중복 재구현 통합은 이번 Task 범위 밖으로 남겨둔다.
 
 ### Task 8 — 씬 시각 브리프 교차검증 확장 (§5.5)
 
