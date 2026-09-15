@@ -14,6 +14,7 @@ profiles:
       language: ko
       persona_id: nollam_documentary_narrator_v1
     delivery_profile_id: trend_explainer_20m
+    pacing_profile_id: nollam_decay_20m
     voice_lock_id: M2_WARM
     freshness_classes: [DAILY, STABLE]
     discovery_role: DISCOVERY_ONLY
@@ -33,6 +34,7 @@ profiles:
       language: ko
       speaker: "calm curious second-person explainer"
     delivery_profile: doodle_docu_12m
+    pacing_profile_id: narration_aligned_hybrid_v1
   human_archive_cinematic_v1:
     display_name: "Human Archive Cinematic"
     is_default: false
@@ -46,3 +48,4 @@ profiles:
       language: ko
       speaker: "calm documentary narrator"
     delivery_profile: standard_docu
+    pacing_profile_id: narration_aligned_hybrid_v1
