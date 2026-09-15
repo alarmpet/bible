@@ -1,6 +1,6 @@
-# [쉽선비 / Human Archive] 전주기 다큐멘터리 제작 및 Google Flow AI 비주얼 운영 매뉴얼
+# [놀람파일 / 쉽선비 / Human Archive] 전주기 다큐멘터리 제작 및 AI 비주얼 운영 매뉴얼
 
-본 문서는 **'쉽선비' (Human Archive)** 채널의 정규 역사 다큐멘터리 제작 파이프라인과 `doodle_seonbi_v1` 역할 분리, Google Flow 브라우저 자동화, 렌더링 및 릴리즈 거버넌스를 정리한 공식 문서다.
+본 문서는 **Human Archive** 채널의 정규 다큐멘터리 제작 파이프라인을 정리한 공식 문서다. **1순위 메인 프로필은 `nollam_file_v1` (놀람파일 — 인류의 서재 벤치마크 기반 20분 포토리얼리스틱 시네마틱 다큐)**이며, `doodle_seonbi_v1` (쉽선비 조선 역사 두들)은 2순위 레거시 서브 프로필로 유지한다. 프로필 전환 근거 및 상세 사양은 `docs/superpowers/plans/2026-09-02-human-archive-retention-pacing-autonomy-master-plan.md` (v2.1)를 참조한다.
 
 `docs/solutions/`에는 과거 장애와 해결책이 분야별 YAML frontmatter(`module`, `tags`, `problem_type`)로 정리되어 있다. EP02 v6를 재개할 때의 첫 정본은 `docs/solutions/integration-issues/ep02-v6-reuse-first-tts-codex-visual-brief-recovery-2026-08-28.md`다. v5 자산·Flow 생명주기 이력은 `docs/solutions/integration-issues/ep02-v5-flow-visual-pipeline-contract-and-lifecycle-defects-2026-08-28.md`를 참고한다.
 
@@ -54,11 +54,22 @@ flowchart TD
 
 ---
 
-## 2. 쉽선비 두들 시각 역할·텍스트 정책 (Canonical Visual Policy)
+## 2. 채널 프로필 시각 정책 (Canonical Visual Policies)
 
-### 스타일·역할 규칙
+### 2.1 놀람파일 (`nollam_file_v1`) — 1순위 메인 프로필
 
-* 기본 프로필은 `doodle_seonbi_v1`이다. `human_archive_cinematic_v1`은 별도 프로필이며 자동 폴백하지 않는다.
+* 기본 프로필은 `nollam_file_v1`이다. `channel_profiles.yaml`에서 `default_profile_id: nollam_file_v1`로 설정되어 있다.
+* 비주얼 스타일은 **포토리얼리스틱 시네마틱 다큐멘터리** (인류의 서재 벤치마크)이며, 호스트 아바타 캐릭터는 **0% (완전 배제)**이다.
+* 화면은 100% 다큐멘터리 B-roll과 시각 그래픽으로만 구성한다: Midjourney v6.1 / Flux.1 기반 8대 시각 모드 (자연현상 시뮬레이션, 역사 재현, 증거 매크로, 과학 3D 다이어그램, 위성 지형도, 인물 동작, 우주, 분위기).
+* AI 기본 이미지 프롬프트에는 글자·숫자·연도·워터마크를 넣지 않는다. 모든 텍스트는 `overlay_event_manifest`를 통해 렌더러가 합성한다.
+* 배송 프로필은 `trend_explainer_20m` (목표 1200초, 14~26분 허용)이다.
+* 시간 감쇠 페이싱 곡선 `nollam_decay_20m`을 사용한다 (Cold Open 4.0초 → Outro 12.5초, 7구간).
+* 대본은 `script_policy_v3.yaml` + `nollam_script_prompt_v3.j2` 기반 Claude 4-Step 체인으로 생성한다.
+* 상세 사양: `docs/superpowers/plans/2026-09-02-human-archive-retention-pacing-autonomy-master-plan.md`
+
+### 2.2 쉽선비 두들 (`doodle_seonbi_v1`) — 2순위 레거시 서브 프로필
+
+* `doodle_seonbi_v1`은 레거시 서브 프로필이다. `is_default: false`로 설정되어 있으며, 조선 역사 다큐에만 사용한다.
 * 역할은 `host_explainer`, `historical_reconstruction`, `evidence_object`, `diagram_metaphor`, `atmosphere` 다섯 가지다.
 * 쉽선비는 `host_explainer`에만 등장하며 현재 빌드 전체의 8~12%, 최소 7샷 간격으로 제한한다. 역사 재현·근거 장면에는 쉽선비 또는 검은 갓 마스코트를 넣지 않는다.
 * Flow가 쉽선비를 장면마다 새로 그리게 하지 않는다. 호스트 장면은 발표자 없는 왼쪽 배경을 생성한 뒤 `human_archive/assets/doodle_seonbi_v1.png`를 동일 해시·동일 비율로 합성한다. 갓만 있거나 맨몸 스틱팔다리, 상체 누락, 도포·소매·깃·허리끈 누락은 즉시 FAIL이다.
@@ -236,3 +247,6 @@ python human_archive/scripts/postflight_release.py --input "$build/candidate/HA0
 - OCR 재시도 뒤 `--only` 보고서는 선택 범위만 기록하므로 마지막에 `generate_flow_batch.py --pilot`을 다시 실행해 정식 20/20 파일럿 보고서를 복원한다.
 - 현재 `full-v6-001`은 재사용 30개 물질화 완료, 파일럿 20/20 다운로드 PASS, OCR 콘텐츠 PASS다. 정지 게이트는 최신 두 파일럿 연락시트의 사람 승인이다. 승인 전 전체 82개 생성을 시작하지 않는다.
 - 전체 생성 중 Flow가 `비정상적인 활동이 감지되었습니다`를 표시하면 `provider_activity_blocked`로 분류하고 즉시 중단한다. 계정 변경, CAPTCHA 우회, 같은 요청 반복, 모델 변경으로 제한을 우회하지 않는다. 현재 v6은 77개 완료, 1개 SUBMITTED, 34개 미착수 상태이며 provider 제한 해소와 명시적 재개 판단 전에는 재실행하지 않는다.
+## Nollam File opt-in
+
+`nollam_file_v1` is an opt-in trend explainer profile. Its active v1 format is `nollam_file_long` (16:9, 1920x1080, 25fps), and its narrator job must explicitly lock SuperTonic3 `M2_WARM` (M2, speed 0.95, total_step 10). The final actual video targets 20 minutes with a +/-30% tolerance: 14–26 minutes (840–1560 seconds). Measure duration from the completed TTS/render output, not an estimated script length; any final render outside this range blocks delivery. Required discovery inputs are offline fixtures, official Google Trends input, and human-verified Google News URLs. Missing required inputs fail closed; optional providers never trigger scraper fallback. Use the dedicated Nollam run root and `nollam_file_postflight.py`; do not alter HA002 or legacy `postflight_release.py`.
