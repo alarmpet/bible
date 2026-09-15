@@ -366,10 +366,14 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 **참고(설계 결정):** `pacing_scheduler.py`의 `_zones()`는 동일한 7구간 수치를 비율 기반으로 독립 재구현한 것이었는데(`config/visual_pacing_profiles.yaml`의 절대초 방식과 다른 계산법 — 이 자체가 "같은 설계, 두 개의 독립 구현" 패턴의 또 다른 사례), `plan_shot_timing()`은 `pacing_scheduler.py`를 통하지 않고 `visual_pacing_profiles.yaml`을 직접 읽어 zone을 해석한다 — YAML이 `late_body`/`outro`의 실측-상대 경계(`end_offset_from_end_sec`)까지 포함한 더 원본에 가까운 소스이고, `pacing_scheduler.py`의 `_zones()`는 이 필드를 다루지 않기 때문이다. `pacing_scheduler.py` 자체의 중복 재구현 통합은 이번 Task 범위 밖으로 남겨둔다.
 
-### Task 8 — 씬 시각 브리프 교차검증 확장 (§5.5)
+### Task 8 — 씬 시각 브리프 교차검증 확장 (§5.5) — ✅ 완료 (2026-09-15, 커밋 `9c84c99`)
 
 **Modify**
 - `human_archive/scripts/generate_visual_briefs.py`, `lib/aligned_prompt_compiler.py` — Gemini Pro(설계)+GPT(비평)+Grok(진부함/반복 체크) 3자 교차검증을 씬 브리프 생성에 연결
+
+**완료 기준 검증:** 신설 `lib/visual_brief_cross_validation.py`가 이미 생성된 브리프를 Task 3에서 실전 검증한 `run_consensus_round.escalate_claim()`(codex+grok)에 그대로 태운다. `designer`/`critic` 라운드는 Claude를 실시간 참가자로 요구하고(무인 파이프라인에서 좌석이 없음) 처음부터 경쟁하는 여러 제안을 전제하므로, 이미 하나만 존재하는 브리프를 검토하는 이번 용도에는 맞지 않는다고 판단해 `proposer`/`adversary` 역할을 재사용했다 — `adversary.md`가 이미 이 계획서가 진단한 비주얼 브리프 실패 유형(나레이션 절삭을 설계로 위장, 라운드로빈 모션 배정, 프롬프트 내 텍스트/워터마크, 캐릭터 드리프트)을 항목별로 명시하고 있어 새 role 파일이나 파서 없이 기존 계약(VERDICT/FINDINGS/NUMBERS/UNCERTAINTY)으로 충분했다. §5.5 비용 가드레일에 따라 기본은 비활성 — `--cross-validate-scene-ids`/`--cross-validate-sample`로 명시 선택한 샷에만 적용되고, 결과는 매니페스트의 `cross_validation`에 PASS/REVIEW_REQUIRED로 기록되며 불일치가 생성 자체를 막지는 않는다(팩트체크와 동일 철학). 신규 테스트 7개(mock 기반, Task 3에서 이미 라이브 검증된 `escalate_claim()` 자체를 재검증하지 않고 spec 조립·선택 로직·배선만 검증) + 기존 `generate_visual_briefs.py`/`visual_brief_provider` CLI 스위트 71개 통과.
+
+**Gemini 미배선:** Task 3와 동일한 사유(`agy` 바이너리 미설치)로 Gemini는 아직 4번째 참가자로 연결하지 않았다 — codex+grok 2자 교차검증만 실전 배선했다.
 
 ### Task 9 — `human_library_replica` 격리 (§6 실행)
 
