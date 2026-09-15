@@ -266,7 +266,7 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 
 ## 7. 구현 Task 목록
 
-### Task 0 — "선언-실행 괴리" 방지 게이트 + git 위생
+### Task 0 — "선언-실행 괴리" 방지 게이트 + git 위생 — ✅ 완료 (2026-09-15, 커밋 `6079a56`; git 위생은 앞서 `88e4242`에서 완료)
 
 **Create**
 - `human_archive/scripts/audit_declared_vs_wired.py` — YAML/스키마에 선언된 기능(예: `nollam_decay_20m`, `claude_chain.step_*`)마다 production 진입점(CLAUDE.md에 문서화된 실행 순서 또는 `run_*.py`)에서 실제로 import/호출되는지 정적 분석으로 검사. 호출자가 0건이면 FAIL.
@@ -277,7 +277,7 @@ all-manage의 3사(Claude/Codex/Grok)에는 Gemini가 없다. 그러나 human_ar
 2. `.gitignore`에 `runs/`, `audit/`, `scratch/` 등 산출물 디렉터리를 명시해 미추적 파일 수를 근본적으로 줄인다.
 3. `CLAUDE.md`의 미스테이징 수정(+19/-5)을 커밋한다.
 
-**완료 기준:** `git status`에서 `human_archive` 미추적 파일이 산출물 디렉터리 제외 0건. `audit_declared_vs_wired.py`가 CI에서 매 PR마다 실행된다.
+**완료 기준 검증:** git 위생(작업 1~3)은 이 문서 작성 이전에 별도 Codex 세션이 커밋 `88e4242`로 이미 완료해뒀음을 재확인 — `git status`에서 `human_archive` 미추적 파일 0건. `audit_declared_vs_wired.py`는 "def/class 선언 라인이 아닌 실제 호출부가 production 코드(테스트·산출물 디렉터리 제외)에 있는가"를 정적으로 검사하는 큐레이티드 레지스트리 방식으로 구현했다(모든 YAML 키를 무차별 스캔하는 방식은 대부분의 설정값이 `cfg[key]`로 범용적으로 읽혀 "선언만 되고 죽은 코드"와 구분이 불가능해 오탐이 실제 발견을 압도하므로 채택하지 않음). 오늘 세션이 실제로 고친 7개 항목(`NollamDecayTimingProfile`, `measure_decoded_video_motion_diversity`, `compile_nollam_prompt`, `resolve_script_paths`, `escalate_claim`, `critique_visual_briefs`, `render_motion_clip_v3`)이 전부 PASS로 검증되고, 아직 안 고친 4개 항목(`generate_release_manifest_v4/v5`, `resolve_pipeline_context`, `claude_chain`)은 `accepted=True` + 설명 노트로 정직하게 추적한다(§10 리스크 완화책 그대로: 처음엔 warning만, `--strict`는 이 4개를 막지 않는다). 신규 테스트 14개(핵심 스캔 로직 + 실제 레지스트리에 대한 회귀 테스트 포함) 통과.
 
 ### Task 1 — 파이프라인 수렴: nollam_file_v1을 ①CLI v5/v6 계약 위에 이식 — ✅ 완료 (2026-09-15, 커밋 `412152f`)
 
