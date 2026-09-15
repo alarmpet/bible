@@ -15,6 +15,10 @@ profiles:
       persona_id: nollam_documentary_narrator_v1
     delivery_profile_id: trend_explainer_20m
     pacing_profile_id: nollam_decay_20m
+    script_template_path: templates/nollam_script_prompt_v3.j2
+    script_schema_path: schemas/trend_verified_script_v1.schema.json
+    script_policy_path: config/script_policy_v3.yaml
+    image_prompt_compiler: nollam
     voice_lock_id: M2_WARM
     freshness_classes: [DAILY, STABLE]
     discovery_role: DISCOVERY_ONLY
@@ -35,6 +39,9 @@ profiles:
       speaker: "calm curious second-person explainer"
     delivery_profile: doodle_docu_12m
     pacing_profile_id: narration_aligned_hybrid_v1
+    script_template_path: templates/seonbi_script_prompt.j2
+    script_schema_path: schemas/verified_script_v2.schema.json
+    script_policy_path: config/seonbi_narration_policy.yaml
   human_archive_cinematic_v1:
     display_name: "Human Archive Cinematic"
     is_default: false
@@ -49,3 +56,6 @@ profiles:
       speaker: "calm documentary narrator"
     delivery_profile: standard_docu
     pacing_profile_id: narration_aligned_hybrid_v1
+    script_template_path: templates/seonbi_script_prompt.j2
+    script_schema_path: schemas/verified_script_v2.schema.json
+    script_policy_path: config/seonbi_narration_policy.yaml

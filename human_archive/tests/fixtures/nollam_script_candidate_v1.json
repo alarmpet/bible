@@ -1,0 +1,67 @@
+{
+  "script_id": "NOLLAM-TEST-001-script-v1",
+  "job_id": "job-nollam-test-001",
+  "format_id": "nollam_file_long",
+  "episode_id": "NOLLAM-TEST-001",
+  "persona_id": "nollam_documentary_narrator_v1",
+  "voice_lock_id": "M2_WARM",
+  "target_duration_sec": 1200,
+  "claim_ids": [
+    "CLM-JWST-001"
+  ],
+  "sentences": [
+    {
+      "sentence_id": "S001",
+      "order": 1,
+      "phase": "hook",
+      "visual_mode": "deep_space_cosmology",
+      "display_text": "표준 우주론이 예측하지 못한 은하가 발견됐습니다.",
+      "tts_text": "표준 우주론이 예측하지 못한 은하가 발견됐습니다.",
+      "midjourney_prompt": "ultra-detailed early universe galaxy cluster, deep space cosmology, 8k resolution, photorealistic --ar 16:9"
+    },
+    {
+      "sentence_id": "S002",
+      "order": 2,
+      "phase": "roadmap",
+      "visual_mode": "scientific_diagram_3d",
+      "display_text": "오늘은 제임스웹이 뒤집은 초기 우주 이론을 추적합니다.",
+      "tts_text": "오늘은 제임스웹이 뒤집은 초기 우주 이론을 추적합니다.",
+      "midjourney_prompt": "3D scientific diagram, galaxy formation timeline, cinematic documentary lighting --ar 16:9"
+    },
+    {
+      "sentence_id": "S003",
+      "order": 3,
+      "phase": "evidence",
+      "visual_mode": "satellite_terrain_map",
+      "display_text": "2023년 관측 데이터는 은하 성장 속도가 예상의 세 배였음을 보여줍니다.",
+      "tts_text": "2023년 관측 데이터는 은하 성장 속도가 예상의 세 배였음을 보여줍니다.",
+      "segments": [
+        {
+          "kind": "fact",
+          "text": "은하 성장 속도가 예상의 세 배였다",
+          "claim_id": "CLM-JWST-001",
+          "evidence_span_ids": [
+            "SRC-JWST-01:SPAN-01"
+          ]
+        }
+      ]
+    },
+    {
+      "sentence_id": "S004",
+      "order": 4,
+      "phase": "paradigm_shift",
+      "visual_mode": "historical_reconstruction",
+      "display_text": "모든 증거를 종합하면, 초기 은하는 훨씬 더 빨리 성장했다는 결론에 도달합니다.",
+      "tts_text": "모든 증거를 종합하면, 초기 은하는 훨씬 더 빨리 성장했다는 결론에 도달합니다."
+    },
+    {
+      "sentence_id": "S005",
+      "order": 5,
+      "phase": "philosophical_outro",
+      "visual_mode": "atmosphere_cinematic",
+      "display_text": "오늘의 탐구는 여기서 마칩니다. 다음 미스터리에서 다시 만나요.",
+      "tts_text": "오늘의 탐구는 여기서 마칩니다. 다음 미스터리에서 다시 만나요."
+    }
+  ],
+  "script_hash": "9097be11bc83e358b018d1ec7295e18da378855e2bfae889943203c67e8128c4"
+}

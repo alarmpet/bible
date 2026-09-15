@@ -63,7 +63,14 @@ def resolve_pipeline_context(
     if delivery_profile_id not in delivery_profiles:
         raise ValueError(f"Unknown delivery profile: {delivery_profile_id}")
 
-    pacing_profile_id = "nollam_decay_20m" if selected_id == "nollam_file_v1" else "narration_aligned_hybrid_v1"
+    # Read from the channel profile itself (config/channel_profiles.yaml's own
+    # pacing_profile_id field) rather than a second hardcoded profile_id -> pacing
+    # mapping here -- this function and plan_narration_shots.py's
+    # resolve_pacing_profile_id() used to each hardcode this same nollam_file_v1 ->
+    # nollam_decay_20m mapping independently (2026-09-15 overhaul plan Task 7).
+    pacing_profile_id = channel_profile.get("pacing_profile_id") or (
+        "nollam_decay_20m" if selected_id == "nollam_file_v1" else "narration_aligned_hybrid_v1"
+    )
     pacing_document = _load_yaml(config_path / "visual_pacing_profiles.yaml")
     if pacing_profile_id not in pacing_document:
         raise ValueError(f"Unknown pacing profile: {pacing_profile_id}")

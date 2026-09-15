@@ -13,7 +13,13 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from lib.script_generation import AntigravityCliProvider, JsonFileProvider, OmniRouteProvider, generate_script_candidate
+from lib.script_generation import (
+    AntigravityCliProvider,
+    JsonFileProvider,
+    OmniRouteProvider,
+    generate_script_candidate,
+    resolve_script_paths,
+)
 from lib.topics_inventory import DEFAULT_DB_PATH, reserve_topic, get_topic_detail
 
 if sys.platform == "win32":
@@ -57,6 +63,15 @@ def main():
     parser.add_argument("--claims", required=True, type=Path)
     parser.add_argument("--sources", required=True, type=Path)
     parser.add_argument("--policy", type=Path)
+    parser.add_argument(
+        "--profile",
+        default=None,
+        help="Channel profile id (e.g. nollam_file_v1, doodle_seonbi_v1). Selects the "
+        "script template/schema/policy from channel_profiles.yaml when --policy is not "
+        "given explicitly. Opt-in: omitting it keeps the historical seonbi "
+        "template/schema/policy exactly as before, it does not fall back to "
+        "channel_profiles.yaml's default_profile_id.",
+    )
     parser.add_argument("--topic-id", type=str)
     parser.add_argument("--db", default=DEFAULT_DB_PATH, type=Path)
     parser.add_argument("--persona", default="standard", choices=["standard", "seonbi", "ship_seonbi"])
@@ -78,7 +93,15 @@ def main():
         reserve_topic(args.db, topic_id, ep_id)
         print(f"🔒 Topic '{topic_id}' locked and reserved for episode '{ep_id}' in local DB")
 
-    policy_path = args.policy or (_SCRIPTS_DIR.parent / "config" / "seonbi_narration_policy.yaml")
+    # --profile is opt-in: omitting it must keep today's seonbi defaults exactly as
+    # they are for existing callers (CLAUDE.md's documented EP02 flow never passes
+    # --profile), not silently switch to channel_profiles.yaml's default_profile_id
+    # (nollam_file_v1) just because that config file's own default changed.
+    if args.profile:
+        _template_path, _schema_path, resolved_policy_path = resolve_script_paths(args.profile)
+        policy_path = args.policy or resolved_policy_path
+    else:
+        policy_path = args.policy or (_SCRIPTS_DIR.parent / "config" / "seonbi_narration_policy.yaml")
     policy = yaml.safe_load(policy_path.read_text(encoding="utf-8"))
 
     if args.provider in ["antigravity-cli", "antigravity"]:
@@ -95,7 +118,7 @@ def main():
             model=args.model,
         )
 
-    candidate = generate_script_candidate(contract, claims, sources, policy, provider)
+    candidate = generate_script_candidate(contract, claims, sources, policy, provider, profile_id=args.profile)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(candidate, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"✅ Script candidate v2 generated via Antigravity: {args.output} ({len(candidate['sentences'])} sentences)")

@@ -1,0 +1,8 @@
+schema_version: 2
+episode_id: "NOLLAM-TEST-001"
+title: "제임스웹이 다시 쓴 초기 우주 — 이론이 무너진 밤"
+format_profile: "trend_explainer_20m"
+target_duration_sec: 1200
+core_question: "제임스웹 우주망원경이 관측한 초기 은하들은 표준 우주론이 예측한 것보다 왜 이렇게 크고 밝을까요?"
+topic_category: "deep_space_cosmology"
+research_status: "approved"

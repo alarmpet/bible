@@ -11,7 +11,7 @@ from typing import Any
 
 from jinja2 import Environment, StrictUndefined
 
-from lib.aligned_prompt_compiler import compile_aligned_prompt
+from lib.aligned_prompt_compiler import compile_aligned_prompt, compile_nollam_prompt
 from lib.fact_review_approval import validate_fact_review_gate
 from lib.provenance import compute_file_sha256
 from lib.visual_brief_cross_validation import (
@@ -75,6 +75,59 @@ _IMAGE_FACING_FIELDS = (
     "text_overlay_policy",
     "safety_treatment",
 )
+
+
+_CHANNEL_PROFILES_PATH = Path(__file__).resolve().parents[1] / "config" / "channel_profiles.yaml"
+
+
+def resolve_image_prompt_compiler_id(channel_profile_id: str | None) -> str:
+    """Which image-prompt compiler a channel profile uses. Opt-in: without an
+    explicit channel_profile_id this returns "aligned" (compile_aligned_prompt,
+    today's unconditional default) unchanged, so existing callers that never
+    pass --channel-profile (CLAUDE.md's documented EP02/doodle_seonbi_v1 flow)
+    see no behavior change.
+
+    Before this, compile_aligned_prompt() -- whose STYLE constant is literally
+    "Korean editorial ink-doodle illustration..." -- was the only compiler
+    generate_visual_briefs.py ever called, for every profile including
+    nollam_file_v1, whose visual policy is photorealistic cinematic
+    documentary. compile_nollam_prompt() (lib/aligned_prompt_compiler.py) was
+    already built and tested (tests/test_nollam_prompt_profile.py) for exactly
+    this, just never reachable from here (2026-09-15 overhaul plan Task 1
+    item 3, §1.3).
+    """
+    if not channel_profile_id:
+        return "aligned"
+    try:
+        import yaml
+
+        data = yaml.safe_load(_CHANNEL_PROFILES_PATH.read_text(encoding="utf-8")) or {}
+        profile = (data.get("profiles") or {}).get(channel_profile_id, {})
+        return str(profile.get("image_prompt_compiler") or "aligned")
+    except Exception:
+        return "aligned"
+
+
+def _brief_to_nollam_request_fields(
+    brief: dict[str, Any],
+    shot_inputs_by_id: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Adapt a CLI v5/v6-shaped brief (_IMAGE_FACING_FIELDS: focal_subject/action/
+    place/era/...) into compile_nollam_prompt()'s expected input shape
+    (subject/action/place/era/..., order, visual_claim_ids)."""
+    shot_id = str(brief.get("shot_id", ""))
+    shot_input = shot_inputs_by_id.get(shot_id, {})
+    return {
+        "shot_id": shot_id,
+        "order": shot_input.get("order", 1),
+        "visual_mode": brief.get("visual_mode", "historical_reconstruction"),
+        "subject": brief.get("focal_subject", ""),
+        "action": brief.get("action", ""),
+        "place": brief.get("place", ""),
+        "era": brief.get("era", ""),
+        "visual_claim_ids": shot_input.get("claim_ids", []),
+        "motion_profile": brief.get("motion_profile", "smooth_subpixel"),
+    }
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -408,6 +461,15 @@ def main() -> None:
         "evenly-spaced deterministic sample of this many shots instead of all.",
     )
     parser.add_argument("--cross-validate-timeout", type=int, default=480)
+    parser.add_argument(
+        "--channel-profile",
+        default=None,
+        help="Channel profile id (e.g. nollam_file_v1). Selects the image-prompt "
+        "compiler (compile_nollam_prompt for nollam_file_v1's photorealistic "
+        "policy vs. compile_aligned_prompt's ink-doodle style) via "
+        "channel_profiles.yaml's image_prompt_compiler field. Opt-in: omitting "
+        "it keeps today's compile_aligned_prompt default unchanged.",
+    )
     args = parser.parse_args()
 
     fact_gate = validate_fact_review_gate(
@@ -528,7 +590,15 @@ def main() -> None:
         "briefs": briefs,
         "cross_validation": cross_validation_summary,
     }
-    requests = [compile_aligned_prompt(brief) for brief in briefs]
+    compiler_id = resolve_image_prompt_compiler_id(args.channel_profile)
+    if compiler_id == "nollam":
+        shot_inputs_by_id = {si["shot_id"]: si for si in shot_inputs}
+        requests = [
+            compile_nollam_prompt(_brief_to_nollam_request_fields(brief, shot_inputs_by_id))
+            for brief in briefs
+        ]
+    else:
+        requests = [compile_aligned_prompt(brief) for brief in briefs]
     prompt_manifest = {
         "schema_version": 1,
         "episode_id": manifest["episode_id"],

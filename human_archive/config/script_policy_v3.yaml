@@ -56,7 +56,7 @@ story_phases:
     signature_closing: true        # 브랜드 시그니처 멘트 필수
 
 # 금지 패턴
-prohibited_patterns:
+prohibited_patterns: &prohibited_patterns
   - "오늘 영상에서는"
   - "구독과 좋아요"
   - "다음 영상에서"
@@ -66,6 +66,14 @@ prohibited_patterns:
   - "에헴"
   - "소생이 보건대"
   - "기가 막히지요"
+
+# 내레이터 보이스 — nollam_script_prompt_v3.j2가 policy.voice.* 형태로 참조한다
+# (템플릿은 seonbi_narration_policy.yaml과 동일한 voice.prohibited_patterns/voice.neutral_outro
+#  구조를 기대하고 작성돼 있었는데, 이 파일에는 이 구조가 없어 실제로 렌더링하면
+#  StrictUndefined로 즉시 실패했다 — 위 prohibited_patterns를 앵커로 재사용해 값이 갈라지지 않게 한다)
+voice:
+  prohibited_patterns: *prohibited_patterns
+  neutral_outro: "오늘의 탐구는 여기서 마칩니다. 다음 미스터리에서 다시 만나요."
 
 # 4-Step Claude 체인 설정
 claude_chain:
