@@ -20,6 +20,12 @@
 
 **Tech Stack:** Python 3.13, pytest, JSON Schema, YAML 정책 파일, SuperTonic3 HTTP & ToneFixture, Google Flow CDP, PIL Subpixel Bicubic (120% Overscan), FFmpeg/ffprobe, existing Human Archive & NOLLAM manifests.
 
+## Round 5 사후 감사 상태 — V4 기준선 보존 및 V5 하드닝으로 이관
+
+2026-09-11 직접 검증에서 V4 MP4·미러 SHA-256과 root non-media 테스트 628 passed를 확인했다. 다만 `run_neanderthal_full_pipeline.py`가 planner effect ID를 실제 renderer profile로 전달하지 않아 현재 코드 규칙상 39개 planned effect가 모두 `push_in`으로 폴백되는 문제가 발견됐다. 또한 `postflight_release.py`는 manifest boolean을 읽지만 encoded MP4의 실제 motion/정지 프레임을 재계산하지 않으며, 일부 memory/skill/legacy manifest에는 과거 Bare-Tip 정책이 남아 있다.
+
+따라서 아래 Round 4 구현 완료 표시는 V4의 Visible-First opening과 파일 무결성에 한정한 기준선 기록으로 취급한다. 실제 beat-aware/Tri-Phasic motion과 physical postflight를 완결할 후속 계획은 [`2026-09-11-nollam-v4-post-release-hardening-plan.md`](file:///D:/module/bible/docs/superpowers/plans/2026-09-11-nollam-v4-post-release-hardening-plan.md)에서 V5 candidate로 실행한다. V4 파일과 V2/V3 historical manifest는 덮어쓰지 않는다.
+
 ## Round 4 방향 전환 — Visible-First Opening 및 Beat-Aware Dynamic Motion
 
 > 이 섹션은 아래 Phase 3·4·6·7에 남아 있는 기존 `씬 1번 베어팁 강제` 항목을 **정책상 supersede**한다. 기존 체크 표시는 과거 구현 이력으로 보존하지만, 다음 실행부터의 목표 계약은 이 섹션을 따른다.

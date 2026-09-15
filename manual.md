@@ -58,9 +58,23 @@ python bible_healing/scripts/final_background_preflight.py
 python bible_healing/scripts/final_render_preflight.py
 ```
 
-## [쉽선비 / Human Archive] v5/v6 내레이션 정렬형 제작 매뉴얼
+## [놀람파일 / 쉽선비 / Human Archive] 다큐멘터리 제작 매뉴얼
 
-이 섹션의 실제 TTS 기반 동적 샷 절차가 신규 에피소드 정본이다. 기존 `full-v4-*`, 대표 8장, 대본 글자 수 기반 샷, 호스트 15~25% 절차는 레거시 빌드 재현에만 사용한다. EP02 v6 재개 전에는 `docs/solutions/integration-issues/ep02-v6-reuse-first-tts-codex-visual-brief-recovery-2026-08-28.md`의 현재 상태와 stop gate를 먼저 확인한다.
+**1순위 메인 프로필은 `nollam_file_v1` (놀람파일 — 인류의 서재 벤치마크 기반 20분 포토리얼리스틱 시네마틱 다큐)**이며, 호스트 아바타 0%, 20분 시간 감쇠 페이싱 곡선(`nollam_decay_20m`), Claude 4-Step 대본 체인을 사용한다. `doodle_seonbi_v1` (쉽선비 조선 역사 두들)은 2순위 레거시 서브 프로필로 유지한다. 상세 계획 및 사양은 `docs/superpowers/plans/2026-09-02-human-archive-retention-pacing-autonomy-master-plan.md` (v2.1)를 참조한다.
+
+### 0. 프로필 위계 및 적용 규칙
+
+1. **놀람파일 (`nollam_file_v1`, 기본값)**:
+   - 포맷: `trend_explainer_20m` (목표 1200초, 14~26분)
+   - 비주얼: 100% 포토리얼리스틱 시네마틱 B-roll (Midjourney v6.1 / Flux.1), **호스트 아바타 캐릭터 0%**
+   - 페이싱: `nollam_decay_20m` (0~15초 4.0초 → 120초 6.5초 → 바디 10.0초 → 아웃트로 12.5초)
+   - 대본: `config/script_policy_v3.yaml` + `templates/nollam_script_prompt_v3.j2` (격식 60% : 친근 40%, 40초 질문 룰)
+   - 음향: `config/audio_mix_policy.yaml` (ElevenLabs M2_WARM, 80Hz HPF, 250Hz 부스트, -14 LUFS)
+
+2. **쉽선비 (`doodle_seonbi_v1`, 레거시)**:
+   - 포맷: `doodle_docu_12m` (720초)
+   - 비주얼: 두들 일러스트 + 호스트 캐릭터 합성 (8~12%, 최소 7샷 간격)
+   - 아래 서술된 v5/v6 절차는 쉽선비 레거시 빌드 및 사료 기반 역사 다큐멘터리에 적용된다.
 
 ### 1. 고정 순서와 역할 정책
 
@@ -199,3 +213,6 @@ v6 현재 상태, Luna 복구 순서, 외부 전송 범위, 실행기 우회는 
 - 재사용은 source/target의 visual mode와 role이 모두 호환될 때만 후보로 유지한다.
 - Flow `최신 업데이트` dialog가 입력을 막으면 사용자 표시 시작 버튼을 role 기반으로 닫고 hidden을 확인한다.
 - OCR-safe `--only` 재생성 뒤에는 `--pilot`을 다시 실행해 `flow_batch_report.json`을 20/20 범위로 복원한다.
+### 놀람파일 운영 절차
+
+놀람파일은 기본 프로필을 바꾸지 않는 opt-in 트렌드 해설이다. v1은 16:9 롱폼만 실행하며, 실제 오디오 생성 후 샷 타이밍을 계산한다. Nollam job은 `M2_WARM` lock을 명시하고, 상태 라벨·출처 카드는 overlay manifest로 합성한다. 외부 게시와 정정은 서명된 manifest를 만든 뒤 사람이 Studio에서 수행한다.
