@@ -55,7 +55,23 @@ def _resolve_nollam_decay_zones(zones_cfg, total_duration_sec: float):
 
 
 def _zone_bounds_at(resolved_zones, time_sec: float):
-    for zone in resolved_zones:
+    """Match the LAST-declared zone whose resolved range contains time_sec.
+
+    Found live running a real quick_3m (~190s) nollam_file_v1 episode
+    (2026-09-16): late_body's fixed start_sec (600) and early_body's fixed
+    end_sec (300) are calibrated for the nominal 1200s curve. At a much
+    shorter measured duration, outro's dynamically end-relative start
+    (total-90, e.g. ~99.7s for a 190s episode) falls *inside* early_body's
+    still-fixed [120, 300) range -- both zones match the same late-episode
+    timestamps. Forward-first-match always picked early_body (declared
+    earlier in the list), so the entire decay curve's climactic slow-down
+    (outro's 12.5s target) silently never triggered for short episodes; every
+    shot near the true end kept early_body's ~8.5s target instead. Zones
+    declared later in the curve represent "closer to the real end" and must
+    win any such overlap regardless of episode length -- checking in reverse
+    costs nothing for the well-formed (non-overlapping) 1200s/900s case,
+    where at most one zone ever matches a given time_sec anyway."""
+    for zone in reversed(resolved_zones):
         if zone["start_sec"] <= time_sec < zone["end_sec"]:
             return zone
     return resolved_zones[-1]
@@ -203,6 +219,28 @@ def plan_shot_timing(
             }
         )
         index = next_index
+
+    # Close the natural silence gap between sentences (real audio has a
+    # room-tone pause of gap_sec, e.g. ~0.35s, between every sentence --
+    # build_sentence_audio_master.py's --gap-sec) by extending each shot's
+    # end_sec to the next shot's start_sec, and the final shot's end_sec to
+    # the audio's own measured total_duration_sec. Without this, a shot's
+    # end_sec stopped at its last sentence's own raw end_sec, leaving that
+    # gap owned by neither shot. build_motion_clips_v3.py renders each clip
+    # to exactly duration_sec, so those un-owned gaps (23 of them, 8.05s
+    # total, in a real 24-shot quick_3m build) never appeared in the video at
+    # all -- the concatenated motion track ran that many seconds shorter than
+    # the master audio, and render_episode_v2.py's ffmpeg `-shortest` mux
+    # silently truncated that much off the END of the finished episode
+    # (2026-09-16 finding, live on a real render).
+    if shots:
+        total_audio_duration_sec = float(audio_manifest.get("total_duration_sec", 0.0))
+        for i, shot in enumerate(shots):
+            if i + 1 < len(shots):
+                shot["end_sec"] = shots[i + 1]["start_sec"]
+            elif total_audio_duration_sec > shot["end_sec"]:
+                shot["end_sec"] = total_audio_duration_sec
+            shot["duration_sec"] = round(shot["end_sec"] - shot["start_sec"], 3)
 
     timing_sha = hashlib.sha256(
         json.dumps(shots, sort_keys=True).encode()

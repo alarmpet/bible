@@ -42,6 +42,22 @@ def test_postflight_validates_20m_duration_bounds():
     assert any("exceeds maximum" in f for f in res_too_long["failures"])
 
 
+def test_postflight_accepts_quick_3m_duration_bounds_via_override():
+    """2026-09-16 finding: validate_duration() was hardcoded to
+    trend_explainer_20m's 840-1560s bounds only, so it rejected a real,
+    correctly rendered quick_3m episode's ~190s duration outright. Passing
+    the delivery profile's own bounds (config/delivery_profiles.yaml's
+    quick_3m: 170/190/180) must accept it."""
+    res = validate_duration(189.7, min_sec=170.0, max_sec=190.0, target_sec=180.0)
+    assert res["ok"] is True
+
+    # the historical default (no override) must still reject a quick_3m-length
+    # duration, so a caller that forgets to pass the profile's bounds fails
+    # loudly instead of silently validating against the wrong target
+    res_default = validate_duration(189.7)
+    assert res_default["ok"] is False
+
+
 def test_full_postflight_integration():
     render_valid = {"width": 1920, "height": 1080, "fps": 25, "format_id": "nollam_file_long", "voice_lock_id": "M2_WARM"}
     res_pass = validate_full_postflight(render_valid, 1185.0)

@@ -22,7 +22,17 @@ def _write_provider_schema(tmp_path):
     return schema_path
 
 
-def test_codex_provider_uses_schema_ephemeral_read_only_and_no_shell(tmp_path):
+def test_codex_provider_uses_schema_ephemeral_read_only_and_no_shell(tmp_path, monkeypatch):
+    # 2026-09-16: found live on Windows -- a bare "codex" with shell=False
+    # fails (WinError 2) when codex is an npm-installed codex.CMD shim,
+    # because CreateProcess doesn't apply PATHEXT resolution the way a shell
+    # does. The provider now resolves the executable via shutil.which() (like
+    # run_consensus_round.py's codex_cmd() already did); pin that resolution
+    # here instead of depending on the test host's real PATH state.
+    monkeypatch.setattr(
+        "lib.visual_brief_provider.shutil.which",
+        lambda name: r"C:\fake\codex.CMD" if name == "codex" else None,
+    )
     calls = []
 
     def fake_run(args, **kwargs):
@@ -34,12 +44,19 @@ def test_codex_provider_uses_schema_ephemeral_read_only_and_no_shell(tmp_path):
     provider = CodexCliVisualBriefProvider(repo_root=tmp_path, runner=fake_run)
     provider.generate("PROMPT", _write_provider_schema(tmp_path))
     args, kwargs = calls[0]
-    assert args[:2] == ["codex", "exec"]
+    assert args[:2] == [r"C:\fake\codex.CMD", "exec"]
     assert ["--ephemeral", "--sandbox", "read-only"] == args[2:5]
     assert "--output-schema" in args and "--output-last-message" in args
     assert kwargs["input"] == "PROMPT"
     assert kwargs["encoding"] == "utf-8"
     assert kwargs["shell"] is False
+
+
+def test_codex_provider_raises_clear_error_when_codex_not_on_path(tmp_path, monkeypatch):
+    monkeypatch.setattr("lib.visual_brief_provider.shutil.which", lambda name: None)
+    provider = CodexCliVisualBriefProvider(repo_root=tmp_path, runner=lambda *a, **k: None)
+    with pytest.raises(FileNotFoundError, match="codex is not on PATH"):
+        provider.generate("PROMPT", _write_provider_schema(tmp_path))
 
 
 def test_codex_provider_surfaces_nonzero_exit_stderr(tmp_path):

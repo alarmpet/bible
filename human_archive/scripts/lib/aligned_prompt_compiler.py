@@ -79,6 +79,7 @@ def compile_nollam_prompt(brief: dict, provider: str = "flow") -> dict:
         "asset_id": asset_id,
         "order": order,
         "visual_mode": mode,
+        "semantic_anchors": list(brief.get("semantic_anchors", [])),
         "visual_claim_ids": list(brief.get("visual_claim_ids", [])),
         "look_id": look_id,
         "asset_type": asset_type,

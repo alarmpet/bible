@@ -2,6 +2,7 @@
 """Test Korean caption splitting and ASS subtitle generation."""
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 import pytest
@@ -57,6 +58,56 @@ def test_build_ass_subtitles_accepts_double_size_for_sample_v3(tmp_path: Path):
 
     content = ass_path.read_text(encoding="utf-8-sig")
     assert "Style: DocuMain,Malgun Gothic,108," in content
+
+
+def test_build_ass_subtitles_uses_real_sentence_timing_when_available(tmp_path: Path):
+    """2026-09-16 finding from a real nollam_file_v1 build: this used to look
+    ONLY for scene_audio_manifest.json, which that pipeline never writes (it
+    writes sentence_audio_manifest.json instead) -- subtitle generation
+    failed outright with "Audio manifest not found" on an otherwise-complete
+    build. The real per-sentence start_sec/end_sec must be used directly
+    (more accurate than the legacy character-proportional estimate) when
+    that file exists."""
+    (tmp_path / "sentence_audio_manifest.json").write_text(
+        json.dumps({"sentences": [
+            {"sentence_id": "s01", "start_sec": 0.0, "end_sec": 3.0, "tts_text": "짧은 문장입니다."},
+            {"sentence_id": "s02", "start_sec": 3.0, "end_sec": 9.0, "tts_text": "두 번째 문장입니다."},
+        ]}),
+        encoding="utf-8",
+    )
+
+    ass_path = build_ass_subtitles(tmp_path)
+
+    dialogues = [
+        line for line in ass_path.read_text(encoding="utf-8-sig").splitlines()
+        if line.startswith("Dialogue:")
+    ]
+    assert len(dialogues) == 2
+    # first cue starts at 0:00:00.00 and the second sentence's cue starts
+    # exactly at its own real start_sec (3.0s), not a character-count guess
+    assert dialogues[0].split(",")[1] == "0:00:00.00"
+    assert dialogues[1].split(",")[1] == "0:00:03.00"
+
+
+def test_build_ass_subtitles_prefers_sentence_manifest_over_legacy_scene_manifest(tmp_path: Path):
+    """When both files exist (shouldn't normally happen, but must be
+    deterministic), the real per-sentence timing wins."""
+    (tmp_path / "sentence_audio_manifest.json").write_text(
+        json.dumps({"sentences": [
+            {"sentence_id": "s01", "start_sec": 0.0, "end_sec": 2.0, "tts_text": "진짜 타이밍."},
+        ]}),
+        encoding="utf-8",
+    )
+    (tmp_path / "scene_audio_manifest.json").write_text(
+        '{"shots":[{"shot_id":"LEGACY","startSeconds":0.0,'
+        '"endSeconds":99.0,"display_text":"레거시 타이밍."}]}',
+        encoding="utf-8",
+    )
+
+    ass_path = build_ass_subtitles(tmp_path)
+    content = ass_path.read_text(encoding="utf-8-sig")
+    assert "진짜 타이밍" in content
+    assert "레거시 타이밍" not in content
 
 
 def test_double_size_caption_splits_long_sentence_into_safe_cues(tmp_path: Path):

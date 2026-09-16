@@ -22,6 +22,17 @@ def _brief(**overrides: object) -> dict[str, object]:
     return brief
 
 
+def test_nollam_prompt_carries_semantic_anchors_through_for_downstream_validation() -> None:
+    """2026-09-16 finding: compile_nollam_prompt() never read
+    brief["semantic_anchors"] at all, so every real nollam_file_v1 build's
+    compiled request had no semantic_anchors -- build_image_request_manifest_v5.py
+    hit a bare KeyError on it, and validate_image_requests.py (which reads
+    flow_image_prompts.json directly) unconditionally rejects any request
+    missing them."""
+    request = compile_nollam_prompt(_brief(semantic_anchors=["mammoth footprint", "snowy valley"]))
+    assert request["semantic_anchors"] == ["mammoth footprint", "snowy valley"]
+
+
 def test_nollam_historical_prompt_has_4_look_rotation_and_safe_zone() -> None:
     request = compile_nollam_prompt(_brief(order=4))
 

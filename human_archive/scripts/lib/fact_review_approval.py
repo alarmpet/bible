@@ -118,6 +118,31 @@ def _validate_persona_report(persona_report: dict[str, Any]) -> None:
         raise ValueError("persona report overall_status must be PASS")
 
 
+def _report_is_clean_pass(report: dict[str, Any]) -> bool:
+    """True when a fact_check_report needs no human review at all: overall_status
+    PASS, zero blocking failures, and zero review-required items. Distinct from
+    the REVIEW_REQUIRED-with-approvable-wording-diffs case that
+    record_fact_review_approval.py exists for -- a clean PASS has nothing for a
+    human to approve, so it must not be forced through that approval script
+    (2026-09-16: found live running a real nollam_file_v1 episode -- a fully
+    verified, zero-issue script_candidate.json had no path through
+    validate_fact_review_gate()/generate_visual_briefs.py at all, because
+    _validate_report_is_approvable() unconditionally required overall_status
+    == REVIEW_REQUIRED)."""
+    if report.get("schema_version") != 2:
+        return False
+    if report.get("overall_status") != "PASS":
+        return False
+    blocking_fields = (
+        "fail_count",
+        "unsupported_count",
+        "forbidden_wording_count",
+        "unresolved_conflict_count",
+        "review_required_count",
+    )
+    return all(report.get(field) == 0 for field in blocking_fields)
+
+
 def _review_items(report: dict[str, Any]) -> list[dict[str, Any]]:
     items = []
     seen_review_ids: set[str] = set()
@@ -245,17 +270,36 @@ def record_fact_review_approval(
 
 def validate_fact_review_gate(
     *,
-    approval_path: Path,
+    approval_path: Path | None,
     script_path: Path,
     fact_report_path: Path,
     persona_report_path: Path,
     claim_inventory_path: Path,
     source_snapshot_path: Path,
 ) -> dict[str, Any]:
+    report = _read_json(fact_report_path)
+    if _report_is_clean_pass(report):
+        _validate_persona_report(_read_json(persona_report_path))
+        fact_report_sha256 = compute_file_sha256(fact_report_path)
+        return {
+            "effective_status": "PASS",
+            "approved_review_count": 0,
+            "review_set_sha256": compute_object_sha256([]),
+            "fact_approval_sha256": compute_object_sha256(
+                {
+                    "gate_mode": "clean_pass_no_approval_required",
+                    "fact_report_sha256": fact_report_sha256,
+                }
+            ),
+        }
+    if approval_path is None:
+        raise ValueError(
+            "fact review approval is required: fact report is not a clean PASS "
+            "(overall_status PASS with zero blocking/review-required counts)"
+        )
     approval = _read_json(approval_path)
     validate_json(approval, load_schema(APPROVAL_SCHEMA_PATH))
     _validate_approval_envelope(approval)
-    report = _read_json(fact_report_path)
     _validate_report_is_approvable(report)
     _validate_persona_report(_read_json(persona_report_path))
     items = _review_items(report)

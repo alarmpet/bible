@@ -85,7 +85,15 @@ def render_build(build_dir: Path, output_file: Path | None = None) -> Path:
     if not contract_file.exists():
         contract_file = build_dir.parent / "source" / "shot_contract.json"
     asset_manifest_file = build_dir / "asset_manifest.json"
-    audio_manifest_file = build_dir / "scene_audio_manifest.json"
+    # nollam_file_v1 builds write sentence_audio_manifest.json (real
+    # per-sentence TTS timing); older ep01/ep02 doodle_seonbi_v1 builds write
+    # scene_audio_manifest.json (per-shot). 2026-09-16 finding: this
+    # unconditionally pointed at the legacy filename, so hashing it for
+    # build_manifest.json's provenance record crashed with FileNotFoundError
+    # on an otherwise fully-rendered nollam_file_v1 build.
+    audio_manifest_file = build_dir / "sentence_audio_manifest.json"
+    if not audio_manifest_file.exists():
+        audio_manifest_file = build_dir / "scene_audio_manifest.json"
     subtitles_file = build_dir / "subtitles.ass"
     master_audio_file = build_dir / "master_audio_48k.wav"
     bgm_file = build_dir / "bgm.wav"
@@ -98,13 +106,17 @@ def render_build(build_dir: Path, output_file: Path | None = None) -> Path:
     work_dir.mkdir(parents=True, exist_ok=True)
     candidate_dir.mkdir(parents=True, exist_ok=True)
 
-    if audio_manifest_file.exists():
-        audio_data = json.loads(audio_manifest_file.read_text(encoding="utf-8"))
-        shots = audio_data.get("shots", [])
-    elif asset_manifest_file.exists():
+    # scene_audio_manifest.json (legacy, per-shot) has a "shots" key directly
+    # usable here; sentence_audio_manifest.json (nollam_file_v1, per-sentence)
+    # does not -- shot_id/motion-clip lookup below needs shot-level rows, so
+    # a sentence-shaped audio manifest falls through to asset_manifest.json
+    # (which always has shot-level rows) instead of yielding an empty list.
+    audio_data = json.loads(audio_manifest_file.read_text(encoding="utf-8")) if audio_manifest_file.exists() else {}
+    shots = audio_data.get("shots", [])
+    if not shots and asset_manifest_file.exists():
         am_data = json.loads(asset_manifest_file.read_text(encoding="utf-8"))
         shots = am_data.get("assets", [])
-    else:
+    if not shots:
         contract_data = json.loads(contract_file.read_text(encoding="utf-8"))
         shots = contract_data.get("shots", [])
 

@@ -58,6 +58,26 @@ def test_late_body_and_outro_scale_with_actual_measured_duration_not_a_fixed_120
     assert profile.bounds_for(815.0).target_shot_sec == 12.5  # now outro
 
 
+def test_late_body_and_outro_still_win_when_short_duration_makes_them_overlap_early_body():
+    """2026-09-16 finding from a real quick_3m (~190s) episode: early_body's
+    fixed end_sec=300 and late_body's fixed start_sec=600 are calibrated for
+    the nominal 1200s curve and don't shrink with a much shorter measured
+    duration, so outro's dynamic start (total-90) can fall inside early_body's
+    still-fixed [120, 300) range. The real end of a short episode must still
+    resolve to outro's pacing, not early_body's stale bounds."""
+    total = 190.0  # quick_3m-scale
+    profile = NollamDecayTimingProfile("nollam_decay_20m", NOLLAM_DECAY_ZONES, total_duration_sec=total)
+
+    # outro dynamically starts at 190 - 90 = 100s, well inside early_body's
+    # fixed [120, 300) -- wait, 100 < 120, so also check a point that lands in
+    # the genuine overlap window [120, 190):
+    assert profile.bounds_for(150.0).target_shot_sec == 12.5  # outro, not early_body's 8.5
+    assert profile.bounds_for(189.0).target_shot_sec == 12.5  # the true final seconds
+    # times before outro's dynamic start still resolve to the normal curve
+    assert profile.bounds_for(30.0).target_shot_sec == 4.5    # hook
+    assert profile.bounds_for(65.0).target_shot_sec == 6.5    # roadmap
+
+
 def test_plan_shot_timing_applies_different_zone_bounds_to_the_same_episode():
     """A script whose early sentences fall in cold_open (target 4s) and later
     ones fall in body (target 10s) must actually get different shot groupings

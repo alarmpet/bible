@@ -46,6 +46,43 @@ def test_rejects_build_without_human_visual_approval(tmp_path: Path):
     assert any("approval" in error.lower() for error in errors)
 
 
+def test_accepts_sentence_audio_manifest_in_place_of_legacy_scene_manifest(tmp_path: Path):
+    """2026-09-16 finding from a real nollam_file_v1 build: this used to
+    unconditionally require scene_audio_manifest.json (the older
+    doodle_seonbi_v1 per-shot shape). A real nollam_file_v1 build writes
+    sentence_audio_manifest.json instead -- an otherwise-complete build
+    failed this freshness check outright."""
+    build = tmp_path / "run" / "candidate"
+    source = build.parent / "source"
+    contract_body = {"schema_version": 1, "episode_id": "TEST", "shots": []}
+    contract = dict(contract_body, contract_sha256=compute_object_sha256(contract_body))
+    _write(source / "shot_contract.json", json.dumps(contract))
+    _write(build / "asset_manifest.json", json.dumps({"contract_sha256": contract["contract_sha256"]}))
+    _write(build / "sentence_audio_manifest.json")
+    _write(build / "subtitles.ass", "")
+    (build / "approvals").mkdir(parents=True)
+    _write(build / "approvals" / "visual_approval.json")
+
+    ok, errors = verify_upstream_hash_freshness(build)
+
+    assert ok is True, errors
+
+
+def test_rejects_build_missing_both_audio_manifest_shapes(tmp_path: Path):
+    build = tmp_path / "run" / "candidate"
+    _write(build.parent / "source" / "shot_contract.json")
+    _write(build / "asset_manifest.json", '{"assets": []}')
+    _write(build / "subtitles.ass", "")
+    (build / "approvals").mkdir(parents=True)
+    _write(build / "approvals" / "visual_approval.json")
+
+    ok, errors = verify_upstream_hash_freshness(build)
+
+    assert ok is False
+    assert any("audio_manifest" in error.lower() or "sentence_audio_manifest" in error.lower()
+               or "scene_audio_manifest" in error.lower() for error in errors)
+
+
 def test_accepts_compiler_self_hashed_contract(tmp_path: Path):
     build = tmp_path / "run" / "candidate"
     source = build.parent / "source"

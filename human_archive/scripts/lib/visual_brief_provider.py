@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 
@@ -122,8 +123,18 @@ class CodexCliVisualBriefProvider:
         output_schema_path = Path(output_schema_path)
         with tempfile.TemporaryDirectory(prefix="visual-brief-") as temp_dir:
             output_path = Path(temp_dir) / "visual-brief-response.json"
+            # 2026-09-16: found live -- a bare "codex" with shell=False fails
+            # with WinError 2 on Windows when codex is installed via npm (the
+            # default), because that install is a codex.CMD shim and
+            # CreateProcess (unlike a shell) does not apply PATHEXT
+            # resolution on its own. run_consensus_round.py's codex_cmd()
+            # already resolves this correctly via shutil.which() -- mirror
+            # that instead of hardcoding the bare name.
+            codex_exe = shutil.which("codex")
+            if not codex_exe:
+                raise FileNotFoundError("codex is not on PATH")
             args = [
-                "codex",
+                codex_exe,
                 "exec",
                 "--ephemeral",
                 "--sandbox",

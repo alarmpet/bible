@@ -1,5 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Full episode rebuild orchestrator enforcing end-to-end immutable hash chain gates."""
+"""Full episode rebuild orchestrator enforcing end-to-end immutable hash chain gates.
+
+SCOPE: this is the legacy doodle_seonbi_v1/ep01 (Pompeii-style) one-command
+rebuild path -- it reads script_seonbi_v2/v3.json contracts, uses
+generate_flow_assets_v2 and postflight_release.py (the HA002-shaped gate;
+CLAUDE.md explicitly says not to alter this for nollam), and its default
+--output-root is human_archive/runs/ep01_pompeii_rebuild_v2. It is NOT the
+orchestrator for nollam_file_v1 episodes -- there is currently no single
+reusable driver for that profile; follow CLAUDE.md section 4's Step 1-7
+commands directly (see also the 2026-09-16 workflow-review finding that a
+single driver is needed for nollam too).
+
+2026-09-16 finding (cross-verified live by two independent reviewers in
+audit/orchestration/2026-09-16-2026-09-16-workflow-review/): this used to
+import build_motion_clips_v2, the quarantined full-shot-cosine judder motion
+engine (measured 78-84% near-duplicate frame rate) that
+build_motion_clips_v3.py replaced project-wide on 2026-09-15. Swapped to v3
+below -- same call signature, drop-in. build_audio_master_v2's voice
+selection was NOT touched: unlike build_sentence_audio_master.py (the
+nollam-shaped script, which had a real voice_lock_id-ignoring bug fixed the
+same day), this legacy doodle/ep01 path has no voice_lock_id contract to
+violate in the first place.
+"""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +35,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from build_audio_master_v2 import build_audio_master
 from build_contact_sheet import create_contact_sheet
-from build_motion_clips_v2 import build_motion_clips
+from build_motion_clips_v3 import build_motion_clips_v3
 from build_subtitles_v2 import build_ass_subtitles
 from generate_flow_assets_v2 import generate_assets
 from postflight_release import verify_postflight
@@ -79,7 +101,7 @@ def orchestrate_episode_build(
 
     # Step 4: Motion Clips Generation (Using measured audio durations)
     print("\n[4/6] Generating 25 CFR motion clips aligned to audio timeline...")
-    build_motion_clips(build_dir)
+    build_motion_clips_v3(build_dir)
 
     # Step 5: Render Episode
     print("\n[5/6] Rendering candidate video...")

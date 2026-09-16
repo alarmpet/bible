@@ -32,6 +32,7 @@ import asyncio  # noqa: F401 - kept for parity with the ported module; not used 
 import concurrent.futures as futures
 import datetime as dt
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -49,9 +50,23 @@ from orchestration.prompt_assembly import ROLES, assemble  # noqa: E402
 
 ROOT = _SCRIPTS_DIR.parent  # .../human_archive
 ROUNDS = ROOT / "audit" / "orchestration"
-PARTICIPANTS = ("claude", "codex", "grok")
+PARTICIPANTS = ("claude", "codex", "grok", "groq")
 DEFAULT_TIMEOUT = 1800
 GROK_MAX_TURNS = 80
+# 2026-09-16: Gemini/agy is blocked at the Google account-tier level
+# ("Gemini Code Assist for individuals" free-tier discontinuation --
+# confirmed via IneligibleTierError across every auth type this session
+# tried). Groq Cloud is a genuinely free (no credit card, 14,400 requests/day
+# on most models) alternative fourth reviewer that fills the same slot the
+# plan reserved for gemini_flash/gemini_pro -- chosen over a first attempt
+# with Cerebras Cloud, whose SDK/auth/model-listing all worked live but whose
+# account returned HTTP 402 payment_required on every model (a billing/quota
+# state on that specific account, not a code issue).
+#
+# NOTE: "groq" (Groq Cloud, this participant) and "grok" (xAI's CLI, the
+# existing PARTICIPANTS entry) are two different companies with confusingly
+# similar names -- do not conflate them when reading or editing this file.
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
 # Pinned to this machine's global `codex` config (~/.codex/config.toml) as of 2026-09-15.
 # Pinning (rather than inheriting the global config silently) keeps a round comparable
 # with the ones before it and leaves the user's global config alone. Re-verify this value
@@ -178,6 +193,44 @@ def _run_grok(prompt: str, prompt_file: Path, timeout: int) -> Run:
     return Run(True, proc.stdout, "", proc.stderr)
 
 
+def _run_groq(prompt: str, timeout: int) -> Run:
+    """Groq Cloud is an SDK call, not a subprocess -- there is no CLI shim to
+    shell out to, so this is a direct API call unlike _run_codex/_run_grok.
+    Reads the key from GROQ_API_KEY only; never accepts it as an argument or
+    logs it. (Note the name collision with the unrelated "grok" participant --
+    see the PARTICIPANTS comment above.)"""
+    try:
+        from groq import Groq
+    except ImportError as exc:
+        return Run(False, "", f"groq SDK is not installed: {exc}")
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return Run(False, "", "GROQ_API_KEY is not set")
+    client = Groq(api_key=api_key, timeout=timeout)
+    try:
+        completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=GROQ_MODEL,
+            # 2026-09-16 efficiency round: a real critique-shaped completion
+            # measured 621 tokens; the free tier's 8000-tokens/min budget
+            # means one call that actually reaches a 4096-token ceiling
+            # (2638 prompt + 4096 completion = 6734) drops sustained
+            # throughput to ~1.2 calls/min. 1024 gives ~65% headroom over the
+            # measured completion while keeping a single verbose answer from
+            # eating most of a minute's quota.
+            max_completion_tokens=1024,
+            temperature=0.2,
+            top_p=1,
+            stream=False,
+        )
+    except Exception as exc:  # noqa: BLE001 - SDK error types vary by failure mode
+        return Run(False, "", f"{type(exc).__name__}: {exc}")
+    text = (completion.choices[0].message.content or "").strip()
+    if not text:
+        return Run(False, "", "empty response")
+    return Run(True, text)
+
+
 # Upstream capacity and rate errors say nothing about the question being reviewed.
 TRANSIENT = re.compile(
     r"at capacity|rate.?limit|overloaded|temporarily unavailable|503|429|timed out",
@@ -196,6 +249,8 @@ def _attempt(participant: str, role: str, prompt: str, round_dir: Path,
             run = _run_codex(prompt, round_dir / f"_{role}.codex.raw.md", timeout)
         elif participant == "grok":
             run = _run_grok(prompt, round_dir / f"_{role}.grok.prompt.txt", timeout)
+        elif participant == "groq":
+            run = _run_groq(prompt, timeout)
         else:
             raise ValueError(f"{participant} is not a subprocess participant")
     except subprocess.TimeoutExpired:

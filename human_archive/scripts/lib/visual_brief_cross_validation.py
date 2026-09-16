@@ -32,7 +32,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 if TYPE_CHECKING:
-    from run_consensus_round import EscalationResult
+    from run_consensus_round import EscalationResult, Outcome
 
 _BRIEF_FIELDS = (
     "visual_mode",
@@ -111,6 +111,51 @@ def select_scenes_for_critique(
     return [briefs[i] for i in indices]
 
 
+def screen_with_groq(
+    brief: dict[str, Any],
+    narration_text: str,
+    *,
+    timeout: int = 480,
+    round_dir: Path,
+) -> "Outcome":
+    """Additive third screener on an already-produced visual brief -- does NOT
+    replace or touch escalate_claim()'s codex+grok pair, and never affects its
+    `ok`/`agreed` fields. A caller decides whether to also weigh this.
+
+    2026-09-16 workflow-review finding (audit/orchestration/2026-09-16-2026-09-16-
+    groq-placement/), independently confirmed by two reviewers who read this file
+    and run_consensus_round.py directly: unlike escalate_claim()'s fact-check
+    packet (tri_model_debate_engine.py's execute_fact_check(), which inlines the
+    claim sentence but not the evidence excerpt -- Groq has no file-read tool
+    access, so that packet leaves it correctly answering CANNOT_DETERMINE),
+    build_critique_spec() above already inlines everything needed to judge a
+    brief -- the narration text and every _BRIEF_FIELDS value -- so this spec is
+    fully self-contained and Groq can meaningfully screen it.
+
+    round_dir is required (not optional) because this must land in the same
+    round directory escalate_claim() already wrote to, as a third file
+    (`proposer.groq.md` alongside `proposer.codex.md`/`adversary.grok.md` or
+    whichever roles that round assigned) -- never a separate round.
+    """
+    # Imported lazily, and in this order, so run_consensus_round's own
+    # sys.path setup (inserting scripts/lib) runs before importing
+    # orchestration.prompt_assembly -- mirrors how escalate_claim() itself
+    # resolves that import.
+    from run_consensus_round import _invoke
+    from orchestration.prompt_assembly import assemble
+
+    spec = build_critique_spec(brief, narration_text)
+    prompt = assemble("proposer", spec)
+    # 2026-09-16 efficiency round (audit/orchestration/2026-09-16-2026-09-16-
+    # groq-efficiency/): the default retries=1/backoff=20.0 undershoots the
+    # measured token-bucket refill time for one full-size call (24.4s =
+    # 3259 measured tokens / (8000 tok/min / 60)) by 4.4s, so a real 429 on a
+    # tight loop can fail its one retry before the quota has actually
+    # refilled. Groq gets its own, more patient retry budget; codex/grok's
+    # global default (used by escalate_claim) is untouched.
+    return _invoke("groq", "proposer", prompt, round_dir, timeout, retries=3, backoff=25.0)
+
+
 def critique_visual_brief(
     brief: dict[str, Any],
     narration_text: str,
@@ -136,27 +181,57 @@ def critique_visual_briefs(
     sample_size: int = 0,
     timeout: int = 480,
     round_dir_root: Path | None = None,
-) -> dict[str, EscalationResult]:
-    """Critique a selection of already-generated briefs. Returns shot_id -> EscalationResult
-    only for the shots actually selected; callers decide how to act on REVIEW_REQUIRED
-    (disagreement) or DEFECTIVE verdicts -- this function never raises on a bad brief,
-    matching execute_fact_check()'s "flag, don't silently block" philosophy (Task 3).
+    include_groq_screen: bool = False,
+) -> tuple[dict[str, EscalationResult], dict[str, "Outcome"]]:
+    """Critique a selection of already-generated briefs. Returns
+    (shot_id -> EscalationResult, shot_id -> Groq Outcome) for the shots
+    actually selected; the second dict is {} unless include_groq_screen=True.
+    Callers decide how to act on REVIEW_REQUIRED (disagreement) or DEFECTIVE
+    verdicts -- this function never raises on a bad brief, matching
+    execute_fact_check()'s "flag, don't silently block" philosophy (Task 3).
+
+    Kept as a separate dict rather than folded into EscalationResult: Groq's
+    opinion is an additive third signal, not a vote in escalate_claim()'s
+    codex+grok agreement contract (which has its own pinned tests). Pass the
+    second dict to summarize_critique_results() to surface it in the summary
+    without changing PASS/REVIEW_REQUIRED status.
+
+    2026-09-16 efficiency round recommendation: cap sample_size at 8 (12 for
+    denser coverage) when include_groq_screen is on -- 8 x the measured 3259
+    tokens/call = 3.26 minutes against the real 8000-tokens/min budget; the
+    100-180 nominal shot count would take 40-73 minutes of pure Groq-quota
+    wall time (see audit/orchestration/2026-09-16-2026-09-16-groq-efficiency/).
     """
     selected = select_scenes_for_critique(briefs, scene_ids=scene_ids, sample_size=sample_size)
     results: dict[str, EscalationResult] = {}
+    groq_outcomes: dict[str, "Outcome"] = {}
     for brief in selected:
         shot_id = brief.get("shot_id", "unknown_shot")
         narration = sentence_texts_by_shot.get(shot_id, "")
         rd = (round_dir_root / shot_id) if round_dir_root else None
-        results[shot_id] = critique_visual_brief(brief, narration, timeout=timeout, round_dir=rd)
-    return results
+        result = critique_visual_brief(brief, narration, timeout=timeout, round_dir=rd)
+        results[shot_id] = result
+        if include_groq_screen:
+            groq_outcomes[shot_id] = screen_with_groq(
+                brief, narration, timeout=timeout, round_dir=result.round_dir,
+            )
+    return results, groq_outcomes
 
 
-def summarize_critique_results(results: dict[str, EscalationResult]) -> dict[str, Any]:
-    """Compact, JSON-serializable summary suitable for embedding in the brief manifest."""
+def summarize_critique_results(
+    results: dict[str, EscalationResult],
+    groq_outcomes: dict[str, "Outcome"] | None = None,
+) -> dict[str, Any]:
+    """Compact, JSON-serializable summary suitable for embedding in the brief
+    manifest. `status` (PASS/REVIEW_REQUIRED) is derived only from the
+    escalate_claim() codex+grok pair, unchanged by groq_outcomes -- Groq is an
+    additive third opinion surfaced for a human to read, not a vote (see
+    critique_visual_briefs()'s docstring)."""
+    from orchestration.contract import parse
+
     summary: dict[str, Any] = {}
     for shot_id, result in results.items():
-        summary[shot_id] = {
+        row = {
             "ok": result.ok,
             "agreed": result.agreed,
             "verdict": result.verdict,
@@ -165,4 +240,12 @@ def summarize_critique_results(results: dict[str, EscalationResult]) -> dict[str
             "round_dir": str(result.round_dir),
             "participants_answered": sorted(result.answers.keys()),
         }
+        outcome = (groq_outcomes or {}).get(shot_id)
+        if outcome is not None:
+            row["groq_screen"] = {
+                "ok": outcome.ok,
+                "verdict": parse(outcome.text).verdict if outcome.ok else None,
+                "detail": outcome.detail or None,
+            }
+        summary[shot_id] = row
     return summary

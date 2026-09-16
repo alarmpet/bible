@@ -29,10 +29,26 @@ def build_image_request_manifest(build_dir: Path) -> Path:
     timing_data = _read(timing_path)
     timing_by_id = {str(shot["shot_id"]): shot for shot in timing_data["shots"]}
 
+    # 2026-09-16 finding: nollam_file_v1's compile_nollam_prompt() output
+    # (unlike doodle_seonbi_v1's compile_aligned_prompt()) doesn't carry
+    # semantic_anchors on the request itself -- generate_visual_briefs.py was
+    # updated this week to support the nollam compiler, but this downstream
+    # step never was, so every real nollam build hit a bare KeyError here.
+    # The anchors do exist one step upstream, on the visual brief itself.
+    anchors_by_shot_id: dict[str, list[str]] = {}
+    brief_manifest_path = build_dir / "visual_brief_manifest.json"
+    if brief_manifest_path.is_file():
+        brief_data = _read(brief_manifest_path)
+        for brief in brief_data.get("briefs", []):
+            anchors = brief.get("semantic_anchors")
+            if anchors:
+                anchors_by_shot_id[str(brief["shot_id"])] = anchors
+
     rows: list[dict[str, Any]] = []
     for request in prompt_data["requests"]:
         shot_id = str(request["shot_id"])
         timing = timing_by_id[shot_id]
+        semantic_anchors = request.get("semantic_anchors") or anchors_by_shot_id.get(shot_id, [])
         row = {
             "scene_id": shot_id,
             "shot_id": shot_id,
@@ -42,7 +58,7 @@ def build_image_request_manifest(build_dir: Path) -> Path:
             "duration_sec": timing["duration_sec"],
             "visual_mode": request["visual_mode"],
             "visual_role": VISUAL_ROLE_BY_MODE.get(request["visual_mode"], "atmosphere"),
-            "semantic_anchors": request["semantic_anchors"],
+            "semantic_anchors": semantic_anchors,
             "submission_prompt": request["submission_prompt"],
             "positive_prompt": request["positive_prompt"],
             "negative": request["negative"],

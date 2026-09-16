@@ -495,6 +495,156 @@ def test_recorded_approval_matches_public_schema(tmp_path: Path) -> None:
     validate_json(approval, load_schema(schema_path))
 
 
+def _write_clean_pass_fixture_bundle(root: Path) -> dict[str, Path]:
+    paths = _write_fixture_bundle(root)
+    paths["fact_report"].write_text(
+        json.dumps(
+            {
+                "schema_version": 2,
+                "overall_status": "PASS",
+                "fail_count": 0,
+                "unsupported_count": 0,
+                "forbidden_wording_count": 0,
+                "unresolved_conflict_count": 0,
+                "review_required_count": 0,
+                "segment_evaluations": [
+                    {
+                        "sentence_id": "S-001",
+                        "segment_index": 0,
+                        "kind": "fact",
+                        "claim_id": "CLM-001",
+                        "status": "PASS",
+                        "issues": [],
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    return paths
+
+
+def test_gate_accepts_clean_pass_report_without_any_approval_file(
+    tmp_path: Path,
+) -> None:
+    """2026-09-16 finding: a fully verified, zero-issue fact_check_report (a
+    real live run's PASS result, not REVIEW_REQUIRED) previously had no path
+    through validate_fact_review_gate() at all -- it unconditionally required
+    an approval file bound to REVIEW_REQUIRED items, and
+    record_fact_review_approval.py itself refuses to record an approval for a
+    report that isn't REVIEW_REQUIRED. A clean PASS has nothing for a human to
+    approve, so the gate must accept it directly."""
+    from lib.fact_review_approval import validate_fact_review_gate
+
+    paths = _write_clean_pass_fixture_bundle(tmp_path)
+    gate = validate_fact_review_gate(
+        approval_path=None,
+        script_path=paths["script"],
+        fact_report_path=paths["fact_report"],
+        persona_report_path=paths["persona_report"],
+        claim_inventory_path=paths["claims"],
+        source_snapshot_path=paths["sources"],
+    )
+    assert gate["effective_status"] == "PASS"
+    assert gate["approved_review_count"] == 0
+    assert "fact_approval_sha256" in gate
+
+
+def test_gate_still_requires_approval_for_non_clean_report(tmp_path: Path) -> None:
+    from lib.fact_review_approval import validate_fact_review_gate
+
+    paths = _write_fixture_bundle(tmp_path)
+    with pytest.raises(ValueError, match="fact review approval is required"):
+        validate_fact_review_gate(
+            approval_path=None,
+            script_path=paths["script"],
+            fact_report_path=paths["fact_report"],
+            persona_report_path=paths["persona_report"],
+            claim_inventory_path=paths["claims"],
+            source_snapshot_path=paths["sources"],
+        )
+
+
+def test_visual_brief_manifest_accepts_clean_pass_without_fact_approval_flag(
+    tmp_path: Path,
+) -> None:
+    paths = _write_clean_pass_fixture_bundle(tmp_path)
+    timing_path = tmp_path / "shot_timing_manifest.json"
+    output_path = tmp_path / "visual_brief_manifest.json"
+    prompts_path = tmp_path / "flow_image_prompts.json"
+    timing_path.write_text(
+        json.dumps(
+            {
+                "script_sha256": _sha256(paths["script"]),
+                "timing_sha256": "TIMING-SHA",
+                "shots": [
+                    {
+                        "shot_id": "shot-001",
+                        "order": 1,
+                        "chapter": 1,
+                        "start_sec": 0.0,
+                        "end_sec": 4.0,
+                        "sentence_spans": [
+                            {"sentence_id": "S-001", "evidence_span_ids": []}
+                        ],
+                        "claim_ids": [],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(_SCRIPTS_DIR / "generate_visual_briefs.py"),
+            "--script",
+            str(paths["script"]),
+            "--timing",
+            str(timing_path),
+            "--claims",
+            str(paths["claims"]),
+            "--sources",
+            str(paths["sources"]),
+            "--fact-report",
+            str(paths["fact_report"]),
+            "--persona-report",
+            str(paths["persona_report"]),
+            "--provider",
+            "fallback",
+            "--output",
+            str(output_path),
+            "--prompts",
+            str(prompts_path),
+        ],
+        cwd=_PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    manifest = json.loads(output_path.read_text(encoding="utf-8"))
+    assert manifest["schema_version"] == 2
+    assert manifest["fact_review_set_sha256"]
+    assert manifest["fact_approval_sha256"]
+    from lib.schema_validation import load_schema, validate_json
+
+    validate_json(
+        manifest,
+        load_schema(
+            _PROJECT_ROOT
+            / "human_archive"
+            / "schemas"
+            / "visual_brief_manifest.schema.json"
+        ),
+    )
+
+
 def test_visual_brief_cli_refuses_to_run_without_fact_approval(
     tmp_path: Path,
 ) -> None:

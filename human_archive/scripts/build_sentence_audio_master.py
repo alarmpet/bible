@@ -24,6 +24,42 @@ def _text_sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest().upper()
 
 
+_DEFAULT_VOICE = "M4"
+
+
+def _resolve_voice(
+    voice: str | None,
+    voice_lock_id: str | None,
+    script: dict[str, Any],
+) -> str:
+    """Resolve the SuperTonic3 voice code to synthesize with.
+
+    Found live running a real nollam_file_v1 episode (2026-09-16): this
+    function's only caller previously hardcoded voice="M4" whenever no
+    explicit --voice was given, and the CLI never exposed a --voice/
+    --voice-lock-id flag at all -- so CLAUDE.md's own documented Step 2
+    command (`build_sentence_audio_master.py --script ... --audio-mode
+    supertonic3 ...`, no voice flag) silently synthesized every nollam_file_v1
+    episode with M4 instead of the mandated M2_WARM
+    (voice=M2, per channel_profiles.yaml and CLAUDE.md section 4). Per-episode
+    one-off scripts (run_neanderthal_full_pipeline.py, run_san_jose_full_
+    pipeline.py) worked around this by calling the Python function directly
+    with an explicit voice="M2" -- but the general, documented CLI path had
+    no way to do that and no test ever caught it.
+
+    Priority: explicit --voice > explicit --voice-lock-id > the script's own
+    top-level voice_lock_id field (script_candidate.json already declares
+    this) > the historical M4 default, kept only for callers that declare no
+    lock at all.
+    """
+    if voice:
+        return voice
+    resolved_lock_id = voice_lock_id or script.get("voice_lock_id")
+    if resolved_lock_id:
+        return str(resolved_lock_id).split("_")[0]
+    return _DEFAULT_VOICE
+
+
 def _assemble_pcm_master(
     rows: list[dict[str, Any]],
     sentence_dir: Path,
@@ -225,7 +261,7 @@ def build_sentence_audio_master(
                         text,
                         phrase_path,
                         speed=float(speed if speed is not None else 0.94),
-                        voice=str(voice if voice is not None else "M4"),
+                        voice=_resolve_voice(voice, voice_lock_id, script),
                         total_step=int(total_step if total_step is not None else 10),
                         silence_duration=0.0,
                     )
@@ -291,6 +327,22 @@ def main() -> None:
     parser.add_argument("--gap-sec", type=float, default=0.35)
     parser.add_argument("--reuse-existing", action="store_true")
     parser.add_argument("--reuse-from-build", type=Path, action="append", default=[])
+    parser.add_argument(
+        "--voice",
+        default=None,
+        help="SuperTonic3 voice code (e.g. M2). Overrides --voice-lock-id and "
+        "the script's own voice_lock_id field. Omit to resolve from the "
+        "script (recommended -- keeps the CLI honoring script_candidate.json's "
+        "declared voice_lock_id instead of silently defaulting to M4).",
+    )
+    parser.add_argument(
+        "--voice-lock-id",
+        default=None,
+        help="e.g. M2_WARM. Used only when --voice is not given; overrides "
+        "the script's own voice_lock_id field.",
+    )
+    parser.add_argument("--speed", type=float, default=None)
+    parser.add_argument("--total-step", type=int, default=None)
     args = parser.parse_args()
     build_sentence_audio_master(
         args.script,
@@ -300,6 +352,10 @@ def main() -> None:
         args.gap_sec,
         reuse_existing=args.reuse_existing,
         reuse_from_builds=args.reuse_from_build,
+        voice_lock_id=args.voice_lock_id,
+        voice=args.voice,
+        speed=args.speed,
+        total_step=args.total_step,
     )
 
 

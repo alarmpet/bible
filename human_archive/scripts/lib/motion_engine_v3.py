@@ -41,9 +41,17 @@ from PIL import Image
 # Easing: short ramp-in / constant cruise / short ramp-out, not a single S-curve.
 # ---------------------------------------------------------------------------------
 
-DEFAULT_RAMP_FRAC = 0.15  # each ramp is at most 15% of the shot; Aug26 asked for a
-# fixed 0.2-0.4s ramp, but a duration-independent fraction keeps very short pilot shots
-# (2.5s) and very long outro shots (12.5s) both correctly dominated by the cruise phase.
+DEFAULT_RAMP_FRAC = 0.15  # engine default only; production callers pass ramp_frac_for_duration()
+
+# Hard Gate 5: each end gets a fixed 0.2-0.4s ramp regardless of shot length. A 15%
+# fraction gave an 11s shot a ~1.7s ramp-in, so the move barely registered at the start.
+HARD_GATE_RAMP_SEC = 0.3
+
+
+def ramp_frac_for_duration(duration_sec: float, ramp_sec: float = HARD_GATE_RAMP_SEC) -> float:
+    if duration_sec <= 0:
+        return 0.0
+    return max(0.0, min(0.49, ramp_sec / float(duration_sec)))
 
 
 def ease_ramp_cruise(t: float, ramp_frac: float = DEFAULT_RAMP_FRAC) -> float:

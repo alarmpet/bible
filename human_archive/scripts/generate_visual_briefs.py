@@ -152,6 +152,7 @@ def _brief_to_nollam_request_fields(
         "action": brief.get("action", ""),
         "place": brief.get("place", ""),
         "era": brief.get("era", ""),
+        "semantic_anchors": brief.get("semantic_anchors", []),
         "visual_claim_ids": shot_input.get("claim_ids", []),
         "motion_profile": brief.get("motion_profile", "smooth_subpixel"),
     }
@@ -455,7 +456,17 @@ def main() -> None:
     parser.add_argument("--sources", type=Path, required=True)
     parser.add_argument("--fact-report", type=Path, required=True)
     parser.add_argument("--persona-report", type=Path, required=True)
-    parser.add_argument("--fact-approval", type=Path, required=True)
+    parser.add_argument(
+        "--fact-approval",
+        type=Path,
+        default=None,
+        help="Human approval file recorded by record_fact_review_approval.py. "
+        "Required when --fact-report's overall_status is REVIEW_REQUIRED; not "
+        "required (and not read) when it is a clean PASS (zero blocking and "
+        "zero review-required counts) -- there is nothing for a human to "
+        "approve in that case, and record_fact_review_approval.py itself "
+        "refuses to run against a PASS report.",
+    )
     parser.add_argument(
         "--provider",
         choices=["antigravity-cli", "fallback", "codex-cli", "json-file"],
@@ -512,6 +523,19 @@ def main() -> None:
         "evenly-spaced deterministic sample of this many shots instead of all.",
     )
     parser.add_argument("--cross-validate-timeout", type=int, default=480)
+    parser.add_argument(
+        "--cross-validate-include-groq",
+        action="store_true",
+        help="Additionally screen each cross-validated shot with Groq (a fast, "
+        "free third opinion -- see lib/visual_brief_cross_validation.py's "
+        "screen_with_groq()). Additive only: never changes the codex+grok "
+        "escalate_claim() PASS/REVIEW_REQUIRED status, surfaced as a separate "
+        "groq_screen field. Off by default. 2026-09-16 efficiency round: keep "
+        "--cross-validate-sample at 8 (12 max) when this is on -- Groq's free "
+        "tier is budgeted at 8000 tokens/min and one critique call measured "
+        "~3259 tokens, so 8 calls costs ~3.3 minutes of that budget "
+        "(audit/orchestration/2026-09-16-2026-09-16-groq-efficiency/).",
+    )
     parser.add_argument(
         "--channel-profile",
         default=None,
@@ -610,31 +634,47 @@ def main() -> None:
     cross_validation_summary: dict[str, Any] = {}
     if cross_validate_scene_ids or args.cross_validate_sample:
         narration_by_shot = {si["shot_id"]: si["narration_digest"] for si in shot_inputs}
-        results = critique_visual_briefs(
+        results, groq_outcomes = critique_visual_briefs(
             briefs,
             narration_by_shot,
             scene_ids=cross_validate_scene_ids,
             sample_size=args.cross_validate_sample,
             timeout=args.cross_validate_timeout,
             round_dir_root=(args.output.parent / "cross_validation") if args.output else None,
+            include_groq_screen=args.cross_validate_include_groq,
         )
-        cross_validation_summary = summarize_critique_results(results)
+        cross_validation_summary = summarize_critique_results(results, groq_outcomes)
         flagged = [sid for sid, r in cross_validation_summary.items() if r["status"] != "PASS"]
         if flagged:
             print(
                 f"Cross-validation flagged {len(flagged)}/{len(cross_validation_summary)} "
                 f"reviewed shot(s) as REVIEW_REQUIRED: {', '.join(flagged)}"
             )
+        groq_flagged = [
+            sid for sid, r in cross_validation_summary.items()
+            if r.get("groq_screen", {}).get("verdict") not in (None, "SOUND")
+        ]
+        if groq_flagged:
+            print(
+                f"Groq screen additionally flagged {len(groq_flagged)}/{len(groq_outcomes)} "
+                f"shot(s) (advisory, does not change PASS/REVIEW_REQUIRED): "
+                f"{', '.join(groq_flagged)}"
+            )
 
     brief_hash = hashlib.sha256(
         json.dumps(briefs, sort_keys=True, ensure_ascii=False).encode("utf-8")
     ).hexdigest()
+    fact_approval_sha256 = (
+        compute_file_sha256(args.fact_approval)
+        if args.fact_approval is not None
+        else fact_gate["fact_approval_sha256"]
+    )
     manifest = {
         "schema_version": 2,
         "episode_id": script.get("episode_id", ""),
         "script_sha256": timing.get("script_sha256", ""),
         "timing_sha256": timing.get("timing_sha256", ""),
-        "fact_approval_sha256": compute_file_sha256(args.fact_approval),
+        "fact_approval_sha256": fact_approval_sha256,
         "fact_review_set_sha256": fact_gate["review_set_sha256"],
         "provider": provider_name,
         "model": model_name,

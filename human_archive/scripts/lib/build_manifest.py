@@ -35,16 +35,31 @@ def verify_upstream_hash_freshness(build_dir: Path) -> tuple[bool, list[str]]:
         contract_file = build_dir.parent / "source" / "shot_contract.json"
 
     asset_manifest_file = build_dir / "asset_manifest.json"
-    audio_manifest_file = build_dir / "scene_audio_manifest.json"
+    # nollam_file_v1 builds write sentence_audio_manifest.json (real per-sentence
+    # TTS timing, from build_sentence_audio_master.py); older ep01/ep02
+    # doodle_seonbi_v1 builds write scene_audio_manifest.json (per-shot). Either
+    # one satisfies "the audio timing this build renders against actually
+    # exists" -- 2026-09-16 finding: this unconditionally required
+    # scene_audio_manifest.json, so a real, otherwise-complete nollam_file_v1
+    # build failed this freshness check outright.
+    audio_manifest_candidates = [
+        build_dir / "sentence_audio_manifest.json",
+        build_dir / "scene_audio_manifest.json",
+    ]
     subtitles_file = build_dir / "subtitles.ass"
     approval_candidates = [
         build_dir / "approvals" / "visual_pilot_review.json",
         build_dir / "approvals" / "visual_approval.json",
     ]
 
-    for p in [contract_file, asset_manifest_file, audio_manifest_file, subtitles_file]:
+    for p in [contract_file, asset_manifest_file, subtitles_file]:
         if not p.exists():
             errors.append(f"Required build upstream file missing: {p}")
+    if not any(p.exists() for p in audio_manifest_candidates):
+        errors.append(
+            "Required build upstream file missing: "
+            f"{audio_manifest_candidates[0]} or {audio_manifest_candidates[1]}"
+        )
 
     approval_file = next((p for p in approval_candidates if p.exists()), None)
     if approval_file is None:

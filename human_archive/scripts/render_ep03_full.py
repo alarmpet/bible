@@ -9,7 +9,13 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from lib.provenance import compute_file_sha256
-from build_motion_clips_v2 import build_motion_clips
+# 2026-09-16: build_motion_clips_v2 is the quarantined full-shot-cosine
+# judder engine (measured 78-84% near-duplicate frame rate) that
+# build_motion_clips_v3.py replaced project-wide on 2026-09-15 -- swapped to
+# v3 below (same call signature, drop-in). Found live via the same
+# workflow-review round that caught build_episode_v2.py doing the same
+# thing (audit/orchestration/2026-09-16-2026-09-16-workflow-review/).
+from build_motion_clips_v3 import build_motion_clips_v3
 from render_episode_v2 import render_build
 from postflight_release import verify_postflight
 
@@ -52,7 +58,7 @@ def main():
 
     # 1. Build motion clips
     print("\n--- 1. Rendering 45 Ken Burns Motion Clips ---")
-    build_motion_clips(bdir)
+    build_motion_clips_v3(bdir)
 
     # 2. Render Candidate Video
     print("\n--- 2. Synthesizing Candidate Full Documentary Video ---")

@@ -68,26 +68,45 @@ def split_caption_cues(text: str, max_chars_per_line: int) -> list[list[str]]:
     return [lines[index:index + 2] for index in range(0, len(lines), 2)]
 
 
-def build_ass_subtitles(
-    build_dir: Path,
-    output_file: Path | None = None,
-    *,
-    font_size: int = 54,
-    max_chars_per_line: int = 22,
-) -> Path:
-    build_dir = Path(build_dir).resolve()
-    manifest_path = build_dir / "scene_audio_manifest.json"
-    if not manifest_path.exists():
-        raise SystemExit(f"Audio manifest not found: {manifest_path}")
+def _sentence_cue_units_from_sentence_audio_manifest(build_dir: Path) -> list[dict] | None:
+    """Real per-sentence start_sec/end_sec from build_sentence_audio_master.py's
+    output -- the actual TTS timing, not the character-proportional estimate
+    the legacy scene_audio_manifest.json path below has to fall back to
+    because that older per-SHOT format has no per-sentence timestamps at all.
 
-    manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    2026-09-16 finding: this script previously only ever looked for
+    scene_audio_manifest.json. A real nollam_file_v1 build never writes that
+    file (it writes sentence_audio_manifest.json instead) -- subtitle
+    generation failed outright (`Audio manifest not found`) on a build whose
+    audio, shot timing, and images were all already correct."""
+    path = build_dir / "sentence_audio_manifest.json"
+    if not path.exists():
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    sentences = data.get("sentences", [])
+    if not sentences:
+        return None
+    return [
+        {
+            "start": float(s["start_sec"]),
+            "end": float(s["end_sec"]),
+            "text": str(s.get("tts_text", "")).strip(),
+        }
+        for s in sentences
+    ]
+
+
+def _sentence_cue_units_from_scene_audio_manifest(build_dir: Path) -> tuple[list[dict], int] | None:
+    """Legacy path: per-shot startSeconds/endSeconds/display_text, with
+    per-sentence timing approximated by character-count share of the shot's
+    duration (the only option when there are no real per-sentence
+    timestamps)."""
+    path = build_dir / "scene_audio_manifest.json"
+    if not path.exists():
+        return None
+    manifest_data = json.loads(path.read_text(encoding="utf-8"))
     shots = manifest_data.get("shots", [])
-
-    if not output_file:
-        output_file = build_dir / "subtitles.ass"
-
-    events = []
-
+    units: list[dict] = []
     for s in shots:
         shot_start = s["startSeconds"]
         shot_end = s["endSeconds"]
@@ -109,32 +128,71 @@ def build_ass_subtitles(
             sent_dur = shot_dur * ratio
             sent_start = curr_time
             sent_end = curr_time + sent_dur if i < len(sentences) - 1 else shot_end
-
-            cue_lines = split_caption_cues(sent, max_chars_per_line)
-            cue_chars = [sum(len(line) for line in lines) for lines in cue_lines]
-            cue_total = max(1, sum(cue_chars))
-            cue_start = sent_start
-            for cue_index, lines in enumerate(cue_lines):
-                cue_ratio = cue_chars[cue_index] / cue_total
-                cue_end = (
-                    cue_start + sent_dur * cue_ratio
-                    if cue_index < len(cue_lines) - 1
-                    else sent_end
-                )
-                formatted_text = r"\N".join(lines)
-                start_ass = format_ass_timestamp(cue_start)
-                end_ass = format_ass_timestamp(cue_end)
-                events.append(
-                    f"Dialogue: 0,{start_ass},{end_ass},DocuMain,,0,0,0,,{formatted_text}"
-                )
-                cue_start = cue_end
+            units.append({"start": sent_start, "end": sent_end, "text": sent})
             curr_time = sent_end
+    return units, len(shots)
+
+
+def build_ass_subtitles(
+    build_dir: Path,
+    output_file: Path | None = None,
+    *,
+    font_size: int = 54,
+    max_chars_per_line: int = 22,
+) -> Path:
+    build_dir = Path(build_dir).resolve()
+
+    sentence_units = _sentence_cue_units_from_sentence_audio_manifest(build_dir)
+    if sentence_units is not None:
+        source_count, source_label = len(sentence_units), "sentences"
+    else:
+        legacy = _sentence_cue_units_from_scene_audio_manifest(build_dir)
+        if legacy is None:
+            raise SystemExit(
+                "Audio manifest not found: "
+                f"{build_dir / 'sentence_audio_manifest.json'} or "
+                f"{build_dir / 'scene_audio_manifest.json'}"
+            )
+        sentence_units, shot_count = legacy
+        source_count, source_label = shot_count, "shots"
+
+    if not output_file:
+        output_file = build_dir / "subtitles.ass"
+
+    events = []
+
+    for unit in sentence_units:
+        sent = unit["text"]
+        if not sent:
+            continue
+        sent_start = unit["start"]
+        sent_end = unit["end"]
+        sent_dur = max(0.01, sent_end - sent_start)
+
+        cue_lines = split_caption_cues(sent, max_chars_per_line)
+        cue_chars = [sum(len(line) for line in lines) for lines in cue_lines]
+        cue_total = max(1, sum(cue_chars))
+        cue_start = sent_start
+        for cue_index, lines in enumerate(cue_lines):
+            cue_ratio = cue_chars[cue_index] / cue_total
+            cue_end = (
+                cue_start + sent_dur * cue_ratio
+                if cue_index < len(cue_lines) - 1
+                else sent_end
+            )
+            formatted_text = r"\N".join(lines)
+            start_ass = format_ass_timestamp(cue_start)
+            end_ass = format_ass_timestamp(cue_end)
+            events.append(
+                f"Dialogue: 0,{start_ass},{end_ass},DocuMain,,0,0,0,,{formatted_text}"
+            )
+            cue_start = cue_end
 
     full_ass_text = generate_clean_ass_header(font_size=font_size) + "\n".join(events) + "\n"
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(full_ass_text, encoding="utf-8-sig")
 
-    print(f"✅ Clean 1-2 line ASS subtitles created: {output_file} ({len(events)} cues from {len(shots)} shots)")
+    print(f"✅ Clean 1-2 line ASS subtitles created: {output_file} ({len(events)} cues from {source_count} {source_label})")
     return output_file
 
 
